@@ -3,6 +3,7 @@ import 'dart:math';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../domain/entities/interview_turn.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/session_config.dart';
 import '../../domain/entities/turn_event.dart';
@@ -25,7 +26,9 @@ abstract interface class InterviewRemoteDataSource {
     required String turnId,
   });
 
-  List<TurnScore> scoresFor(String sessionId);
+  List<InterviewTurn> turnsFor(String sessionId);
+
+  SessionConfig configFor(String sessionId);
 
   void dispose(String sessionId);
 }
@@ -95,8 +98,11 @@ final class InterviewScriptedDataSource implements InterviewRemoteDataSource {
   }
 
   @override
-  List<TurnScore> scoresFor(String sessionId) =>
-      List.unmodifiable(_require(sessionId).scores);
+  List<InterviewTurn> turnsFor(String sessionId) =>
+      List.unmodifiable(_require(sessionId).turns);
+
+  @override
+  SessionConfig configFor(String sessionId) => _require(sessionId).config;
 
   @override
   void dispose(String sessionId) {
@@ -161,8 +167,13 @@ final class InterviewScriptedDataSource implements InterviewRemoteDataSource {
     await Future<void>.delayed(gradeDelay);
     if (events.isClosed) return;
 
+    final asked = session.pending;
     final score = _score(answer, session.activeKeywords);
-    session.scores.add(score);
+    if (asked != null) {
+      session.turns.add(
+        InterviewTurn(question: asked, answer: answer, score: score),
+      );
+    }
     session.pending = null;
     events.add(GradeDone(score));
 
@@ -262,7 +273,7 @@ final class _ScriptedSession {
   final SessionConfig config;
   final List<ScriptedQuestion> bank;
   final events = StreamController<TurnEvent>.broadcast();
-  final scores = <TurnScore>[];
+  final turns = <InterviewTurn>[];
 
   bool started = false;
   int askedCount = 0;

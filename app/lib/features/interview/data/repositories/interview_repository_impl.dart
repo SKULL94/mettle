@@ -1,7 +1,6 @@
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/result/result.dart';
-import '../../domain/entities/interview_turn.dart';
 import '../../domain/entities/scorecard.dart';
 import '../../domain/entities/session_config.dart';
 import '../../domain/entities/turn_event.dart';
@@ -74,13 +73,20 @@ final class InterviewRepositoryImpl implements InterviewRepository {
   @override
   Future<Result<Scorecard>> getScorecard(String sessionId) async {
     try {
-      final scores = _remote.scoresFor(sessionId);
+      final turns = _remote.turnsFor(sessionId);
+      if (turns.isEmpty) return const Failed(CacheFailure());
+
+      final scores = turns
+          .map((turn) => turn.score)
+          .whereType<TurnScore>()
+          .toList();
       if (scores.isEmpty) return const Failed(CacheFailure());
 
       return Success(
         Scorecard(
           sessionId: sessionId,
-          turns: const <InterviewTurn>[],
+          topic: _remote.configFor(sessionId).topic,
+          turns: turns,
           overall: _mean(scores.map((s) => s.overall)),
           dimensions: TurnScore(
             correctness: _mean(scores.map((s) => s.correctness)),

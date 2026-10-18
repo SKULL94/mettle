@@ -9,6 +9,7 @@ import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/interview/data/datasources/interview_remote_data_source.dart';
 import '../../features/interview/data/repositories/interview_repository_impl.dart';
 import '../../features/interview/domain/repositories/interview_repository.dart';
+import '../../features/interview/domain/usecases/get_scorecard.dart';
 import '../../features/interview/domain/usecases/skip_question.dart';
 import '../../features/interview/domain/usecases/start_session.dart';
 import '../../features/interview/domain/usecases/submit_answer.dart';
@@ -40,6 +41,7 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton(() => WatchTurns(sl()));
   sl.registerLazySingleton(() => SubmitAnswer(sl()));
   sl.registerLazySingleton(() => SkipQuestion(sl()));
+  sl.registerLazySingleton(() => GetScorecard(sl()));
 
   sl.registerFactory(() => HomeBloc(sl()));
 }

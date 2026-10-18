@@ -73,4 +73,9 @@ abstract final class AppStrings {
   static const skipped = 'Skipped';
   static const sessionNotFound =
       'That session is no longer available. Start a new one.';
+  static const perQuestion = 'PER QUESTION';
+
+  static String followUpSummary(int count) => count == 1
+      ? 'The interviewer probed deeper once, where an answer was thin.'
+      : 'The interviewer probed deeper $count times, where answers were thin.';
 }
