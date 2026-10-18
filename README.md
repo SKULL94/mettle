@@ -234,15 +234,19 @@ To use real model calls, copy `.env.example` to `.env` and fill in your provider
 
 ## Repository layout
 
-Moving to a monorepo as part of M1 scaffolding:
-
 ```
-├── app/              Flutter application
-├── api/              FastAPI + LangGraph service
+├── app/              Flutter application          ✅ in place
+│   ├── lib/core/         constants · theme · result · error · router · di · storage · widgets
+│   ├── lib/features/     splash · home · interview · progress · settings
+│   └── test/             mirrors lib/
+├── api/              FastAPI + LangGraph service  ⬜ next Phase 1 slice
 ├── docs/             product plan · backend architecture
 ├── CONVENTIONS.md    Flutter conventions (binding, enforced in review)
-└── docker-compose.yml
+└── docker-compose.yml                             ⬜ lands with api/
 ```
+
+Platform targets are `android`, `ios`, and `web` only — the desktop platform
+folders are deliberately absent rather than carried along unused.
 
 ---
 
