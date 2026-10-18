@@ -20,12 +20,12 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await resetDependencies();
+
+    await configureDependencies();
   });
 
   tearDown(resetDependencies);
 
-  /// Pumps a router at [location] without going through splash, so route
-  /// assertions don't depend on bootstrap timing.
   Future<GoRouter> pumpAt(WidgetTester tester, String location) async {
     final router = createRouter();
     router.go(location);
@@ -41,8 +41,6 @@ void main() {
     testWidgets('starts on splash and lands on home', (tester) async {
       await tester.pumpWidget(const MettleApp());
 
-      // First frame is the wordmark — no spinner, because bootstrap is fast
-      // enough that one would only flash.
       expect(find.byType(SplashPage), findsOneWidget);
       expect(find.text(AppStrings.appName), findsWidgets);
 
@@ -57,8 +55,6 @@ void main() {
       await tester.pumpWidget(const MettleApp());
       await tester.pumpAndSettle();
 
-      // Splash uses go(), not push(). If that regresses, Android back from Home
-      // returns to a splash screen that re-bootstraps.
       final router = tester
           .state<NavigatorState>(find.byType(Navigator).first)
           .widget;
@@ -87,16 +83,13 @@ void main() {
       await pumpAt(tester, '/session/abc123');
 
       expect(find.byType(InterviewPage), findsOneWidget);
-      // The whole point of pushing it outside the shell: nothing competes for
-      // attention mid-answer.
+
       expect(find.byType(NavigationBar), findsNothing);
     });
 
     testWidgets('session id reaches the page from the path', (tester) async {
       await pumpAt(tester, '/session/abc123');
 
-      // Routes pass identifiers, never objects — that is what keeps deep links
-      // and browser refresh working.
       final page = tester.widget<InterviewPage>(find.byType(InterviewPage));
       expect(page.sessionId, 'abc123');
     });

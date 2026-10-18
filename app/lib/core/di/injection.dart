@@ -1,30 +1,30 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/home/data/datasources/home_local_data_source.dart';
+import '../../features/home/data/repositories/home_repository_impl.dart';
+import '../../features/home/domain/repositories/home_repository.dart';
+import '../../features/home/domain/usecases/get_home_overview.dart';
+import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../storage/app_preferences.dart';
 
-/// The single container. No other global mutable state exists in the app.
 final sl = GetIt.instance;
 
-/// Composition root, called once from the splash bootstrap.
-///
-/// Registration order is fixed and the section comments are load-bearing:
-/// external → data sources → repositories → use cases → blocs. Keeping it
-/// manual means it is explicit and greppable with no build step; when this file
-/// passes ~150 lines, split into per-feature `_initX()` functions called from
-/// here rather than reaching for codegen.
 Future<void> configureDependencies() async {
-  // ── External ─────────────────────────────────────────────
+  if (sl.isRegistered<SharedPreferences>()) return;
+
   sl.registerSingleton<SharedPreferences>(
     await SharedPreferences.getInstance(),
   );
   sl.registerLazySingleton<AppPreferences>(() => AppPreferences(sl()));
 
-  // ── Data sources ─────────────────────────────────────────
-  // ── Repositories ─────────────────────────────────────────
-  // ── Use cases ────────────────────────────────────────────
-  // ── Blocs ────────────────────────────────────────────────
+  sl.registerLazySingleton<HomeLocalDataSource>(HomeLocalDataSourceSeeded.new);
+
+  sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl(sl()));
+
+  sl.registerLazySingleton(() => GetHomeOverview(sl()));
+
+  sl.registerFactory(() => HomeBloc(sl()));
 }
 
-/// Test seam: drops every registration so each test starts clean.
 Future<void> resetDependencies() => sl.reset();
