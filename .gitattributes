@@ -1,0 +1,21 @@
+# Normalise line endings so a Windows checkout and Linux CI produce identical
+# blobs. Without this, every commit from Windows warns about CRLF conversion and
+# diffs can show whole-file changes that are only line endings.
+* text=auto eol=lf
+
+# Binary assets must never be touched.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.ttf   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
+*.jar   binary
+*.keystore binary
+
+# Generated / resolved files: keep them out of review noise without hiding them
+# from version control.
+pubspec.lock linguist-generated=true -diff
