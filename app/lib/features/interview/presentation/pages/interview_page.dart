@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_strings.dart';
 
-/// The core Phase 1 screen. Takes only the session id — the bloc fetches the
-/// rest, which keeps deep links and browser refresh working.
 class InterviewPage extends StatelessWidget {
   const InterviewPage({required this.sessionId, super.key});
 

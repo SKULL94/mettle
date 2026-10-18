@@ -18,8 +18,6 @@ void main() {
     });
 
     test('band boundaries are exclusive-upper, so no score is unmapped', () {
-      // Walking every value catches an off-by-one in a threshold, which is the
-      // realistic way this function breaks.
       for (var score = 0; score <= 100; score++) {
         expect(
           colors.forScore(score),
@@ -32,8 +30,6 @@ void main() {
 
   group('ScoreColors.labelFor', () {
     test('every band carries a text label', () {
-      // Score is never communicated by colour alone — this label is the
-      // accessibility pair for forScore, so the two must agree on boundaries.
       expect(ScoreColors.labelFor(10), 'Weak');
       expect(ScoreColors.labelFor(45), 'Developing');
       expect(ScoreColors.labelFor(70), 'Solid');

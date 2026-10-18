@@ -71,6 +71,10 @@ specifically to prevent that.
   import cycles.
 - ❌ Abstract on first use. Extract on the **second** real usage, not in anticipation of one.
 - ❌ Keep mutable global state. `get_it` is the only container.
+- ❌ Write comments — neither `///` doc comments nor `//` inline notes. Code carries its meaning in
+  naming and structure; rationale belongs in the commit message, where it is attached to the change
+  that needed explaining. A line that can't be understood without a comment is a line to rename or
+  restructure.
 
 **Do:**
 
@@ -147,7 +151,7 @@ final class NoParams {
 ```
 
 ```dart
-final class GetSession implements UseCase<Session, String> {
+class GetSession implements UseCase<Session, String> {
   const GetSession(this._repository);
   final SessionRepository _repository;
 

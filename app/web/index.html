@@ -27,15 +27,6 @@
       height: 100%;
       background: #0E0E11;
     }
-
-    /*
-      Pre-boot loading state. Flutter web's first paint is not instant, and a
-      bare white page reads as broken. This paints the app's own dark ground
-      plus the wordmark immediately, so the handoff to Flutter is invisible.
-
-      Deliberately uses a system font stack: loading Inter here would block
-      first paint to save a font swap nobody sees for 200ms.
-    */
     #boot {
       position: fixed;
       inset: 0;
@@ -94,8 +85,6 @@
   </div>
 
   <script>
-    // Flutter dispatches this once it has painted its first frame, which is the
-    // only reliable moment to drop the placeholder without a flash of nothing.
     window.addEventListener('flutter-first-frame', function () {
       var boot = document.getElementById('boot');
       if (!boot) return;

@@ -5,8 +5,6 @@ import '../constants/app_dimens.dart';
 import '../constants/app_strings.dart';
 import '../router/app_routes.dart';
 
-/// `errorBuilder` target. Reachable on the web by editing the URL, so it has to
-/// offer a way back rather than trapping the visitor.
 class NotFoundView extends StatelessWidget {
   const NotFoundView({super.key});
 

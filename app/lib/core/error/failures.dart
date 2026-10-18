@@ -1,8 +1,5 @@
 import '../constants/app_strings.dart';
 
-/// Domain-level error. Carries a message that is already safe to show a user —
-/// exceptions get translated into these at the repository boundary, so nothing
-/// above it has to think about transport details.
 sealed class Failure {
   const Failure(this.message);
   final String message;

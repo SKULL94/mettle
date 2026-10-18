@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_strings.dart';
 
-/// M2 surface. Present now only so the third shell branch is navigable.
 class ProgressPage extends StatelessWidget {
   const ProgressPage({super.key});
 

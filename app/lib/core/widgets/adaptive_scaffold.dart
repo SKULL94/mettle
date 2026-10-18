@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_dimens.dart';
 
-/// A navigation destination, transport-agnostic between the bar and the rail.
 @immutable
 final class AdaptiveDestination {
   const AdaptiveDestination({
@@ -16,12 +15,6 @@ final class AdaptiveDestination {
   final String label;
 }
 
-/// The single place responsiveness is decided.
-///
-/// Below [AppDimens.breakpointExpanded] the app uses a bottom navigation bar;
-/// at or above it, a [NavigationRail]. Screens never branch on width
-/// themselves — they are handed a body and stay layout-agnostic, which is what
-/// keeps "one codebase, phone and web" from turning into per-screen `if`s.
 class AdaptiveScaffold extends StatelessWidget {
   const AdaptiveScaffold({
     required this.destinations,

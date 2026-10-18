@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_strings.dart';
 
-/// M2 surface — theme, API base URL, demo-mode toggle, clear data.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 

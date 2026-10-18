@@ -2,15 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 
-/// Score semantics as a theme extension.
-///
-/// `ColorScheme` has no slot for "this score is weak", but the convention that
-/// widgets read colors from `Theme` still has to hold. A `ThemeExtension` is the
-/// supported way to add a semantic palette without widgets reaching for
-/// [AppColors] directly.
-///
-/// Read it with `Theme.of(context).extension<ScoreColors>()!` — or, more
-/// conveniently, `context.scoreColors`.
 @immutable
 final class ScoreColors extends ThemeExtension<ScoreColors> {
   const ScoreColors({
@@ -20,9 +11,6 @@ final class ScoreColors extends ThemeExtension<ScoreColors> {
     required this.strong,
   });
 
-  /// Identical in both brightnesses: these four are chosen at one lightness
-  /// level so the ramp reads as a single scale, and re-tinting them per theme
-  /// would break that.
   const ScoreColors.standard()
     : weak = AppColors.scoreWeak,
       developing = AppColors.scoreDeveloping,
@@ -34,11 +22,6 @@ final class ScoreColors extends ThemeExtension<ScoreColors> {
   final Color solid;
   final Color strong;
 
-  /// Maps a 0–100 score onto the ramp.
-  ///
-  /// Score is never communicated by color alone — callers pair this with the
-  /// numeric value or [labelFor], which is an accessibility requirement, not a
-  /// preference.
   Color forScore(int score) {
     if (score < 40) return weak;
     if (score < 60) return developing;
@@ -46,7 +29,6 @@ final class ScoreColors extends ThemeExtension<ScoreColors> {
     return strong;
   }
 
-  /// The text label that must accompany [forScore].
   static String labelFor(int score) {
     if (score < 40) return 'Weak';
     if (score < 60) return 'Developing';
@@ -81,7 +63,6 @@ final class ScoreColors extends ThemeExtension<ScoreColors> {
   }
 }
 
-/// Saves `Theme.of(context).extension<ScoreColors>()!` at every call site.
 extension ScoreColorsX on BuildContext {
   ScoreColors get scoreColors =>
       Theme.of(this).extension<ScoreColors>() ?? const ScoreColors.standard();

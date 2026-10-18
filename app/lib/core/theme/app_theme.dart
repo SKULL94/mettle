@@ -4,10 +4,6 @@ import '../constants/app_colors.dart';
 import '../constants/app_dimens.dart';
 import 'score_colors.dart';
 
-/// Material 3 themes, dark-first.
-///
-/// Both brightnesses are built here before any screen exists — retrofitting
-/// dark mode costs roughly 10x more than building both from the start.
 abstract final class AppTheme {
   static ThemeData dark() => _build(
     brightness: Brightness.dark,
@@ -16,8 +12,6 @@ abstract final class AppTheme {
           seedColor: AppColors.accentDark,
           brightness: Brightness.dark,
         ).copyWith(
-          // Seeded harmony for the derived roles; explicit overrides for the
-          // tokens the design actually specifies.
           primary: AppColors.accentDark,
           onPrimary: AppColors.onAccentDark,
           surface: AppColors.bgDark,
@@ -78,9 +72,6 @@ abstract final class AppTheme {
         titleTextStyle: text.titleMedium,
       ),
 
-      // Dark mode carries hierarchy with a hairline border and a lifted surface
-      // tone. Shadows are invisible on dark surfaces, so light mode gets them
-      // and dark mode does not.
       cardTheme: CardThemeData(
         color: scheme.surfaceContainer,
         elevation: isDark ? 0 : 1,
@@ -189,12 +180,6 @@ abstract final class AppTheme {
     );
   }
 
-  /// Type scale.
-  ///
-  /// `fontFamily` is intentionally unset so the platform face is used until
-  /// Inter is bundled as an asset — the scale is what carries the hierarchy, and
-  /// loading a web font would delay first paint on the web build. Code uses a
-  /// monospace fallback chain so technical content is correct today.
   static TextTheme _textTheme(ColorScheme scheme, Color mutedText) {
     return TextTheme(
       displaySmall: TextStyle(
@@ -235,7 +220,7 @@ abstract final class AppTheme {
         fontWeight: FontWeight.w400,
         color: scheme.onSurfaceVariant,
       ),
-      // The muted ALL-CAPS section label.
+
       labelSmall: TextStyle(
         fontSize: 12,
         height: 16 / 12,
@@ -246,8 +231,6 @@ abstract final class AppTheme {
     );
   }
 
-  /// Monospace style for code inside questions and answers. Non-negotiable in a
-  /// technical interview app.
   static TextStyle code(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return TextStyle(

@@ -29,8 +29,6 @@ void main() {
       build: SplashCubit.new,
       act: (cubit) => cubit.bootstrap(),
       verify: (_) {
-        // Bootstrap's actual job. If this regresses, every screen that resolves
-        // from sl() fails at runtime instead of here.
         expect(sl.isRegistered<SharedPreferences>(), isTrue);
         expect(sl.isRegistered<AppPreferences>(), isTrue);
       },
@@ -45,8 +43,7 @@ void main() {
       final second = await prefs.deviceId();
 
       expect(first, isNotEmpty);
-      // Stability matters: a regenerated id orphans the backend's conversation
-      // thread and silently loses the user's history.
+
       expect(second, first);
       expect(
         first,
@@ -67,8 +64,6 @@ void main() {
       await cubit.bootstrap();
       expect(cubit.state, isA<SplashReady>());
 
-      // Retry resets the container; without that, re-registering the same
-      // singleton would throw and leave the app stuck on the error screen.
       await cubit.retry();
       expect(cubit.state, isA<SplashReady>());
 

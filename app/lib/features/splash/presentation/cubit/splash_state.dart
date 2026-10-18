@@ -1,4 +1,3 @@
-/// Sealed so an unhandled state is a compile error, not a forgotten branch.
 sealed class SplashState {
   const SplashState();
 }
