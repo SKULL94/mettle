@@ -47,4 +47,30 @@ abstract final class AppStrings {
   static const notFoundTitle = 'Page not found';
   static const notFoundBody = "That route doesn't exist.";
   static const bootstrapFailed = "Couldn't start up.";
+
+  static const setupTitle = 'New session';
+  static const setupTopic = 'TOPIC';
+  static const setupLength = 'QUESTIONS';
+  static const setupStart = 'Begin';
+
+  static const topicStateManagement = 'State management';
+  static const topicWidgetLifecycle = 'Widget lifecycle';
+  static const topicKeys = 'Keys';
+  static const topicAsyncIsolates = 'Async & isolates';
+  static const topicPerformance = 'Performance';
+  static const topicNavigation = 'Navigation';
+  static const topicTesting = 'Testing';
+
+  static const reasonDepth = 'depth';
+  static const reasonCorrectness = 'correctness';
+  static const reasonClarity = 'clarity';
+  static const reasonStructure = 'structure';
+
+  static const grading = 'Scoring your answer…';
+  static const sessionComplete = 'Session complete';
+  static const viewScorecard = 'View scorecard';
+  static const yourAnswer = 'Your answer';
+  static const skipped = 'Skipped';
+  static const sessionNotFound =
+      'That session is no longer available. Start a new one.';
 }
