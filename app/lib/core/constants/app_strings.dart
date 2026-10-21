@@ -70,13 +70,39 @@ abstract final class AppStrings {
   static String questionProgress(int current, int total) =>
       'Q $current of $total';
 
-  static const scorecard = 'Scorecard';
+  static const scorecard = 'Assessment Scorecard';
   static const correctness = 'Correctness';
   static const depth = 'Depth';
   static const clarity = 'Clarity';
   static const structure = 'Structure';
-  static const whatWasMissing = 'What was missing';
-  static const practiceWeakTopics = 'Practice weak topics';
+  static const whatWasMissing = 'WHAT WAS MISSING';
+
+  static String questionNumber(int position) => 'Q$position';
+
+  static const correctnessRubric =
+      'Framework behaviour described accurately, with no wrong assumptions.';
+  static const depthRubric =
+      'Goes past the API surface into mechanism and trade-offs.';
+  static const clarityRubric =
+      'Precise terminology, and an answer that is easy to follow.';
+  static const structureRubric =
+      'A deliberate order: claim first, then reasoning, then example.';
+
+  static const rubricDimensions = 'Rubric dimensions';
+  static const collapseAll = 'Collapse all';
+  static const expandAll = 'Expand all';
+  static const evaluatorNoteBalanced =
+      'Your four dimensions came out even — no single weak spot to target yet.';
+
+  static String questionAudit(int count) => 'Question audit ($count)';
+
+  static String evaluatorNote(String strongest, String weakest) =>
+      'Strongest on $strongest, weakest on $weakest. '
+      'Put your next session there.';
+
+  static String practiceTopic(String topic) => 'Practice $topic';
+
+  static String scoreOutOf(int value, int max) => '$value / $max';
 
   static const retry = 'Retry';
   static const dismiss = 'Dismiss';
@@ -121,7 +147,7 @@ abstract final class AppStrings {
   static const grading = 'Scoring your answer…';
   static const sessionComplete = 'Session complete';
   static const viewScorecard = 'View scorecard';
-  static const yourAnswer = 'Your answer';
+  static const yourAnswer = 'YOUR ANSWER';
   static const skipped = 'Skipped';
   static const sessionNotFound =
       'That session is no longer available. Start a new one.';

@@ -4,72 +4,121 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/score_colors.dart';
 import '../../../../core/widgets/skeleton_box.dart';
+import '../../../../core/widgets/status_dot.dart';
 import '../../domain/entities/turn_score.dart';
 
+typedef RubricDimension = ({String label, String description, int value});
+
+const maxBand = 5;
+
+List<RubricDimension> rubricDimensions(TurnScore score) => [
+  (
+    label: AppStrings.correctness,
+    description: AppStrings.correctnessRubric,
+    value: score.correctness,
+  ),
+  (
+    label: AppStrings.depth,
+    description: AppStrings.depthRubric,
+    value: score.depth,
+  ),
+  (
+    label: AppStrings.clarity,
+    description: AppStrings.clarityRubric,
+    value: score.clarity,
+  ),
+  (
+    label: AppStrings.structure,
+    description: AppStrings.structureRubric,
+    value: score.structure,
+  ),
+];
+
+int bandPercent(int value) => (value / maxBand * 100).round();
+
 class RubricBars extends StatelessWidget {
-  const RubricBars({required this.score, super.key});
+  const RubricBars({
+    required this.score,
+    this.showDescriptions = false,
+    super.key,
+  });
 
   final TurnScore score;
+  final bool showDescriptions;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _RubricRow(label: AppStrings.correctness, value: score.correctness),
-        _RubricRow(label: AppStrings.depth, value: score.depth),
-        _RubricRow(label: AppStrings.clarity, value: score.clarity),
-        _RubricRow(label: AppStrings.structure, value: score.structure),
+        for (final dimension in rubricDimensions(score))
+          _RubricRow(dimension: dimension, showDescription: showDescriptions),
       ],
     );
   }
 }
 
 class _RubricRow extends StatelessWidget {
-  const _RubricRow({required this.label, required this.value});
+  const _RubricRow({required this.dimension, required this.showDescription});
 
-  final String label;
-  final int value;
-
-  static const _maxBand = 5;
+  final RubricDimension dimension;
+  final bool showDescription;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final asPercent = (value / _maxBand * 100).round();
-    final colour = context.scoreColors.forScore(asPercent);
+    final percent = bandPercent(dimension.value);
+    final colour = context.scoreColors.forScore(percent);
 
     return Semantics(
-      label: '$label $value out of $_maxBand',
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: AppDimens.md),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 92,
-              child: Text(label, style: theme.textTheme.bodySmall),
-            ),
-            Expanded(
-              child: ClipRRect(
+      label: AppStrings.scoreSemantics(percent, ScoreColors.labelFor(percent)),
+      child: ExcludeSemantics(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: AppDimens.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      dimension.label,
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                  ),
+                  const SizedBox(width: AppDimens.sm),
+                  StatusDot(color: colour),
+                  const SizedBox(width: AppDimens.xs),
+                  Text(
+                    AppStrings.scoreOutOf(dimension.value, maxBand),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colour,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(width: AppDimens.xs),
+                  Text(
+                    ScoreColors.labelFor(percent).toUpperCase(),
+                    style: theme.textTheme.labelSmall,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimens.sm),
+              ClipRRect(
                 borderRadius: BorderRadius.circular(AppDimens.radiusPill),
                 child: LinearProgressIndicator(
-                  value: value / _maxBand,
+                  value: dimension.value / maxBand,
                   minHeight: 6,
                   backgroundColor: theme.colorScheme.outline,
                   valueColor: AlwaysStoppedAnimation<Color>(colour),
                 ),
               ),
-            ),
-            SizedBox(
-              width: 32,
-              child: Text(
-                '$value',
-                textAlign: TextAlign.end,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-          ],
+              if (showDescription) ...[
+                const SizedBox(height: AppDimens.sm),
+                Text(dimension.description, style: theme.textTheme.bodySmall),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -99,11 +148,12 @@ class _RubricRowSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.only(bottom: AppDimens.md),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 92, child: SkeletonBox.text(width: 70)),
-          Expanded(child: SkeletonBox(height: 6, radius: AppDimens.radiusPill)),
-          SizedBox(width: 32),
+          SkeletonBox.text(width: 110),
+          SizedBox(height: AppDimens.sm),
+          SkeletonBox(height: 6, radius: AppDimens.radiusPill),
         ],
       ),
     );

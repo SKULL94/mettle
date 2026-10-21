@@ -27,6 +27,7 @@ abstract final class AppDimens {
   static const iconMd = 20.0;
   static const scoreRingSize = 96.0;
   static const scoreRingLarge = 112.0;
+  static const scoreRingHero = 128.0;
   static const scoreRingStroke = 8.0;
   static const sparklineHeight = 44.0;
 }

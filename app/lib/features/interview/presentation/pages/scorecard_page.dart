@@ -5,16 +5,19 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/result/result.dart';
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/theme/score_colors.dart';
-import '../../../../core/widgets/score_ring.dart';
 import '../../../../core/widgets/skeleton_box.dart';
+import '../../domain/entities/interview_topic.dart';
 import '../../domain/entities/scorecard.dart';
+import '../../domain/usecases/start_session.dart';
 import '../bloc/scorecard_cubit.dart';
 import '../bloc/scorecard_state.dart';
+import '../widgets/overall_score_card.dart';
+import '../widgets/question_audit.dart';
 import '../widgets/rubric_bars.dart';
+import '../widgets/session_setup_sheet.dart';
 import '../widgets/topic_label.dart';
-import '../widgets/turn_breakdown.dart';
 
 class ScorecardPage extends StatelessWidget {
   const ScorecardPage({required this.sessionId, super.key});
@@ -36,17 +39,18 @@ class ScorecardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.scorecard),
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => context.go(AppRoutes.home),
+    return BlocBuilder<ScorecardCubit, ScorecardState>(
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(
+          title: const Text(AppStrings.scorecard),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: AppStrings.navHome,
+            onPressed: () => context.go(AppRoutes.home),
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: BlocBuilder<ScorecardCubit, ScorecardState>(
-          builder: (context, state) => switch (state) {
+        body: SafeArea(
+          child: switch (state) {
             ScorecardLoading() => const _ScorecardSkeleton(),
             ScorecardLoaded(:final scorecard) => _ScorecardBody(
               scorecard: scorecard,
@@ -54,6 +58,12 @@ class ScorecardView extends StatelessWidget {
             ScorecardError(:final message) => _ScorecardError(message: message),
           },
         ),
+        bottomNavigationBar: switch (state) {
+          ScorecardLoaded(:final scorecard) => _PracticeBar(
+            topic: scorecard.topic,
+          ),
+          _ => null,
+        },
       ),
     );
   }
@@ -71,42 +81,35 @@ class _ScorecardBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(AppDimens.md),
       children: [
+        _SessionMeta(scorecard: scorecard),
+        const SizedBox(height: AppDimens.md),
+        OverallScoreCard(
+          overall: scorecard.overall,
+          dimensions: scorecard.dimensions,
+        ),
+        const SizedBox(height: AppDimens.md),
         Card(
           child: Padding(
-            padding: const EdgeInsets.all(AppDimens.lg),
+            padding: const EdgeInsets.all(AppDimens.md),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ScoreRing(score: scorecard.overall, size: 120),
-                const SizedBox(height: AppDimens.sm),
                 Text(
-                  ScoreColors.labelFor(scorecard.overall),
-                  style: theme.textTheme.titleMedium,
+                  AppStrings.rubricDimensions,
+                  style: theme.textTheme.titleLarge,
                 ),
-                const SizedBox(height: AppDimens.xs),
-                Text(
-                  topicLabel(scorecard.topic),
-                  style: theme.textTheme.labelSmall,
-                ),
-                const SizedBox(height: AppDimens.lg),
-                RubricBars(score: scorecard.dimensions),
+                const SizedBox(height: AppDimens.md),
+                RubricBars(score: scorecard.dimensions, showDescriptions: true),
               ],
             ),
           ),
         ),
-        if (scorecard.followUpCount > 0) ...[
-          const SizedBox(height: AppDimens.md),
-          _FollowUpNote(count: scorecard.followUpCount),
-        ],
         const SizedBox(height: AppDimens.xl),
-        Text(AppStrings.perQuestion, style: theme.textTheme.labelSmall),
-        const SizedBox(height: AppDimens.sm),
-        for (var i = 0; i < scorecard.turns.length; i++)
-          TurnBreakdown(turn: scorecard.turns[i], position: i + 1),
-        const SizedBox(height: AppDimens.lg),
-        FilledButton(
-          onPressed: () => context.go(AppRoutes.home),
-          child: const Text(AppStrings.practiceWeakTopics),
-        ),
+        if (scorecard.followUpCount > 0) ...[
+          _FollowUpNote(count: scorecard.followUpCount),
+          const SizedBox(height: AppDimens.md),
+        ],
+        QuestionAudit(turns: scorecard.turns),
       ],
     );
   }
@@ -121,30 +124,105 @@ class _FollowUpNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(AppDimens.md),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(AppDimens.radius),
-        border: Border.all(color: theme.colorScheme.outline),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.subdirectory_arrow_right_rounded,
-            size: AppDimens.md,
-            color: theme.colorScheme.primary,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          Icons.subdirectory_arrow_right_rounded,
+          size: AppDimens.iconSm,
+          color: theme.colorScheme.primary,
+        ),
+        const SizedBox(width: AppDimens.sm),
+        Expanded(
+          child: Text(
+            AppStrings.followUpSummary(count),
+            style: theme.textTheme.bodySmall,
           ),
-          const SizedBox(width: AppDimens.sm),
-          Expanded(
-            child: Text(
-              AppStrings.followUpSummary(count),
-              style: theme.textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+}
+
+class _SessionMeta extends StatelessWidget {
+  const _SessionMeta({required this.scorecard});
+
+  final Scorecard scorecard;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Wrap(
+      spacing: AppDimens.sm,
+      runSpacing: AppDimens.sm,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimens.sm,
+            vertical: AppDimens.xs,
+          ),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(AppDimens.radiusPill),
+            border: Border.all(
+              color: theme.colorScheme.outline,
+              width: AppDimens.hairline,
             ),
           ),
-        ],
+          child: Text(
+            topicLabel(scorecard.topic).toUpperCase(),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ),
+        Text(
+          AppStrings.questionCount(scorecard.questionCount),
+          style: theme.textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+}
+
+class _PracticeBar extends StatelessWidget {
+  const _PracticeBar({required this.topic});
+
+  final InterviewTopic topic;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimens.md),
+        child: FilledButton(
+          onPressed: () => practiceAgain(context, topic),
+          child: Text(AppStrings.practiceTopic(topicLabel(topic))),
+        ),
       ),
     );
+  }
+}
+
+Future<void> practiceAgain(BuildContext context, InterviewTopic topic) async {
+  final router = GoRouter.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+
+  final config = await showSessionSetupSheet(context, topic: topic);
+  if (config == null) return;
+
+  final result = await sl<StartSession>()(config);
+
+  switch (result) {
+    case Success(:final data):
+      await router.pushReplacementNamed(
+        AppRoutes.sessionName,
+        pathParameters: {AppRoutes.idParam: data},
+      );
+    case Failed(:final failure):
+      messenger.showSnackBar(SnackBar(content: Text(failure.message)));
   }
 }
 
@@ -156,26 +234,34 @@ class _ScorecardSkeleton extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(AppDimens.md),
       children: const [
+        SkeletonBox.text(width: 160),
+        SizedBox(height: AppDimens.md),
         Card(
           child: Padding(
             padding: EdgeInsets.all(AppDimens.lg),
             child: Column(
               children: [
-                SkeletonBox.circle(size: 120),
-                SizedBox(height: AppDimens.md),
-                SkeletonBox.text(width: 72),
+                SkeletonBox.circle(size: AppDimens.scoreRingHero),
                 SizedBox(height: AppDimens.lg),
+                SkeletonBox.text(width: 220),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: AppDimens.md),
+        Card(
+          child: Padding(
+            padding: EdgeInsets.all(AppDimens.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox.text(width: 140),
+                SizedBox(height: AppDimens.md),
                 RubricBarsSkeleton(),
               ],
             ),
           ),
         ),
-        SizedBox(height: AppDimens.xl),
-        SkeletonBox.text(width: 110),
-        SizedBox(height: AppDimens.md),
-        SkeletonBox(height: 56, radius: AppDimens.radiusCard),
-        SizedBox(height: AppDimens.sm),
-        SkeletonBox(height: 56, radius: AppDimens.radiusCard),
       ],
     );
   }

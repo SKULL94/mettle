@@ -82,18 +82,20 @@ final class InterviewRepositoryImpl implements InterviewRepository {
           .toList();
       if (scores.isEmpty) return const Failed(CacheFailure());
 
+      final dimensions = TurnScore(
+        correctness: _mean(scores.map((s) => s.correctness)),
+        depth: _mean(scores.map((s) => s.depth)),
+        clarity: _mean(scores.map((s) => s.clarity)),
+        structure: _mean(scores.map((s) => s.structure)),
+      );
+
       return Success(
         Scorecard(
           sessionId: sessionId,
           topic: _remote.configFor(sessionId).topic,
           turns: turns,
-          overall: _mean(scores.map((s) => s.overall)),
-          dimensions: TurnScore(
-            correctness: _mean(scores.map((s) => s.correctness)),
-            depth: _mean(scores.map((s) => s.depth)),
-            clarity: _mean(scores.map((s) => s.clarity)),
-            structure: _mean(scores.map((s) => s.structure)),
-          ),
+          overall: dimensions.overall,
+          dimensions: dimensions,
         ),
       );
     } on Object {
