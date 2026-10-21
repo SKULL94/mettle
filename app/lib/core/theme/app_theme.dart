@@ -22,6 +22,7 @@ abstract final class AppTheme {
           outline: AppColors.outlineDark,
           outlineVariant: AppColors.outlineDark,
           error: AppColors.danger,
+          surfaceTint: Colors.transparent,
         ),
     mutedText: AppColors.textMutedDark,
     navSurface: AppColors.navSurfaceDark,
@@ -44,6 +45,7 @@ abstract final class AppTheme {
           outline: AppColors.outlineLight,
           outlineVariant: AppColors.outlineLight,
           error: AppColors.danger,
+          surfaceTint: Colors.transparent,
         ),
     mutedText: AppColors.textMutedLight,
     navSurface: AppColors.surfaceLight,
@@ -69,8 +71,9 @@ abstract final class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: isDark ? 0 : 1,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: text.titleMedium,
       ),
@@ -160,7 +163,6 @@ abstract final class AppTheme {
 
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: navSurface,
-        surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         indicatorColor: scheme.primary.withValues(alpha: 0.22),
         indicatorShape: const StadiumBorder(),

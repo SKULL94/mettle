@@ -37,24 +37,24 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> scrollToSessions(WidgetTester tester) async {
+    await tester.scrollUntilVisible(
+      find.text(AppStrings.recentSessions),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+  }
+
   tearDown(resetDependencies);
 
   testWidgets('recovers from the legacy summary-only format', (tester) async {
     await openWith(tester, legacyPayload);
 
-    debugPrint('legacy screen: ' +
-        find
-            .byType(Text)
-            .evaluate()
-            .map((e) => (e.widget as Text).data)
-            .whereType<String>()
-            .take(20)
-            .join(' | '));
-    final prefs = await SharedPreferences.getInstance();
-    debugPrint('stored now: ' +
-        (prefs.getString('sessions') ?? 'NULL').substring(0, 80));
     expect(find.text(AppStrings.cacheError), findsNothing);
     expect(find.text(AppStrings.dashboardTitle), findsOneWidget);
+
+    await scrollToSessions(tester);
     expect(find.byType(SessionRow), findsWidgets);
     expect(tester.takeException(), isNull);
 
@@ -68,6 +68,7 @@ void main() {
     await openWith(tester, 'not json at all');
 
     expect(find.text(AppStrings.cacheError), findsNothing);
+    await scrollToSessions(tester);
     expect(find.byType(SessionRow), findsWidgets);
     expect(tester.takeException(), isNull);
   });
@@ -79,6 +80,7 @@ void main() {
     );
 
     expect(find.text(AppStrings.cacheError), findsNothing);
+    await scrollToSessions(tester);
     expect(find.byType(SessionRow), findsWidgets);
   });
 
@@ -97,6 +99,7 @@ void main() {
     await openWith(tester, null);
 
     expect(find.text(AppStrings.cacheError), findsNothing);
+    await scrollToSessions(tester);
     expect(find.byType(SessionRow), findsWidgets);
 
     final prefs = await SharedPreferences.getInstance();
