@@ -2,6 +2,9 @@ abstract final class ApiConstants {
   static const defaultBaseUrl = 'http://10.0.2.2:8000';
   static const webBaseUrl = 'http://localhost:8000';
 
+  static const configuredBaseUrl = String.fromEnvironment('METTLE_BASE_URL');
+  static const isBackendConfigured = configuredBaseUrl != '';
+
   static const apiVersion = 'v1';
 
   static const sessions = '/$apiVersion/sessions';

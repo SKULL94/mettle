@@ -1,20 +1,57 @@
 abstract final class AppStrings {
   static const appName = 'Mettle';
   static const appTagline = 'Test your mettle';
+  static const brandMark = 'M';
 
   static const navHome = 'Home';
   static const navProgress = 'Progress';
   static const navSettings = 'Settings';
 
+  static const dashboardTitle = 'Practice Dashboard';
   static const startSession = 'Start session';
-  static const avgScore = 'avg score';
-  static const trend = 'trend';
-  static const weakTopics = 'WEAK TOPICS';
-  static const recentSessions = 'RECENT SESSIONS';
+  static const yourProgress = 'YOUR PROGRESS';
+  static const averageScore = 'Average score';
+  static const latest = 'Latest';
+  static const weakTopics = 'Weak topics';
+  static const recentSessions = 'Recent sessions';
   static const homeEmptyTitle = 'No sessions yet';
   static const homeEmptyBody =
       'Run your first interview and Mettle will score each answer against a '
       'rubric, then track how you improve.';
+
+  static const emptyValue = '—';
+  static const noScoreYet = 'No score yet';
+
+  static String scoreSemantics(int score, String band) =>
+      'Score $score out of 100, $band';
+
+  static const metaSeparator = ' · ';
+  static const today = 'Today';
+  static const yesterday = 'Yesterday';
+  static const monthsShort = <String>[
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  static String sessionCount(int count) =>
+      count == 1 ? '1 session' : '$count sessions';
+
+  static String questionCount(int count) =>
+      count == 1 ? '1 question' : '$count questions';
+
+  static String sessionTrend(int count) => '$count-SESSION TREND';
+
+  static String needsAttention(int count) => 'Needs attention ($count)';
 
   static const followUp = 'FOLLOW-UP';
   static const answerHint = 'Type your answer…';

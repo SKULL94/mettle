@@ -17,7 +17,14 @@ abstract final class AppDimens {
   static const breakpointExpanded = 840.0;
 
   static const minTouchTarget = 48.0;
+  static const ctaHeight = 56.0;
+  static const rowHeight = 64.0;
+  static const brandMark = 32.0;
+  static const dot = 6.0;
+  static const iconSm = 16.0;
+  static const iconMd = 20.0;
   static const scoreRingSize = 96.0;
+  static const scoreRingLarge = 112.0;
   static const scoreRingStroke = 8.0;
-  static const sparklineHeight = 32.0;
+  static const sparklineHeight = 44.0;
 }

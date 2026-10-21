@@ -196,6 +196,13 @@ abstract final class AppTheme {
         letterSpacing: -0.25,
         color: scheme.onSurface,
       ),
+      titleLarge: TextStyle(
+        fontSize: 20,
+        height: 28 / 20,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.2,
+        color: scheme.onSurface,
+      ),
       titleMedium: TextStyle(
         fontSize: 16,
         height: 24 / 16,

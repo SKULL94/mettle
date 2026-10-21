@@ -7,12 +7,14 @@ class Sparkline extends StatelessWidget {
   const Sparkline({
     required this.values,
     this.height = AppDimens.sparklineHeight,
+    this.dotColor,
     this.semanticLabel,
     super.key,
   });
 
   final List<int> values;
   final double height;
+  final Color? dotColor;
   final String? semanticLabel;
 
   @override
@@ -29,7 +31,8 @@ class Sparkline extends StatelessWidget {
           painter: _SparklinePainter(
             values: values,
             line: scheme.primary,
-            dot: scheme.primary,
+            fill: scheme.primary.withValues(alpha: 0.12),
+            dot: dotColor ?? scheme.primary,
           ),
           size: Size.infinite,
         ),
@@ -53,17 +56,19 @@ class _SparklinePainter extends CustomPainter {
   const _SparklinePainter({
     required this.values,
     required this.line,
+    required this.fill,
     required this.dot,
   });
 
   final List<int> values;
   final Color line;
+  final Color fill;
   final Color dot;
 
   @override
   void paint(Canvas canvas, Size size) {
     const strokeWidth = 2.0;
-    const dotRadius = 2.5;
+    const dotRadius = 3.0;
 
     const inset = dotRadius + strokeWidth / 2;
     final usableWidth = size.width - inset * 2;
@@ -88,6 +93,13 @@ class _SparklinePainter extends CustomPainter {
       path.lineTo(p.dx, p.dy);
     }
 
+    final area = Path.from(path)
+      ..lineTo(pointAt(values.length - 1).dx, size.height)
+      ..lineTo(pointAt(0).dx, size.height)
+      ..close();
+
+    canvas.drawPath(area, Paint()..color = fill);
+
     canvas.drawPath(
       path,
       Paint()
@@ -107,5 +119,8 @@ class _SparklinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SparklinePainter old) =>
-      old.line != line || old.dot != dot || !listEquals(old.values, values);
+      old.line != line ||
+      old.fill != fill ||
+      old.dot != dot ||
+      !listEquals(old.values, values);
 }
