@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../domain/entities/session_summary.dart';
-import 'section_header.dart';
-import 'session_row.dart';
+import '../../../../core/widgets/section_header.dart';
+import '../../../sessions/domain/entities/session_summary.dart';
+import '../../../sessions/presentation/widgets/session_list.dart';
 
 class RecentSessions extends StatelessWidget {
   const RecentSessions({
@@ -25,17 +25,7 @@ class RecentSessions extends StatelessWidget {
       children: [
         const SectionHeader(title: AppStrings.recentSessions),
         const SizedBox(height: AppDimens.md),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              for (final (index, session) in sessions.indexed) ...[
-                if (index > 0) const Divider(height: AppDimens.hairline),
-                SessionRow(session: session, onTap: () => onSelected(session)),
-              ],
-            ],
-          ),
-        ),
+        SessionList(sessions: sessions, onSelected: onSelected),
       ],
     );
   }
@@ -46,17 +36,6 @@ class RecentSessionsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          SessionRowSkeleton(),
-          Divider(height: AppDimens.hairline),
-          SessionRowSkeleton(),
-          Divider(height: AppDimens.hairline),
-          SessionRowSkeleton(),
-        ],
-      ),
-    );
+    return const SessionListSkeleton();
   }
 }

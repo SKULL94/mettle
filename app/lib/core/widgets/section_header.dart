@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_dimens.dart';
+import '../constants/app_dimens.dart';
 
 class SectionHeader extends StatelessWidget {
   const SectionHeader({required this.title, this.trailing, super.key});

@@ -21,8 +21,8 @@ you'll find if you clone it.
 
 | Milestone | Scope | Status |
 |---|---|---|
-| **M1** | Splash · Home · Interview · Scorecard. Text only, no auth, keyless demo mode, end to end | 🚧 In progress |
-| **M2** | Voice answers + waveform, Progress charts, History, Settings, offline via Drift | ⬜ Planned |
+| **M1** | Splash · Home · Interview · Scorecard · Progress (basic) · Settings (basic). Text only, no auth, keyless demo mode, end to end | 🚧 In progress |
+| **M2** | Voice answers + waveform, question coverage, progress filters and date ranges, offline via Drift | ⬜ Planned |
 | **M3** | Rubric evaluation, role/JD setup, checkpointer resume, human-in-the-loop, deployed web build | ⬜ Planned |
 
 Design docs are checked in and current: [product & UI plan](docs/product-plan.md) ·
@@ -40,7 +40,7 @@ works" — the two halves meeting.
 
 | | Ships in Phase 1 |
 |---|---|
-| **`app/`** | Splash → Home → setup sheet → Interview → Scorecard. Text only. Design tokens and both themes before any screen. All four states on every screen. Responsive for phone and web. |
+| **`app/`** | Splash → Home → setup sheet → Interview → Scorecard, plus basic Progress and Settings tabs. Text only. Design tokens and both themes before any screen. All four states on every screen. Responsive for phone and web. |
 | **`api/`** | Five endpoints, the versioned SSE event protocol, the five-node graph with the conditional follow-up edge, SQLite checkpointer, `ScriptedProvider` as the default. |
 | **The seam** | The SSE event protocol is the contract. The app builds against fakes, the API against its scripted provider — both test it independently, so neither side blocks the other. |
 | **CI** | Two workflows green with no secrets configured, including the dependency-rule guard and the iOS compile check. |
@@ -50,9 +50,15 @@ every change touches both sides. Here that's one commit and one PR that either p
 or doesn't. Split across two repos, every contract tweak becomes a coordinated two-repo dance with a
 window where `main` is broken on one side. This matters much less by M3 — it matters a lot today.
 
-**Explicitly out of scope for Phase 1:** voice input · progress charts · history · settings ·
-role/JD onboarding · auth · Postgres · iOS device testing · real model calls as the default path
-(the hosted provider works, but scripted is the default so the repo stays keyless).
+**Explicitly out of scope for Phase 1:** voice input · question coverage · progress filters and date
+ranges · a configurable API URL · accounts · notifications · role/JD onboarding · auth · Postgres ·
+iOS device testing · real model calls as the default path (the hosted provider works, but scripted is
+the default so the repo stays keyless).
+
+Progress and Settings **are** in Phase 1, in their basic form — the list above is what gets cut from
+them, not the screens themselves. Both are cheap on top of what already exists: Progress reads the
+same local sessions Home does and reuses the sparkline painter, and Settings needs nothing beyond
+the `shared_preferences` instance the app already registers.
 
 Naming that list is what keeps Phase 1 finishable. Ships as tag **`v0.1.0`** with a changelog entry.
 
@@ -111,7 +117,9 @@ placed as a gate in front of it, so the app keeps working offline and the demo s
 | **Home** | Average-score ring, score sparkline, recent sessions, weak-topic chips, start CTA |
 | **Interview** | The core loop: streaming questions, `Q 3 of 5` progress, answer input, and a **`↳ FOLLOW-UP`** badge when the agent decides to probe deeper instead of advancing |
 | **Scorecard** | Per-dimension rubric scores (correctness · depth · clarity · structure), overall ring, what was missing, next steps |
-| Progress · History · Settings | M2 — trends, past sessions, configurable API endpoint |
+| **Progress** | Score trend across your last 10 sessions, topic mastery rows with average and band, and a session history that opens any past scorecard |
+| **Settings** | Appearance (system · light · dark), a read-only demo-mode row, clear stored data behind a confirmation, and app version |
+| History filters · coverage · API endpoint | M2 — the parts of Progress and Settings deliberately cut from Phase 1 |
 
 Every screen implements all four states — loading, empty, error, loaded — not just the happy path.
 Skeletons, never centered spinners.
@@ -228,7 +236,8 @@ cd app && flutter run -d chrome # Web
 ```
 
 To use real model calls, copy `.env.example` to `.env` and fill in your provider API key. The app's
-**Settings** screen (M2) also lets you point it at your own backend URL.
+**Settings** screen shows which mode it is running in; pointing it at your own backend URL lands with
+`api/`, since until then there is nothing to point it at.
 
 ---
 
@@ -270,8 +279,9 @@ dependency-rule guard and the iOS compile check.
 
 ## Roadmap
 
-- **M1** — complete text-only loop, keyless demo mode
-- **M2** — voice answers with a custom-painted waveform, progress charts, offline-first storage
+- **M1** — complete text-only loop, keyless demo mode, basic Progress and Settings
+- **M2** — voice answers with a custom-painted waveform, question coverage, progress filters and date
+  ranges, offline-first storage
 - **M3** — full rubric evaluation, role + job-description targeting, session resume, deployed web demo
 - **v2** — accounts and cross-device sync (layered over local storage, not a gate in front of it)
 

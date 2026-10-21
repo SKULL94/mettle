@@ -5,12 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/result/result.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/skeleton_box.dart';
 import '../../domain/entities/interview_topic.dart';
 import '../../domain/entities/scorecard.dart';
-import '../../domain/usecases/start_session.dart';
 import '../bloc/scorecard_cubit.dart';
 import '../bloc/scorecard_state.dart';
 import '../widgets/overall_score_card.dart';
@@ -208,22 +206,14 @@ class _PracticeBar extends StatelessWidget {
 
 Future<void> practiceAgain(BuildContext context, InterviewTopic topic) async {
   final router = GoRouter.of(context);
-  final messenger = ScaffoldMessenger.of(context);
 
-  final config = await showSessionSetupSheet(context, topic: topic);
-  if (config == null) return;
+  final sessionId = await launchSession(context, topic: topic);
+  if (sessionId == null) return;
 
-  final result = await sl<StartSession>()(config);
-
-  switch (result) {
-    case Success(:final data):
-      await router.pushReplacementNamed(
-        AppRoutes.sessionName,
-        pathParameters: {AppRoutes.idParam: data},
-      );
-    case Failed(:final failure):
-      messenger.showSnackBar(SnackBar(content: Text(failure.message)));
-  }
+  await router.pushReplacementNamed(
+    AppRoutes.sessionName,
+    pathParameters: {AppRoutes.idParam: sessionId},
+  );
 }
 
 class _ScorecardSkeleton extends StatelessWidget {

@@ -1,12 +1,12 @@
 import '../../../../core/error/exceptions.dart';
 import '../models/session_summary_model.dart';
 
-abstract interface class HomeLocalDataSource {
+abstract interface class SessionLocalDataSource {
   Future<List<SessionSummaryModel>> recentSessions({int limit = 10});
 }
 
-final class HomeLocalDataSourceSeeded implements HomeLocalDataSource {
-  const HomeLocalDataSourceSeeded({this.seed = _defaultSeed});
+final class SessionLocalDataSourceSeeded implements SessionLocalDataSource {
+  const SessionLocalDataSourceSeeded({this.seed = _defaultSeed});
 
   final List<Map<String, dynamic>> seed;
 

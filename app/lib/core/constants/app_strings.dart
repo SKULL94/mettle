@@ -51,6 +51,17 @@ abstract final class AppStrings {
 
   static String sessionTrend(int count) => '$count-SESSION TREND';
 
+  static const progressTitle = 'Progress';
+  static const topicMastery = 'Topic mastery';
+  static const history = 'History';
+  static const progressEmptyTitle = 'Nothing to chart yet';
+  static const progressEmptyBody = 'Complete a session to see your progress.';
+
+  static String trendOldest(int score) => 'Oldest $score';
+
+  static String masterySemantics(String topic, int score, String band) =>
+      '$topic, average $score out of 100, $band';
+
   static String needsAttention(int count) => 'Needs attention ($count)';
 
   static const followUp = 'FOLLOW-UP';

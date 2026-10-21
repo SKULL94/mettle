@@ -1,7 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../features/home/data/datasources/home_local_data_source.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/usecases/get_home_overview.dart';
@@ -14,6 +13,10 @@ import '../../features/interview/domain/usecases/skip_question.dart';
 import '../../features/interview/domain/usecases/start_session.dart';
 import '../../features/interview/domain/usecases/submit_answer.dart';
 import '../../features/interview/domain/usecases/watch_turns.dart';
+import '../../features/progress/data/repositories/progress_repository_impl.dart';
+import '../../features/progress/domain/repositories/progress_repository.dart';
+import '../../features/progress/domain/usecases/get_progress_overview.dart';
+import '../../features/sessions/data/datasources/session_local_data_source.dart';
 import '../storage/app_preferences.dart';
 
 final sl = GetIt.instance;
@@ -26,17 +29,23 @@ Future<void> configureDependencies() async {
   );
   sl.registerLazySingleton<AppPreferences>(() => AppPreferences(sl()));
 
-  sl.registerLazySingleton<HomeLocalDataSource>(HomeLocalDataSourceSeeded.new);
+  sl.registerLazySingleton<SessionLocalDataSource>(
+    SessionLocalDataSourceSeeded.new,
+  );
   sl.registerLazySingleton<InterviewRemoteDataSource>(
     InterviewScriptedDataSource.new,
   );
 
   sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl(sl()));
+  sl.registerLazySingleton<ProgressRepository>(
+    () => ProgressRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton<InterviewRepository>(
     () => InterviewRepositoryImpl(sl()),
   );
 
   sl.registerLazySingleton(() => GetHomeOverview(sl()));
+  sl.registerLazySingleton(() => GetProgressOverview(sl()));
   sl.registerLazySingleton(() => StartSession(sl()));
   sl.registerLazySingleton(() => WatchTurns(sl()));
   sl.registerLazySingleton(() => SubmitAnswer(sl()));

@@ -1,5 +1,5 @@
-import 'session_summary.dart';
-import 'topic_mastery.dart';
+import '../../../sessions/domain/entities/session_summary.dart';
+import '../../../sessions/domain/entities/topic_mastery.dart';
 
 class HomeOverview {
   const HomeOverview({

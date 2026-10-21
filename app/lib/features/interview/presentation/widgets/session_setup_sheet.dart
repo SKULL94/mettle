@@ -3,11 +3,39 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/result/result.dart';
 import '../../../../core/widgets/demo_mode_chip.dart';
 import '../../domain/entities/interview_topic.dart';
 import '../../domain/entities/session_config.dart';
+import '../../domain/usecases/start_session.dart';
 import 'selectable_tile.dart';
 import 'topic_label.dart';
+
+Future<String?> launchSession(
+  BuildContext context, {
+  InterviewTopic? topic,
+  Set<InterviewTopic> weakTopics = const {},
+}) async {
+  final messenger = ScaffoldMessenger.of(context);
+
+  final config = await showSessionSetupSheet(
+    context,
+    topic: topic,
+    weakTopics: weakTopics,
+  );
+  if (config == null) return null;
+
+  final result = await sl<StartSession>()(config);
+
+  switch (result) {
+    case Success(:final data):
+      return data;
+    case Failed(:final failure):
+      messenger.showSnackBar(SnackBar(content: Text(failure.message)));
+      return null;
+  }
+}
 
 Future<SessionConfig?> showSessionSetupSheet(
   BuildContext context, {

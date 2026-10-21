@@ -2,15 +2,15 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/home_overview.dart';
-import '../../domain/entities/session_summary.dart';
-import '../../domain/entities/topic_mastery.dart';
+import '../../../sessions/domain/entities/session_summary.dart';
+import '../../../sessions/domain/entities/topic_mastery.dart';
 import '../../domain/repositories/home_repository.dart';
-import '../datasources/home_local_data_source.dart';
+import '../../../sessions/data/datasources/session_local_data_source.dart';
 
 final class HomeRepositoryImpl implements HomeRepository {
   const HomeRepositoryImpl(this._local);
 
-  final HomeLocalDataSource _local;
+  final SessionLocalDataSource _local;
 
   static const _weakThreshold = 60;
 
@@ -54,22 +54,8 @@ final class HomeRepositoryImpl implements HomeRepository {
   }
 
   static List<TopicMastery> _weakTopics(List<SessionSummary> sessions) {
-    final byTopic = <String, List<int>>{};
-    for (final session in sessions) {
-      byTopic
-          .putIfAbsent(session.topic, () => <int>[])
-          .add(session.overallScore);
-    }
-
-    final weak = <TopicMastery>[];
-    for (final entry in byTopic.entries) {
-      final score = _mean(entry.value);
-      if (score <= _weakThreshold) {
-        weak.add(TopicMastery(topic: entry.key, score: score));
-      }
-    }
-
-    weak.sort((a, b) => a.score.compareTo(b.score));
-    return weak;
+    return TopicMastery.fromSessions(sessions)
+        .where((mastery) => mastery.score <= _weakThreshold)
+        .toList();
   }
 }

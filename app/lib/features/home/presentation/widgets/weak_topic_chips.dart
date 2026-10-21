@@ -6,8 +6,8 @@ import '../../../../core/theme/score_colors.dart';
 import '../../../../core/widgets/status_dot.dart';
 import '../../../interview/domain/entities/interview_topic.dart';
 import '../../../interview/presentation/widgets/topic_label.dart';
-import '../../domain/entities/topic_mastery.dart';
-import 'section_header.dart';
+import '../../../sessions/domain/entities/topic_mastery.dart';
+import '../../../../core/widgets/section_header.dart';
 
 class WeakTopicChips extends StatelessWidget {
   const WeakTopicChips({

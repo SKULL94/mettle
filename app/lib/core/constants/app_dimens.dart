@@ -30,4 +30,5 @@ abstract final class AppDimens {
   static const scoreRingHero = 128.0;
   static const scoreRingStroke = 8.0;
   static const sparklineHeight = 44.0;
+  static const chartHeight = 140.0;
 }
