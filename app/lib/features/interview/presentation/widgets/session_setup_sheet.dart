@@ -17,6 +17,10 @@ Future<SessionConfig?> showSessionSetupSheet(
   return showModalBottomSheet<SessionConfig>(
     context: context,
     isScrollControlled: true,
+    constraints: BoxConstraints(
+      maxHeight:
+          MediaQuery.sizeOf(context).height * AppDimens.sheetMaxHeightFactor,
+    ),
     builder: (_) =>
         SessionSetupSheet(initialTopic: topic, weakTopics: weakTopics),
   );
@@ -118,7 +122,7 @@ class _SheetHeader extends StatelessWidget {
 
     return Row(
       children: [
-        Flexible(
+        Expanded(
           child: Text(
             AppStrings.setupTitle,
             maxLines: 1,
@@ -128,9 +132,8 @@ class _SheetHeader extends StatelessWidget {
         ),
         if (!ApiConstants.isBackendConfigured) ...[
           const SizedBox(width: AppDimens.sm),
-          const Flexible(child: DemoModeChip()),
+          const DemoModeChip(),
         ],
-        const Spacer(),
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
           tooltip: AppStrings.close,

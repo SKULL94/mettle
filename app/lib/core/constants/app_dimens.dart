@@ -12,6 +12,8 @@ abstract final class AppDimens {
 
   static const hairline = 1.0;
 
+  static const sheetMaxHeightFactor = 0.65;
+
   static const breakpointCompact = 600.0;
 
   static const breakpointExpanded = 840.0;
