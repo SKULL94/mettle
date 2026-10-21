@@ -19,6 +19,8 @@ abstract final class AppDimens {
   static const breakpointExpanded = 840.0;
 
   static const minTouchTarget = 48.0;
+  static const navBarHeight = 74.0;
+  static const navIcon = 24.0;
   static const ctaHeight = 56.0;
   static const rowHeight = 64.0;
   static const brandMark = 32.0;

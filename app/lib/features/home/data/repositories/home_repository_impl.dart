@@ -25,7 +25,7 @@ final class HomeRepositoryImpl implements HomeRepository {
       final models = await _local.recentSessions();
       if (models.isEmpty) return const Success(HomeOverview.empty());
 
-      final sessions = models.map((m) => m.toEntity()).toList();
+      final sessions = models.map((record) => record.toSummary()).toList();
 
       return Success(
         HomeOverview(

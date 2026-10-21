@@ -23,7 +23,7 @@ final class ProgressRepositoryImpl implements ProgressRepository {
       final models = await _local.recentSessions(limit: _historyLimit);
       if (models.isEmpty) return const Success(ProgressOverview.empty());
 
-      final sessions = models.map((model) => model.toEntity()).toList();
+      final sessions = models.map((record) => record.toSummary()).toList();
 
       return Success(
         ProgressOverview(

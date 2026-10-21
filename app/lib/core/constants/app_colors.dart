@@ -7,6 +7,7 @@ abstract final class AppColors {
   static const onAccentLight = Color(0xFFFFFFFF);
 
   static const bgDark = Color(0xFF0E0E11);
+  static const navSurfaceDark = Color(0xFF131316);
   static const surfaceDark = Color(0xFF17171C);
   static const surfaceElevatedDark = Color(0xFF1F1F26);
   static const outlineDark = Color(0xFF2E2E38);

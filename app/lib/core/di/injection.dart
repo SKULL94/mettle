@@ -50,7 +50,7 @@ Future<void> configureDependencies() async {
     () => ProgressRepositoryImpl(sl()),
   );
   sl.registerLazySingleton<InterviewRepository>(
-    () => InterviewRepositoryImpl(sl()),
+    () => InterviewRepositoryImpl(sl(), sl()),
   );
   sl.registerLazySingleton<SettingsRepository>(
     () => SettingsRepositoryImpl(sl(), sl()),

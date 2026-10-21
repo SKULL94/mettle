@@ -20,6 +20,10 @@ final class CacheFailure extends Failure {
   const CacheFailure([super.message = AppStrings.cacheError]);
 }
 
+final class NotFoundFailure extends Failure {
+  const NotFoundFailure([super.message = AppStrings.sessionNotFound]);
+}
+
 final class UnknownFailure extends Failure {
   const UnknownFailure([super.message = AppStrings.unknownError]);
 }
