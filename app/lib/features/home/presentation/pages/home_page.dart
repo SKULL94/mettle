@@ -7,6 +7,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/skeleton_box.dart';
+import '../../../interview/domain/entities/interview_topic.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
@@ -127,6 +128,9 @@ class _HomeLoaded extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final overview = state.overview;
+    final weakTopics = overview.weakTopics
+        .map((mastery) => InterviewTopic.fromId(mastery.topic))
+        .toSet();
 
     return _Body(
       onRefresh: () async =>
@@ -143,12 +147,13 @@ class _HomeLoaded extends StatelessWidget {
           sessionCount: overview.recentSessions.length,
         ),
         const SizedBox(height: AppDimens.lg),
-        const StartSessionButton(),
+        StartSessionButton(weakTopics: weakTopics),
         if (overview.weakTopics.isNotEmpty) ...[
           const SizedBox(height: AppDimens.xl),
           WeakTopicChips(
             topics: overview.weakTopics,
-            onSelected: (topic) => beginSession(context, topic: topic),
+            onSelected: (topic) =>
+                beginSession(context, topic: topic, weakTopics: weakTopics),
           ),
         ],
         const SizedBox(height: AppDimens.xl),

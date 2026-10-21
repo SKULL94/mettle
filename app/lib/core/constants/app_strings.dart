@@ -86,9 +86,16 @@ abstract final class AppStrings {
   static const bootstrapFailed = "Couldn't start up.";
 
   static const setupTitle = 'New session';
-  static const setupTopic = 'TOPIC';
-  static const setupLength = 'QUESTIONS';
-  static const setupStart = 'Begin';
+  static const setupTopic = 'SELECT TOPIC';
+  static const setupLength = 'QUESTION COUNT';
+  static const setupStart = 'Start interview';
+  static const setupWeakLegend = 'weak';
+  static const close = 'Close';
+
+  static String minutesEstimate(int minutes) => '~$minutes min';
+
+  static String setupSummary(String topic, int count) =>
+      'Selected: $topic$metaSeparator${questionCount(count)}';
 
   static const topicStateManagement = 'State management';
   static const topicWidgetLifecycle = 'Widget lifecycle';

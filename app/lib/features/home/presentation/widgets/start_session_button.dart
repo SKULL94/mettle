@@ -15,14 +15,16 @@ import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 
 class StartSessionButton extends StatelessWidget {
-  const StartSessionButton({super.key});
+  const StartSessionButton({this.weakTopics = const {}, super.key});
+
+  final Set<InterviewTopic> weakTopics;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return FilledButton(
-      onPressed: () => beginSession(context),
+      onPressed: () => beginSession(context, weakTopics: weakTopics),
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(AppDimens.ctaHeight),
         textStyle: theme.textTheme.titleLarge,
@@ -45,7 +47,11 @@ class StartSessionButton extends StatelessWidget {
   }
 }
 
-Future<void> beginSession(BuildContext context, {InterviewTopic? topic}) async {
+Future<void> beginSession(
+  BuildContext context, {
+  InterviewTopic? topic,
+  Set<InterviewTopic> weakTopics = const {},
+}) async {
   final homeBloc = context.read<HomeBloc>();
   final messenger = ScaffoldMessenger.of(context);
   final router = GoRouter.of(context);
@@ -53,6 +59,7 @@ Future<void> beginSession(BuildContext context, {InterviewTopic? topic}) async {
   final SessionConfig? config = await showSessionSetupSheet(
     context,
     topic: topic,
+    weakTopics: weakTopics,
   );
   if (config == null) return;
 

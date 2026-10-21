@@ -1,39 +1,49 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/widgets/demo_mode_chip.dart';
 import '../../domain/entities/interview_topic.dart';
 import '../../domain/entities/session_config.dart';
+import 'selectable_tile.dart';
 import 'topic_label.dart';
 
 Future<SessionConfig?> showSessionSetupSheet(
   BuildContext context, {
   InterviewTopic? topic,
+  Set<InterviewTopic> weakTopics = const {},
 }) {
   return showModalBottomSheet<SessionConfig>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => SessionSetupSheet(initialTopic: topic),
+    builder: (_) =>
+        SessionSetupSheet(initialTopic: topic, weakTopics: weakTopics),
   );
 }
 
 class SessionSetupSheet extends StatefulWidget {
-  const SessionSetupSheet({this.initialTopic, super.key});
+  const SessionSetupSheet({
+    this.initialTopic,
+    this.weakTopics = const {},
+    super.key,
+  });
 
   final InterviewTopic? initialTopic;
+  final Set<InterviewTopic> weakTopics;
 
   @override
   State<SessionSetupSheet> createState() => _SessionSetupSheetState();
 }
 
 class _SessionSetupSheetState extends State<SessionSetupSheet> {
-  late InterviewTopic _topic =
-      widget.initialTopic ?? InterviewTopic.stateManagement;
-  int _questionCount = 5;
+  late InterviewTopic? _topic = widget.initialTopic;
+  int _questionCount = SessionConfig.defaultQuestionCount;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final topic = _topic;
 
     return SafeArea(
       child: Padding(
@@ -47,49 +57,183 @@ class _SessionSetupSheetState extends State<SessionSetupSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppStrings.setupTitle, style: theme.textTheme.headlineSmall),
+            const _SheetHeader(),
             const SizedBox(height: AppDimens.lg),
-
-            Text(AppStrings.setupTopic, style: theme.textTheme.labelSmall),
-            const SizedBox(height: AppDimens.sm),
-            Wrap(
-              spacing: AppDimens.sm,
-              runSpacing: AppDimens.sm,
-              children: [
-                for (final topic in InterviewTopic.values)
-                  ChoiceChip(
-                    label: Text(topicLabel(topic)),
-                    selected: topic == _topic,
-                    onSelected: (_) => setState(() => _topic = topic),
-                  ),
-              ],
-            ),
-
-            const SizedBox(height: AppDimens.lg),
-            Text(AppStrings.setupLength, style: theme.textTheme.labelSmall),
-            const SizedBox(height: AppDimens.sm),
-            Wrap(
-              spacing: AppDimens.sm,
-              children: [
-                for (final count in SessionConfig.allowedQuestionCounts)
-                  ChoiceChip(
-                    label: Text('$count'),
-                    selected: count == _questionCount,
-                    onSelected: (_) => setState(() => _questionCount = count),
-                  ),
-              ],
-            ),
-
-            const SizedBox(height: AppDimens.xl),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(
-                SessionConfig(topic: _topic, questionCount: _questionCount),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _TopicPicker(
+                      selected: topic,
+                      weakTopics: widget.weakTopics,
+                      onSelected: (value) => setState(() => _topic = value),
+                    ),
+                    const SizedBox(height: AppDimens.lg),
+                    _QuestionCountPicker(
+                      selected: _questionCount,
+                      onSelected: (value) =>
+                          setState(() => _questionCount = value),
+                    ),
+                  ],
+                ),
               ),
+            ),
+            const SizedBox(height: AppDimens.lg),
+            FilledButton(
+              onPressed: topic == null
+                  ? null
+                  : () => Navigator.of(context).pop(
+                      SessionConfig(
+                        topic: topic,
+                        questionCount: _questionCount,
+                      ),
+                    ),
               child: const Text(AppStrings.setupStart),
             ),
+            if (topic != null) ...[
+              const SizedBox(height: AppDimens.sm),
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  AppStrings.setupSummary(topicLabel(topic), _questionCount),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelSmall,
+                ),
+              ),
+            ],
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SheetHeader extends StatelessWidget {
+  const _SheetHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      children: [
+        Flexible(
+          child: Text(
+            AppStrings.setupTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.headlineSmall,
+          ),
+        ),
+        if (!ApiConstants.isBackendConfigured) ...[
+          const SizedBox(width: AppDimens.sm),
+          const Flexible(child: DemoModeChip()),
+        ],
+        const Spacer(),
+        IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: AppStrings.close,
+          icon: const Icon(Icons.close_rounded, size: AppDimens.iconMd),
+        ),
+      ],
+    );
+  }
+}
+
+class _TopicPicker extends StatelessWidget {
+  const _TopicPicker({
+    required this.selected,
+    required this.weakTopics,
+    required this.onSelected,
+  });
+
+  final InterviewTopic? selected;
+  final Set<InterviewTopic> weakTopics;
+  final ValueChanged<InterviewTopic> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _PickerLabel(
+          label: AppStrings.setupTopic,
+          trailing: weakTopics.isEmpty ? null : const WeakLegend(),
+        ),
+        const SizedBox(height: AppDimens.sm),
+        Wrap(
+          spacing: AppDimens.sm,
+          runSpacing: AppDimens.sm,
+          children: [
+            for (final topic in InterviewTopic.values)
+              TopicTile(
+                topic: topic,
+                selected: topic == selected,
+                isWeak: weakTopics.contains(topic),
+                onTap: () => onSelected(topic),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _QuestionCountPicker extends StatelessWidget {
+  const _QuestionCountPicker({
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final int selected;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _PickerLabel(label: AppStrings.setupLength),
+        const SizedBox(height: AppDimens.sm),
+        Row(
+          children: [
+            for (final count in SessionConfig.allowedQuestionCounts) ...[
+              if (count != SessionConfig.allowedQuestionCounts.first)
+                const SizedBox(width: AppDimens.sm),
+              Expanded(
+                child: QuestionCountTile(
+                  count: count,
+                  minutes: SessionConfig.estimatedMinutes[count],
+                  selected: count == selected,
+                  onTap: () => onSelected(count),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PickerLabel extends StatelessWidget {
+  const _PickerLabel({required this.label, this.trailing});
+
+  final String label;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Wrap(
+      spacing: AppDimens.sm,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(label, style: theme.textTheme.labelSmall),
+        ?trailing,
+      ],
     );
   }
 }
