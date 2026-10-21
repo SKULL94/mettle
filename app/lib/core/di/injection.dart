@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/usecases/get_home_overview.dart';
+import '../../features/home/domain/usecases/watch_sessions.dart' as home;
 import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/interview/data/datasources/interview_remote_data_source.dart';
 import '../../features/interview/data/repositories/interview_repository_impl.dart';
@@ -16,7 +17,15 @@ import '../../features/interview/domain/usecases/watch_turns.dart';
 import '../../features/progress/data/repositories/progress_repository_impl.dart';
 import '../../features/progress/domain/repositories/progress_repository.dart';
 import '../../features/progress/domain/usecases/get_progress_overview.dart';
+import '../../features/progress/domain/usecases/watch_sessions.dart'
+    as progress;
 import '../../features/sessions/data/datasources/session_local_data_source.dart';
+import '../../features/settings/data/repositories/settings_repository_impl.dart';
+import '../../features/settings/domain/repositories/settings_repository.dart';
+import '../../features/settings/domain/usecases/clear_sessions.dart';
+import '../../features/settings/domain/usecases/get_theme_mode.dart';
+import '../../features/settings/domain/usecases/set_theme_mode.dart';
+import '../../features/settings/presentation/cubit/settings_cubit.dart';
 import '../storage/app_preferences.dart';
 
 final sl = GetIt.instance;
@@ -30,7 +39,7 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton<AppPreferences>(() => AppPreferences(sl()));
 
   sl.registerLazySingleton<SessionLocalDataSource>(
-    SessionLocalDataSourceSeeded.new,
+    () => SessionLocalDataSourceStored(sl()),
   );
   sl.registerLazySingleton<InterviewRemoteDataSource>(
     InterviewScriptedDataSource.new,
@@ -43,16 +52,25 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton<InterviewRepository>(
     () => InterviewRepositoryImpl(sl()),
   );
+  sl.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(sl(), sl()),
+  );
 
   sl.registerLazySingleton(() => GetHomeOverview(sl()));
+  sl.registerLazySingleton(() => home.WatchSessions(sl()));
   sl.registerLazySingleton(() => GetProgressOverview(sl()));
+  sl.registerLazySingleton(() => progress.WatchSessions(sl()));
   sl.registerLazySingleton(() => StartSession(sl()));
   sl.registerLazySingleton(() => WatchTurns(sl()));
   sl.registerLazySingleton(() => SubmitAnswer(sl()));
   sl.registerLazySingleton(() => SkipQuestion(sl()));
   sl.registerLazySingleton(() => GetScorecard(sl()));
+  sl.registerLazySingleton(() => GetThemeMode(sl()));
+  sl.registerLazySingleton(() => SetThemeMode(sl()));
+  sl.registerLazySingleton(() => ClearSessions(sl()));
 
-  sl.registerFactory(() => HomeBloc(sl()));
+  sl.registerFactory(() => HomeBloc(sl(), sl()));
+  sl.registerLazySingleton(() => SettingsCubit(sl(), sl(), sl()));
 }
 
 Future<void> resetDependencies() => sl.reset();

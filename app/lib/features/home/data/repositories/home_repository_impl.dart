@@ -17,6 +17,9 @@ final class HomeRepositoryImpl implements HomeRepository {
   static const _trendWindow = 7;
 
   @override
+  Stream<void> watchSessions() => _local.changes;
+
+  @override
   Future<Result<HomeOverview>> getOverview() async {
     try {
       final models = await _local.recentSessions();

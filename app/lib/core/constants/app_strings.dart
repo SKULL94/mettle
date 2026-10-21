@@ -115,6 +115,28 @@ abstract final class AppStrings {
 
   static String scoreOutOf(int value, int max) => '$value / $max';
 
+  static const settingsTitle = 'Settings';
+  static const appearance = 'Appearance';
+  static const themeSystem = 'System';
+  static const themeLight = 'Light';
+  static const themeDark = 'Dark';
+  static const mode = 'Mode';
+  static const demoModeBody = 'Running on scripted questions.';
+  static const liveModeTitle = 'LIVE';
+  static const liveModeBody = 'Connected to a configured backend.';
+  static const data = 'Data';
+  static const clearData = 'Clear data';
+  static const clearDataBody = 'Deletes every stored session on this device.';
+  static const clearDataPrompt =
+      'This removes all stored sessions and their scores. It cannot be undone.';
+  static const clearDataConfirm = 'Clear';
+  static const clearDataDone = 'Stored sessions deleted.';
+  static const about = 'About';
+  static const appVersion = '0.1.0';
+  static const repository = 'Repository';
+  static const repositoryUrl = 'https://github.com/SKULL94/mettle';
+  static const copiedToClipboard = 'Link copied.';
+
   static const retry = 'Retry';
   static const dismiss = 'Dismiss';
   static const cancel = 'Cancel';

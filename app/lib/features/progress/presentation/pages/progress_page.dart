@@ -21,7 +21,7 @@ class ProgressPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ProgressCubit(sl())..load(),
+      create: (_) => ProgressCubit(sl(), sl())..load(),
       child: const ProgressView(),
     );
   }

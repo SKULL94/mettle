@@ -1,27 +1,71 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../core/error/exceptions.dart';
 import '../models/session_summary_model.dart';
 
 abstract interface class SessionLocalDataSource {
   Future<List<SessionSummaryModel>> recentSessions({int limit = 10});
+
+  Future<void> clear();
+
+  Stream<void> get changes;
 }
 
-final class SessionLocalDataSourceSeeded implements SessionLocalDataSource {
-  const SessionLocalDataSourceSeeded({this.seed = _defaultSeed});
+final class SessionLocalDataSourceStored implements SessionLocalDataSource {
+  SessionLocalDataSourceStored(this._prefs, {this.seed = demoSeed});
+
+  final SharedPreferences _prefs;
 
   final List<Map<String, dynamic>> seed;
+
+  final _changes = StreamController<void>.broadcast();
+
+  static const _key = 'sessions';
+
+  @override
+  Stream<void> get changes => _changes.stream;
 
   @override
   Future<List<SessionSummaryModel>> recentSessions({int limit = 10}) async {
     try {
-      final rows = seed.map(SessionSummaryModel.fromJson).toList()
-        ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
-      return rows.take(limit).toList();
+      final rows = _read() ?? await _writeSeed();
+
+      return (rows.map(SessionSummaryModel.fromJson).toList()
+            ..sort((a, b) => b.completedAt.compareTo(a.completedAt)))
+          .take(limit)
+          .toList();
+    } on CacheException {
+      rethrow;
     } on Object catch (error) {
       throw CacheException('malformed session row: $error');
     }
   }
 
-  static const List<Map<String, dynamic>> _defaultSeed = <Map<String, dynamic>>[
+  @override
+  Future<void> clear() async {
+    await _prefs.setString(_key, jsonEncode(<Object>[]));
+    if (!_changes.isClosed) _changes.add(null);
+  }
+
+  List<Map<String, dynamic>>? _read() {
+    final stored = _prefs.getString(_key);
+    if (stored == null) return null;
+
+    final decoded = jsonDecode(stored);
+    if (decoded is! List) throw const CacheException('sessions are not a list');
+
+    return decoded.cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> _writeSeed() async {
+    await _prefs.setString(_key, jsonEncode(seed));
+    return seed;
+  }
+
+  static const List<Map<String, dynamic>> demoSeed = <Map<String, dynamic>>[
     <String, dynamic>{
       'id': 'seed-1',
       'topic': 'state-management',

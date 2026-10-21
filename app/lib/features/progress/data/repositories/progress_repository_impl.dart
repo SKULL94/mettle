@@ -15,6 +15,9 @@ final class ProgressRepositoryImpl implements ProgressRepository {
   static const _historyLimit = 10;
 
   @override
+  Stream<void> watchSessions() => _local.changes;
+
+  @override
   Future<Result<ProgressOverview>> getOverview() async {
     try {
       final models = await _local.recentSessions(limit: _historyLimit);
