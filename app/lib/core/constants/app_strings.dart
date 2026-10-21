@@ -54,10 +54,18 @@ abstract final class AppStrings {
   static String needsAttention(int count) => 'Needs attention ($count)';
 
   static const followUp = 'FOLLOW-UP';
+  static const streaming = 'Streaming';
+  static const blockCursor = '▋';
   static const answerHint = 'Type your answer…';
   static const submit = 'Submit';
   static const skip = 'Skip';
   static const preparingInterview = 'Preparing your interview…';
+  static const followUpSemantics = 'Follow-up question';
+
+  static String followUpProbeSemantics(String reason) =>
+      'Follow-up question, probing $reason';
+
+  static String previousAnswer(int turn) => 'YOUR PREVIOUS ANSWER (TURN $turn)';
 
   static String questionProgress(int current, int total) =>
       'Q $current of $total';

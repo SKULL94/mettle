@@ -6,12 +6,12 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
-import '../../domain/entities/interview_turn.dart';
 import '../bloc/interview_bloc.dart';
 import '../bloc/interview_event.dart';
 import '../bloc/interview_state.dart';
 import '../widgets/answer_composer.dart';
-import '../widgets/question_bubble.dart';
+import '../widgets/previous_answer.dart';
+import '../widgets/question_card.dart';
 
 class InterviewPage extends StatelessWidget {
   const InterviewPage({required this.sessionId, super.key});
@@ -46,33 +46,47 @@ class InterviewView extends StatelessWidget {
         pathParameters: {AppRoutes.idParam: state.sessionId},
       ),
       child: Scaffold(
-        appBar: AppBar(
-          title: BlocBuilder<InterviewBloc, InterviewState>(
-            buildWhen: (p, c) =>
-                p.answeredCount != c.answeredCount ||
-                p.totalQuestions != c.totalQuestions,
-            builder: (context, state) => Text(
-              state.totalQuestions == 0
-                  ? AppStrings.appName
-                  : AppStrings.questionProgress(
-                      (state.answeredCount + 1).clamp(1, state.totalQuestions),
-                      state.totalQuestions,
-                    ),
-            ),
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(2),
-            child: BlocBuilder<InterviewBloc, InterviewState>(
-              buildWhen: (p, c) => p.progress != c.progress,
-              builder: (context, state) =>
-                  LinearProgressIndicator(value: state.progress),
-            ),
-          ),
-        ),
+        appBar: const _InterviewAppBar(),
         body: SafeArea(
           child: BlocBuilder<InterviewBloc, InterviewState>(
             builder: (context, state) => _InterviewBody(state: state),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InterviewAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _InterviewAppBar();
+
+  @override
+  Size get preferredSize =>
+      const Size.fromHeight(kToolbarHeight + AppDimens.hairline * 2);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      centerTitle: true,
+      title: BlocBuilder<InterviewBloc, InterviewState>(
+        buildWhen: (p, c) =>
+            p.answeredCount != c.answeredCount ||
+            p.totalQuestions != c.totalQuestions,
+        builder: (context, state) => Text(
+          state.totalQuestions == 0
+              ? AppStrings.appName
+              : AppStrings.questionProgress(
+                  (state.answeredCount + 1).clamp(1, state.totalQuestions),
+                  state.totalQuestions,
+                ),
+        ),
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(AppDimens.hairline * 2),
+        child: BlocBuilder<InterviewBloc, InterviewState>(
+          buildWhen: (p, c) => p.progress != c.progress,
+          builder: (context, state) =>
+              LinearProgressIndicator(value: state.progress),
         ),
       ),
     );
@@ -86,10 +100,6 @@ class _InterviewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state.status == InterviewStatus.connecting && !state.showsTranscript) {
-      return const _Connecting();
-    }
-
     final answered = state.transcript.where((turn) => turn.isAnswered).toList();
     final previous = answered.isEmpty ? null : answered.last;
 
@@ -97,23 +107,40 @@ class _InterviewBody extends StatelessWidget {
       children: [
         Expanded(
           child: ListView(
-            reverse: true,
             padding: const EdgeInsets.all(AppDimens.md),
             children: [
-              if (state.streamingText.isNotEmpty)
-                QuestionBubble(
+              if (state.showsTranscript)
+                QuestionCard(
                   text: state.streamingText,
                   isFollowUp: state.isFollowUp,
                   isStreaming: state.status == InterviewStatus.streaming,
                   reason: state.pendingReason,
-                ),
-              if (state.status == InterviewStatus.submitting)
-                const _GradingRow(),
-              if (previous != null) _PreviousAnswer(turn: previous),
+                )
+              else
+                const QuestionCardSkeleton(),
+              if (state.status == InterviewStatus.connecting &&
+                  !state.showsTranscript) ...[
+                const SizedBox(height: AppDimens.md),
+                const _StatusLine(label: AppStrings.preparingInterview),
+              ],
+              if (previous != null) ...[
+                const SizedBox(height: AppDimens.xl),
+                PreviousAnswer(turn: previous, turnNumber: answered.length),
+              ],
             ],
           ),
         ),
         if (state.error != null) _InlineError(message: state.error!),
+        if (state.status == InterviewStatus.submitting)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppDimens.md,
+              0,
+              AppDimens.md,
+              AppDimens.sm,
+            ),
+            child: _StatusLine(label: AppStrings.grading),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppDimens.md,
@@ -123,6 +150,7 @@ class _InterviewBody extends StatelessWidget {
           ),
           child: AnswerComposer(
             enabled: state.canSubmit,
+            isSubmitting: state.status == InterviewStatus.submitting,
             onSubmit: (answer) =>
                 context.read<InterviewBloc>().add(AnswerSubmitted(answer)),
             onSkip: () =>
@@ -134,67 +162,28 @@ class _InterviewBody extends StatelessWidget {
   }
 }
 
-class _Connecting extends StatelessWidget {
-  const _Connecting();
+class _StatusLine extends StatelessWidget {
+  const _StatusLine({required this.label});
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        AppStrings.preparingInterview,
-        style: Theme.of(context).textTheme.labelSmall,
-      ),
-    );
-  }
-}
-
-class _GradingRow extends StatelessWidget {
-  const _GradingRow();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppDimens.md),
-      child: Text(
-        AppStrings.grading,
-        style: Theme.of(context).textTheme.labelSmall,
-      ),
-    );
-  }
-}
-
-class _PreviousAnswer extends StatelessWidget {
-  const _PreviousAnswer({required this.turn});
-
-  final InterviewTurn turn;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final answer = turn.answer ?? '';
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppDimens.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            answer.isEmpty ? AppStrings.skipped : AppStrings.yourAnswer,
-            style: theme.textTheme.labelSmall,
+    return Row(
+      children: [
+        SizedBox(
+          width: AppDimens.iconSm,
+          height: AppDimens.iconSm,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: theme.colorScheme.primary,
           ),
-          if (answer.isNotEmpty) ...[
-            const SizedBox(height: AppDimens.xs),
-            Opacity(
-              opacity: 0.6,
-              child: Text(
-                answer,
-                style: theme.textTheme.bodyMedium,
-                textAlign: TextAlign.end,
-              ),
-            ),
-          ],
-        ],
-      ),
+        ),
+        const SizedBox(width: AppDimens.sm),
+        Flexible(child: Text(label, style: theme.textTheme.labelSmall)),
+      ],
     );
   }
 }
@@ -209,7 +198,12 @@ class _InlineError extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppDimens.md),
+      margin: const EdgeInsets.fromLTRB(
+        AppDimens.md,
+        0,
+        AppDimens.md,
+        AppDimens.md,
+      ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimens.md,
         vertical: AppDimens.sm,
@@ -217,7 +211,10 @@ class _InlineError extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(AppDimens.radius),
-        border: Border.all(color: theme.colorScheme.error),
+        border: Border.all(
+          color: theme.colorScheme.error,
+          width: AppDimens.hairline,
+        ),
       ),
       child: Row(
         children: [
