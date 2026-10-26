@@ -21,9 +21,9 @@ you'll find if you clone it.
 
 | Milestone | Scope | Status |
 |---|---|---|
-| **M1** | Splash · Home · Interview · Scorecard · Progress (basic) · Settings (basic). Text only, no auth, keyless demo mode, end to end | 🚧 In progress |
-| **M2** | Voice answers + waveform, question coverage, progress filters and date ranges, offline via Drift | ⬜ Planned |
-| **M3** | Rubric evaluation, role/JD setup, checkpointer resume, human-in-the-loop, deployed web build | ⬜ Planned |
+| **M1** | Splash · Home · Interview · Scorecard · Progress (basic) · Settings (basic). Text only, no auth, difficulty-tiered topics, end to end | 🚧 In progress |
+| **M2** | Auth · onboarding (stack · experience · focus) · personalised Home · voice answers + waveform · progress filters | ⬜ Planned |
+| **M3** | Multi-stack catalogues · JD-targeted questions · checkpointer resume · human-in-the-loop · deployed web build | ⬜ Planned |
 
 Design docs are checked in and current: [product & UI plan](docs/product-plan.md) ·
 [backend architecture](docs/backend-plan.md) · [Flutter conventions](CONVENTIONS.md).
@@ -35,14 +35,15 @@ Design docs are checked in and current: [product & UI plan](docs/product-plan.md
 One repository, two deployable apps, one working vertical slice between them.
 
 **Definition of done:** `docker compose up` plus `flutter run` completes a full interview — question,
-answer, follow-up, scorecard — with **no API key configured**. Not "the UI is finished" or "the graph
-works" — the two halves meeting.
+answer, follow-up, scorecard — on a real device against a live model. Not "the UI is finished" or
+"the graph works" — the two halves meeting. **Verified**: an Android device over Wi-Fi driving the
+containerised backend end to end.
 
 | | Ships in Phase 1 |
 |---|---|
 | **`app/`** | Splash → Home → setup sheet → Interview → Scorecard, plus basic Progress and Settings tabs. Text only. Design tokens and both themes before any screen. All four states on every screen. Responsive for phone and web. |
-| **`api/`** | Five endpoints, the versioned SSE event protocol, the five-node graph with the conditional follow-up edge, SQLite checkpointer, `ScriptedProvider` as the default. |
-| **The seam** | The SSE event protocol is the contract. The app builds against fakes, the API against its scripted provider — both test it independently, so neither side blocks the other. |
+| **`api/`** | The versioned SSE event protocol, the five-node graph with the conditional follow-up edge, SQLite checkpointer (Postgres-ready), the topic catalogue, and the provider adapter. |
+| **The seam** | The SSE event protocol is the contract, and the Dart `TurnEvent` sealed class is its client-side shape. Both halves are versioned together in one repo, so a change to the protocol is one commit. |
 | **CI** | Two workflows green with no secrets configured, including the dependency-rule guard and the iOS compile check. |
 
 **Why a monorepo matters specifically now:** in Phase 1 the SSE contract changes constantly, and
@@ -52,8 +53,7 @@ window where `main` is broken on one side. This matters much less by M3 — it m
 
 **Explicitly out of scope for Phase 1:** voice input · question coverage · progress filters and date
 ranges · a configurable API URL · accounts · notifications · role/JD onboarding · auth · Postgres ·
-iOS device testing · real model calls as the default path (the hosted provider works, but scripted is
-the default so the repo stays keyless).
+iOS device testing · running without an API key.
 
 Progress and Settings **are** in Phase 1, in their basic form — the list above is what gets cut from
 them, not the screens themselves. Both are cheap on top of what already exists: Progress reads the
@@ -87,11 +87,11 @@ than shipping a mic button that silently fails.
 
 ---
 
-## Why there's no login screen
+## Why there's no login screen *yet*
 
-**There is no authentication in v1** — no signup, no password reset, no OAuth. Splash goes straight
-to Home on every launch. This is a deliberate scope decision, and the consequences run all the way
-down the stack:
+**There is no authentication in M1** — no signup, no password reset, no OAuth. Splash goes straight
+to Home on every launch. **M2 adds sign-in and onboarding**; this section is why it ships second
+rather than first, and the ordering is deliberate:
 
 - **Identity is device-local.** Sessions and scores live in a local database on the device. There's
   no account to create and nothing lost by not having one.
@@ -104,8 +104,10 @@ down the stack:
   project there is. Skipping it spent that time on the streaming UI, the agent graph, and the scoring
   rubric instead.
 
-**v2 adds accounts and cross-device sync** — layered on top of working local storage rather than
-placed as a gate in front of it, so the app keeps working offline and the demo stays frictionless.
+**M2 adds accounts, a first-run flow, and a Home personalised to your stack and experience level** —
+layered on top of working local storage rather than placed as a gate in front of it. The sequencing is
+the point: local storage already works, so an account becomes a sync mechanism rather than a
+prerequisite, and the onboarding flow stays skippable with defaults that work.
 
 ---
 
@@ -201,15 +203,35 @@ Answer submission and streaming are **separate calls** on purpose: a POST return
 `text/event-stream` is more elegant, but `EventSource` on the web is GET-only, and web is a primary
 target. Two cheap round-trips beat a platform-specific transport.
 
-### It runs without an API key
+### The provider seam
 
-The model sits behind an `LLMProvider` protocol with two implementations — a real hosted-model
-one and a **deterministic scripted one** that reads from a question bank and grades by rubric
-coverage. The scripted provider is the default whenever no API key is present, so:
+The model sits behind an `LLMProvider` protocol — `stream_question` and `grade` — so the graph never
+imports the SDK and knows nothing about which model answers. Swapping models is one env var, and the
+provider adapts to each model's capabilities: `effort` and adaptive thinking are sent to Sonnet and
+omitted for Haiku, which rejects both.
 
-- `docker compose up` gives a reviewer a working app in 30 seconds with no credentials
-- CI runs the full suite — including graph routing tests — with no secrets and no flake
-- The app's demo mode is this same code path, not a separate mock
+**There is one implementation, and it needs a key.** An earlier design had a second, scripted
+provider reading from a checked-in question bank so the repo would run with no credentials. That was
+dropped once topics became difficulty-tiered: a hand-written bank covering 20 topics × 3 levels would
+have been large, stale, and graded by keyword matching far weaker than the rubric. The tradeoff is
+deliberate and it has a real cost — a reviewer cannot run this without their own key.
+
+### Cost
+
+Measured per call on the live API, with the rubric cached:
+
+| | per grade call | per ~8-turn session | per $1 |
+|---|---|---|---|
+| `claude-haiku-4-5` | ~$0.002 | ~$0.025 | ~40 sessions |
+| `claude-sonnet-5` | ~$0.011 | ~$0.12 | ~8 sessions |
+
+Sonnet's cost is dominated by thinking tokens on grading, which is `GRADE_EFFORT` doing its job —
+lowering it to `medium` is a bigger lever than switching model. Haiku is far cheaper but grades more
+leniently, and since a lenient score means fewer follow-ups fire, it slightly weakens the probe loop.
+
+The rubric is byte-identical every turn, so it is cached behind one breakpoint: **1771 tokens written
+once, then read at ~10% cost on every later call**. Mind the per-model floor — a prefix under it
+silently never caches (512 tokens on Opus 5, **1024 on Sonnet 5**, 4096 on Haiku 4.5).
 
 ### Model usage
 
@@ -224,20 +246,86 @@ than dead-ending mid-interview.
 
 ## Quick start
 
-Lands with M1 — two commands, no credentials needed.
+> **An Anthropic API key is required.** Every question is written and every answer graded by a live
+> model, so there is no offline or canned mode — without a key the backend starts but
+> `POST /v1/sessions` returns `503`. Interviews cost roughly **2–12 cents each** depending on the
+> model (see [Cost](#cost)).
+
+### 1. Configure the key
 
 ```bash
-# Backend (scripted provider, no API key required)
-docker compose up
-
-# App
-cd app && flutter run          # Android
-cd app && flutter run -d chrome # Web
+cp .env.example .env
 ```
 
-To use real model calls, copy `.env.example` to `.env` and fill in your provider API key. The app's
-**Settings** screen shows which mode it is running in; pointing it at your own backend URL lands with
-`api/`, since until then there is nothing to point it at.
+Then edit `.env` and set your key:
+
+```ini
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-haiku-4-5    # or claude-sonnet-5 for stronger grading
+```
+
+Leave `LLM_PROVIDER` commented out — the backend selects the live provider automatically when a key
+is present. `.env` is gitignored; never commit it, and never pass it to `--dart-define-from-file`
+(those values are compiled into the app binary).
+
+### 2. Run the backend
+
+```bash
+docker compose up -d          # http://localhost:8000
+curl localhost:8000/v1/meta   # expect "demo_mode":false and your model
+```
+
+Without Docker:
+
+```bash
+cd api && uv sync && uv run uvicorn app.main:app --port 8000
+```
+
+Run **one instance with one worker** — session state and the SSE queue live in process memory, so a
+second worker breaks the answer/stream pairing. `docker compose down` stops it.
+
+### 3. Run the app
+
+**Android emulator** — `10.0.2.2` is the emulator's alias for your host:
+
+```bash
+cd app && flutter run --dart-define-from-file=dart_defines/emulator.json
+```
+
+**Real device over USB** — `adb reverse` tunnels the phone's own `localhost` to your machine, which
+survives changing networks and needs no firewall rule:
+
+```bash
+adb reverse tcp:8000 tcp:8000
+cd app && flutter run --dart-define-from-file=dart_defines/device.json
+```
+
+**Real device over Wi-Fi** — needed if you want to unplug the cable. Both devices must be on the same
+network, and the backend must be reachable from it:
+
+```bash
+cp app/dart_defines/local.json.example app/dart_defines/local.json
+# edit local.json and put your machine's LAN IP in METTLE_BASE_URL
+cd app && flutter run --dart-define-from-file=dart_defines/local.json
+```
+
+On Windows, allow the port once (PowerShell as Administrator):
+
+```powershell
+New-NetFirewallRule -DisplayName "Mettle API" -Direction Inbound -Protocol TCP `
+  -LocalPort 8000 -Action Allow -Profile Private -RemoteAddress LocalSubnet
+```
+
+`local.json` is gitignored, since the IP is specific to your machine. Note the LAN address is baked in
+at build time, so it must be rebuilt if your router hands out a different IP.
+
+### Notes
+
+- `METTLE_BASE_URL` is a **compile-time** constant. Changing it needs a restart, not a hot reload.
+- Plain HTTP to a LAN address only works in **debug** builds. Release builds are HTTPS-only by
+  design, so a release APK needs a deployed backend.
+- Interviews need the backend running. Home, Progress, Settings and past scorecards read device-local
+  storage and work with it switched off.
 
 ---
 
@@ -279,11 +367,12 @@ dependency-rule guard and the iOS compile check.
 
 ## Roadmap
 
-- **M1** — complete text-only loop, keyless demo mode, basic Progress and Settings
-- **M2** — voice answers with a custom-painted waveform, question coverage, progress filters and date
-  ranges, offline-first storage
-- **M3** — full rubric evaluation, role + job-description targeting, session resume, deployed web demo
-- **v2** — accounts and cross-device sync (layered over local storage, not a gate in front of it)
+- **M1** — complete text-only loop, difficulty-tiered topics, basic Progress and Settings
+- **M2** — accounts and onboarding (stack · experience · focus), a personalised Home, voice answers
+  with a custom-painted waveform, progress filters
+- **M3** — catalogues for the remaining stacks, job-description targeting, session resume, deployed
+  web demo
+- **v2** — cross-device sync on top of M2's accounts, team or cohort features
 
 ---
 

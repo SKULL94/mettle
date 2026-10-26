@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/error/exceptions.dart';
 import '../models/session_record_model.dart';
-import 'session_seed.dart';
 
 abstract interface class SessionLocalDataSource {
   Future<List<SessionRecordModel>> recentSessions({int limit = 10});
@@ -20,7 +19,7 @@ abstract interface class SessionLocalDataSource {
 }
 
 final class SessionLocalDataSourceStored implements SessionLocalDataSource {
-  SessionLocalDataSourceStored(this._prefs, {this.seed = sessionSeed});
+  SessionLocalDataSourceStored(this._prefs, {this.seed = const []});
 
   final SharedPreferences _prefs;
 

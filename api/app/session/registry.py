@@ -38,7 +38,7 @@ def graph() -> Any:
 class SessionHandle:
     session_id: str
     topic: str
-    seniority: str
+    difficulty: str
     question_total: int
     device_id: str
     emitter: SessionEmitter
@@ -66,7 +66,7 @@ class SessionHandle:
                     initial_state(
                         session_id=self.session_id,
                         topic=self.topic,
-                        seniority=self.seniority,
+                        difficulty=self.difficulty,
                         question_total=self.question_total,
                     )
                 )
@@ -149,7 +149,7 @@ class SessionHandle:
 
 async def create(
     topic: str,
-    seniority: str,
+    difficulty: str,
     question_count: int,
     device_id: str,
 ) -> SessionHandle:
@@ -157,7 +157,7 @@ async def create(
     handle = SessionHandle(
         session_id=session_id,
         topic=topic,
-        seniority=seniority,
+        difficulty=difficulty,
         question_total=question_count,
         device_id=device_id,
         emitter=bus.register(session_id),
@@ -180,7 +180,7 @@ async def get(session_id: str) -> SessionHandle:
     handle = SessionHandle(
         session_id=session_id,
         topic=str(values["topic"]),
-        seniority=str(values.get("seniority") or "senior"),
+        difficulty=str(values.get("difficulty") or "medium"),
         question_total=int(values.get("question_total") or 0),
         device_id="",
         emitter=bus.register(session_id),

@@ -2,6 +2,7 @@ from typing import Any
 
 from langgraph.types import interrupt
 
+from ..data.catalog import resolve
 from ..providers.base import DIMENSIONS, GradeRequest, QuestionRequest
 from ..providers.factory import get_provider
 from ..session import bus
@@ -43,13 +44,17 @@ async def ask_question(state: InterviewState) -> dict[str, Any]:
         },
     )
 
+    level, topic = resolve(state["topic"])
     previous = state["history"][-1] if state["history"] else None
     request = QuestionRequest(
-        topic=state["topic"],
-        seniority=state["seniority"],
+        topic=topic.id,
+        topic_label=topic.label,
+        topic_covers=topic.covers,
+        difficulty=level.id,
+        seniority=level.seniority,
+        difficulty_brief=level.brief,
         index=index,
         total=total,
-        bank_index=state["bank_index"],
         is_follow_up=is_follow_up,
         weak_dimension=reason,
         previous_question=previous["question"] if previous else None,
@@ -72,7 +77,6 @@ async def ask_question(state: InterviewState) -> dict[str, Any]:
         total=total,
         kind=kind,
         reason=reason,
-        bank_index=state["bank_index"],
     )
 
     await _emit(
@@ -105,13 +109,14 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
 
     await _emit(session_id, "grade.started", {})
 
-    provider = get_provider()
-    score = await provider.grade(
+    level, topic = resolve(state["topic"])
+    score = await get_provider().grade(
         GradeRequest(
-            topic=state["topic"],
+            topic_label=topic.label,
+            difficulty=level.id,
+            seniority=level.seniority,
             question=pending["text"],
             answer=state["last_answer"],
-            keywords=provider.keywords_for(state["topic"], pending["bank_index"]),
         )
     )
 
@@ -158,7 +163,6 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
         "follow_up_depth": 0,
         "follow_up_reason": None,
         "asked_count": asked_count,
-        "bank_index": state["bank_index"] + 1,
         "questions_remaining": max(state["question_total"] - asked_count, 0),
     }
 
@@ -185,6 +189,7 @@ async def summarize(state: InterviewState) -> dict[str, Any]:
     scorecard = {
         "session_id": state["session_id"],
         "topic": state["topic"],
+        "difficulty": state["difficulty"],
         "overall": overall,
         "dimensions": dimensions,
         "missing": missing,

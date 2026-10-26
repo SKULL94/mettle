@@ -1,3 +1,4 @@
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/result/result.dart';
@@ -22,8 +23,8 @@ final class InterviewRepositoryImpl implements InterviewRepository {
   Future<Result<String>> startSession(SessionConfig config) async {
     try {
       return Success(await _remote.startSession(config));
-    } on NetworkException {
-      return const Failed(NetworkFailure());
+    } on NetworkException catch (error) {
+      return Failed(NetworkFailure(error.detail ?? AppStrings.serverUnreachable));
     } on ServerException {
       return const Failed(ServerFailure());
     } on Object {
@@ -51,8 +52,8 @@ final class InterviewRepositoryImpl implements InterviewRepository {
         answer: answer,
       );
       return const Success(null);
-    } on NetworkException {
-      return const Failed(NetworkFailure());
+    } on NetworkException catch (error) {
+      return Failed(NetworkFailure(error.detail ?? AppStrings.serverUnreachable));
     } on StreamException {
       return const Failed(ServerFailure());
     } on Object {
@@ -68,8 +69,8 @@ final class InterviewRepositoryImpl implements InterviewRepository {
     try {
       await _remote.skipQuestion(sessionId: sessionId, turnId: turnId);
       return const Success(null);
-    } on NetworkException {
-      return const Failed(NetworkFailure());
+    } on NetworkException catch (error) {
+      return Failed(NetworkFailure(error.detail ?? AppStrings.serverUnreachable));
     } on Object {
       return const Failed(UnknownFailure());
     }

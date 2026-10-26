@@ -124,10 +124,18 @@ no tab bar competing for attention mid-answer.
 
 Per conventions: navigate by name, pass **IDs only**, destination bloc fetches its own data.
 
-### No authentication — by design
+### No authentication — by design (M1 only)
 
-**There are no auth screens.** No login, signup, password reset, OTP, or social sign-in. Splash →
-Home, every launch. This is a deliberate scope decision, and the consequences run all the way down:
+> **Superseded in M2.** M2 adds sign-in and a first-run onboarding flow — see *M2 — identity and
+> personalisation* in §4. Everything below is the rationale for shipping M1 without it, and it stays
+> here because the sequencing is the argument: the local-storage path was built first and still
+> works, so M2's account layers *on top of* working storage rather than becoming a gate in front of
+> an empty app. The one claim M2 genuinely gives up is "zero friction for a reviewer", which is why
+> onboarding must stay skippable.
+
+**There are no auth screens in M1.** No login, signup, password reset, OTP, or social sign-in.
+Splash → Home, every launch. This is a deliberate scope decision, and the consequences run all the
+way down:
 
 - **Identity is device-local.** Sessions and scores live in Drift on the device. There is no account
   to create and nothing to lose by not having one.
@@ -266,21 +274,78 @@ wrapper; with it, the architecture is on screen.
 
 *Proves:* data visualization, and that measurement — not chat — is the product.
 
-### M2 — depth
+### M2 — identity and personalisation
 
-- **`Progress` `/progress`** — score trend across sessions, per-topic mastery, question coverage.
-  *Proves:* charting, aggregation, offline reads.
+M1 deliberately had no accounts and no first-run flow (see *No authentication — by design* above).
+**M2 reverses that**, and the reversal is the point of the milestone: the app stops being one
+anonymous practice tool and starts being *your* practice tool.
+
+#### Auth
+
+- **`Splash`** — gains a real decision instead of always landing on Home: restore a session, or route
+  to sign-in. The async bootstrap already exists; this adds one branch.
+- **`SignIn` `/sign-in`** — email plus at least one provider. No password-reset screens hand-rolled;
+  lean on the provider.
+- The backend's `X-Device-Id` becomes a fallback rather than the whole identity story. A real user id
+  means scores follow the person across devices — the thing device-local storage cannot do.
+
+#### Onboarding — three questions, then out of the way
+
+A short first-run flow, skippable, with defaults that work if skipped:
+
+| Step | Choice | What it changes |
+|---|---|---|
+| **Stack** | Flutter · React Native · Android · iOS · Web | Which topic catalogue loads |
+| **Experience** | Junior · Mid-level · Senior | The default difficulty tier |
+| **Focus** | Any topics from the chosen stack | What Home suggests first |
+
+**Experience maps onto the difficulty tiers already shipped in M1.** Onboarding sets the default; the
+setup sheet still overrides it per session. Someone who says "senior" is not locked out of easy
+topics — they just stop having to pick Hard every time.
+
+#### A personalised Home
+
+Home stops being a generic dashboard:
+
+- A **`Flutter · Senior`** chip, tappable to change, replacing the implicit defaults
+- *Continue where you left off* — the weakest topic for **this** stack and level
+- Trend and mastery scoped to the chosen stack, so switching stacks doesn't pollute the numbers
+
+#### Also in M2
+
+- **`Progress` `/progress`** — score trend, per-topic mastery, question coverage.
 - **`History`** — past sessions list, reusing `Scorecard`. Nearly free.
-- **`Settings` `/settings`** — theme, **API base URL**, demo-mode toggle, clear data. A configurable
-  endpoint lets a reviewer point your app at their own backend — a genuinely thoughtful touch.
+- **`Settings`** — theme, **API base URL**, sign-out, clear data.
 - **Voice answers** — record + waveform `CustomPainter` + STT on Android; text fallback on web.
+
+#### What this costs — read before starting
+
+Multi-stack is the expensive half, and the cost is mostly in the backend, not the UI:
+
+1. **The topic catalogue gains a dimension.** `topics.yaml` is 20 topics × 3 levels for Flutter.
+   Five stacks is five catalogues, authored and maintained — and `GET /v1/topics` has to take a stack
+   parameter.
+2. **The interviewer prompt hard-pins Flutter today**, deliberately: it lists the frameworks to
+   *avoid* because Haiku drifted to React Native and Sonnet to Jetpack Compose when the prompt only
+   said "mobile engineer". Each new stack needs the same treatment, including its own do-not-drift
+   list.
+3. **The rubric is framework-neutral but its calibration examples are Flutter** (`build()`,
+   `initState`). Those anchor the scale, so each stack wants its own worked examples or grading
+   drifts between stacks.
+4. **Onboarding becomes a gate**, which contradicts M1's "zero friction to try it". Keep it skippable
+   with working defaults, or the demo loses the property that made it demoable.
+
+Stack selection is what turns this from a Flutter interview tool into an interview tool. It is also
+roughly 4× the content surface. Worth doing deliberately, and worth shipping one stack at a time.
 
 ### M3 — differentiation
 
-- **Role & target setup** — role, seniority, and an optional pasted job description that feeds the
-  agent's question generation. This lives as a section in `Settings`, reachable from an editable
-  `Flutter · Senior` chip on Home. It is **not** a gated first-run screen: there are sensible
-  defaults from launch, and tuning them is an optional improvement rather than a toll booth.
+- **Job-description targeting** — paste a real JD and have questions drawn from it rather than from
+  the fixed catalogue. Reachable from the `Flutter · Senior` chip M2 introduces. Stack and experience
+  move to M2's onboarding; what stays here is the free-text JD, which is the part that needs the
+  model rather than a picker.
+- **The remaining stacks** — M2 ships onboarding with the stack picker; M3 is where the other
+  catalogues and their do-not-drift prompts actually land.
 - Session resume via LangGraph checkpointer.
 - Human-in-the-loop: "ask me that again."
 
@@ -333,9 +398,9 @@ from one small helper. Disproportionate visual coverage for an afternoon.
 
 | | Scope | Proves |
 |---|---|---|
-| **M1** · wk 1 | Splash · Home · setup sheet · Interview · Scorecard. Text only, no auth. Keyless demo mode. End-to-end. | It's real and it runs |
-| **M2** · wk 2 | Voice + waveform, Progress charts, History, Settings, offline via Drift | Flutter depth |
-| **M3** · wk 3 | Rubric evaluation, onboarding + JD input, checkpointer resume, human-in-the-loop, deployed web build | Agent depth + a live link |
+| **M1** · wk 1 | Splash · Home · setup sheet · Interview · Scorecard. Text only, no auth, difficulty-tiered topics. End-to-end on a real device. | It's real and it runs |
+| **M2** · wk 2–3 | Auth + onboarding (stack · experience · focus), personalised Home, Progress charts, History, voice + waveform | Product thinking, not just screens |
+| **M3** · wk 4 | Multi-stack catalogues, JD-targeted questions, checkpointer resume, human-in-the-loop, deployed web build | Agent depth + a live link |
 
 Each milestone ships as a tagged release with a changelog entry. `v0.1.0 → v0.3.0` reads as
 *shipped*; 200 commits and no releases reads as *tinkering*.

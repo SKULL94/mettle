@@ -6,14 +6,19 @@ from fastapi import APIRouter, Header, HTTPException, Response, status
 from sse_starlette.sse import EventSourceResponse
 
 from ...config import get_settings
+from ...data.catalog import UnknownTopic, catalog, resolve
+from ...providers.factory import ProviderNotConfigured, get_provider
 from ...schemas.wire import (
     AnswerRequest,
+    CatalogResponse,
     CreateSessionRequest,
     CreateSessionResponse,
+    DifficultyOut,
     MetaResponse,
     ScorecardResponse,
     SessionStateResponse,
     SkipRequest,
+    TopicOut,
 )
 from ...session import registry
 
@@ -36,6 +41,25 @@ async def meta() -> MetaResponse:
         version=settings.version,
         model=settings.reported_model,
         demo_mode=settings.demo_mode,
+        configured=settings.has_api_key,
+    )
+
+
+@router.get("/topics", response_model=CatalogResponse)
+async def topics() -> CatalogResponse:
+    return CatalogResponse(
+        difficulties=[
+            DifficultyOut(
+                id=level.id,
+                label=level.label,
+                seniority=level.seniority,
+                topics=[
+                    TopicOut(id=t.id, label=t.label, covers=t.covers)
+                    for t in level.topics
+                ],
+            )
+            for level in catalog()
+        ]
     )
 
 
@@ -48,9 +72,23 @@ async def create_session(
     body: CreateSessionRequest,
     x_device_id: DeviceId = "anonymous",
 ) -> CreateSessionResponse:
+    try:
+        get_provider()
+    except ProviderNotConfigured as exc:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)
+        ) from None
+
+    try:
+        level, _ = resolve(body.topic)
+    except UnknownTopic:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, f"unknown topic: {body.topic}"
+        ) from None
+
     handle = await registry.create(
         topic=body.topic,
-        seniority=body.seniority,
+        difficulty=level.id,
         question_count=body.question_count,
         device_id=x_device_id,
     )

@@ -8,10 +8,13 @@ DIMENSIONS = ("correctness", "depth", "clarity", "structure")
 
 class QuestionRequest(BaseModel):
     topic: str
+    topic_label: str
+    topic_covers: str
+    difficulty: str
     seniority: str
+    difficulty_brief: str
     index: int
     total: int
-    bank_index: int = 0
     is_follow_up: bool = False
     weak_dimension: str | None = None
     previous_question: str | None = None
@@ -20,10 +23,11 @@ class QuestionRequest(BaseModel):
 
 
 class GradeRequest(BaseModel):
-    topic: str
+    topic_label: str
+    difficulty: str
+    seniority: str
     question: str
     answer: str
-    keywords: list[str] = Field(default_factory=list)
 
 
 class TurnScore(BaseModel):
@@ -48,5 +52,3 @@ class LLMProvider(Protocol):
     def stream_question(self, req: QuestionRequest) -> AsyncIterator[str]: ...
 
     async def grade(self, req: GradeRequest) -> TurnScore: ...
-
-    def keywords_for(self, topic: str, bank_index: int) -> list[str]: ...

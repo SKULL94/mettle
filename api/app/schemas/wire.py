@@ -4,9 +4,8 @@ from pydantic import BaseModel, Field
 
 
 class CreateSessionRequest(BaseModel):
-    topic: str = "state-management"
+    topic: str
     question_count: int = Field(default=5, ge=1, le=10)
-    seniority: str = "senior"
 
 
 class CreateSessionResponse(BaseModel):
@@ -27,6 +26,24 @@ class MetaResponse(BaseModel):
     version: str
     model: str
     demo_mode: bool
+    configured: bool
+
+
+class TopicOut(BaseModel):
+    id: str
+    label: str
+    covers: str
+
+
+class DifficultyOut(BaseModel):
+    id: str
+    label: str
+    seniority: str
+    topics: list[TopicOut]
+
+
+class CatalogResponse(BaseModel):
+    difficulties: list[DifficultyOut]
 
 
 class SessionStateResponse(BaseModel):
@@ -43,6 +60,7 @@ class SessionStateResponse(BaseModel):
 class ScorecardResponse(BaseModel):
     session_id: str
     topic: str
+    difficulty: str
     overall: int
     dimensions: dict[str, int]
     missing: list[str]

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../constants/app_strings.dart';
 import '../error/exceptions.dart';
 
 final class ServerSentEvent {
@@ -33,9 +34,9 @@ final class SseClient {
     try {
       response = await _client.send(request);
     } on SocketException {
-      throw const NetworkException('the backend is unreachable');
-    } on http.ClientException catch (error) {
-      throw NetworkException(error.message);
+      throw const NetworkException(AppStrings.serverUnreachable);
+    } on http.ClientException {
+      throw const NetworkException(AppStrings.streamInterrupted);
     }
 
     if (response.statusCode != 200) {

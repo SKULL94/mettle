@@ -6,6 +6,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/result/result.dart';
 import '../../../../core/widgets/demo_mode_chip.dart';
+import '../../domain/entities/difficulty.dart';
 import '../../domain/entities/interview_topic.dart';
 import '../../domain/entities/session_config.dart';
 import '../../domain/usecases/start_session.dart';
@@ -69,8 +70,18 @@ class SessionSetupSheet extends StatefulWidget {
 }
 
 class _SessionSetupSheetState extends State<SessionSetupSheet> {
+  late Difficulty _difficulty =
+      widget.initialTopic?.difficulty ?? Difficulty.defaultLevel;
   late InterviewTopic? _topic = widget.initialTopic;
   int _questionCount = SessionConfig.defaultQuestionCount;
+
+  void _selectDifficulty(Difficulty value) {
+    if (value == _difficulty) return;
+    setState(() {
+      _difficulty = value;
+      _topic = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +107,13 @@ class _SessionSetupSheetState extends State<SessionSetupSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _DifficultyPicker(
+                      selected: _difficulty,
+                      onSelected: _selectDifficulty,
+                    ),
+                    const SizedBox(height: AppDimens.lg),
                     _TopicPicker(
+                      difficulty: _difficulty,
                       selected: topic,
                       weakTopics: widget.weakTopics,
                       onSelected: (value) => setState(() => _topic = value),
@@ -174,11 +191,13 @@ class _SheetHeader extends StatelessWidget {
 
 class _TopicPicker extends StatelessWidget {
   const _TopicPicker({
+    required this.difficulty,
     required this.selected,
     required this.weakTopics,
     required this.onSelected,
   });
 
+  final Difficulty difficulty;
   final InterviewTopic? selected;
   final Set<InterviewTopic> weakTopics;
   final ValueChanged<InterviewTopic> onSelected;
@@ -197,13 +216,46 @@ class _TopicPicker extends StatelessWidget {
           spacing: AppDimens.sm,
           runSpacing: AppDimens.sm,
           children: [
-            for (final topic in InterviewTopic.values)
+            for (final topic in InterviewTopic.forDifficulty(difficulty))
               TopicTile(
                 topic: topic,
                 selected: topic == selected,
                 isWeak: weakTopics.contains(topic),
                 onTap: () => onSelected(topic),
               ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _DifficultyPicker extends StatelessWidget {
+  const _DifficultyPicker({required this.selected, required this.onSelected});
+
+  final Difficulty selected;
+  final ValueChanged<Difficulty> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _PickerLabel(label: AppStrings.setupDifficulty),
+        const SizedBox(height: AppDimens.sm),
+        Row(
+          children: [
+            for (final level in Difficulty.values) ...[
+              if (level != Difficulty.values.first)
+                const SizedBox(width: AppDimens.sm),
+              Expanded(
+                child: DifficultyTile(
+                  level: level,
+                  selected: level == selected,
+                  onTap: () => onSelected(level),
+                ),
+              ),
+            ],
           ],
         ),
       ],

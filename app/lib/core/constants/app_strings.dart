@@ -162,7 +162,12 @@ abstract final class AppStrings {
   static const offlineBanner = "Can't reach the server — showing saved data.";
 
   static const serverError = 'Something went wrong. Please try again.';
-  static const noConnection = 'No internet connection.';
+  static const serverUnreachable =
+      "Can't reach the Mettle server.";
+  static const requestTimeout =
+      'The server took too long to respond. Please retry.';
+  static const streamInterrupted =
+      'Lost the connection to the server. Retry to pick up where you left off.';
   static const cacheError = 'Could not read local data.';
   static const unknownError = 'Unexpected error. Please try again.';
   static const notFoundTitle = 'Page not found';
@@ -170,6 +175,7 @@ abstract final class AppStrings {
   static const bootstrapFailed = "Couldn't start up.";
 
   static const setupTitle = 'New session';
+  static const setupDifficulty = 'DIFFICULTY';
   static const setupTopic = 'SELECT TOPIC';
   static const setupLength = 'QUESTION COUNT';
   static const setupStart = 'Start interview';

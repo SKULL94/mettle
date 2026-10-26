@@ -48,28 +48,28 @@ void main() {
 
   tearDown(resetDependencies);
 
-  testWidgets('recovers from the legacy summary-only format', (tester) async {
+  testWidgets('discards the legacy summary-only format without erroring', (
+    tester,
+  ) async {
     await openWith(tester, legacyPayload);
 
     expect(find.text(AppStrings.cacheError), findsNothing);
     expect(find.text(AppStrings.homeTitle), findsOneWidget);
-
-    await scrollToSessions(tester);
-    expect(find.byType(SessionRow), findsWidgets);
+    expect(find.text(AppStrings.homeEmptyTitle), findsOneWidget);
+    expect(find.byType(SessionRow), findsNothing);
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.text(AppStrings.navProgress));
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.cacheError), findsNothing);
-    expect(find.text(AppStrings.topicMastery), findsOneWidget);
   });
 
   testWidgets('recovers from an unreadable payload', (tester) async {
     await openWith(tester, 'not json at all');
 
     expect(find.text(AppStrings.cacheError), findsNothing);
-    await scrollToSessions(tester);
-    expect(find.byType(SessionRow), findsWidgets);
+    expect(find.text(AppStrings.homeEmptyTitle), findsOneWidget);
+    expect(find.byType(SessionRow), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -80,8 +80,9 @@ void main() {
     );
 
     expect(find.text(AppStrings.cacheError), findsNothing);
-    await scrollToSessions(tester);
-    expect(find.byType(SessionRow), findsWidgets);
+    expect(find.text(AppStrings.homeEmptyTitle), findsOneWidget);
+    expect(find.byType(SessionRow), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('a cleared store stays cleared', (tester) async {
@@ -95,15 +96,12 @@ void main() {
     expect(find.byType(SessionRow), findsNothing);
   });
 
-  testWidgets('a fresh install seeds the demo sessions', (tester) async {
+  testWidgets('a fresh install starts empty', (tester) async {
     await openWith(tester, null);
 
     expect(find.text(AppStrings.cacheError), findsNothing);
-    await scrollToSessions(tester);
-    expect(find.byType(SessionRow), findsWidgets);
-
-    final prefs = await SharedPreferences.getInstance();
-    final stored = jsonDecode(prefs.getString('sessions')!);
-    expect((stored as Map<String, dynamic>)['version'], 2);
+    expect(find.text(AppStrings.homeEmptyTitle), findsOneWidget);
+    expect(find.byType(SessionRow), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 }

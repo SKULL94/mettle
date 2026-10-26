@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/error/exceptions.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/interview_turn.dart';
 import '../../domain/entities/turn_event.dart';
@@ -40,7 +41,10 @@ final class InterviewBloc extends Bloc<InterviewEvent, InterviewState> {
       onError: (error, stackTrace) => emit(
         state.copyWith(
           status: InterviewStatus.failed,
-          error: AppStrings.serverError,
+          error: switch (error) {
+            AppException(:final detail?) => detail,
+            _ => AppStrings.serverError,
+          },
         ),
       ),
     );

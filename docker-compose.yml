@@ -5,7 +5,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      LLM_PROVIDER: ${LLM_PROVIDER:-scripted}
+      LLM_PROVIDER: ${LLM_PROVIDER:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
       DATABASE_URL: sqlite+aiosqlite:////srv/data/mettle.db

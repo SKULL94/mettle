@@ -2,6 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ProviderName = Literal["scripted", "anthropic"]
@@ -44,6 +45,13 @@ class Settings(BaseSettings):
 
     token_delay_ms: int = 24
     grade_delay_ms: int = 320
+
+    @field_validator("llm_provider", mode="before")
+    @classmethod
+    def _blank_means_auto_detect(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
     @property
     def has_api_key(self) -> bool:

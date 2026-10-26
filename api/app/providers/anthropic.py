@@ -8,6 +8,8 @@ from .base import GradeRequest, QuestionRequest, TurnScore
 
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
+NO_TUNING_PREFIXES = ("claude-haiku-4-5", "claude-sonnet-4-5")
+
 SCORE_SCHEMA = {
     "type": "object",
     "properties": {
@@ -23,13 +25,23 @@ SCORE_SCHEMA = {
 }
 
 INTERVIEWER = """\
-You are conducting a mock technical interview for a mobile engineer. Ask one
-question at a time and nothing else: no preamble, no restatement of the topic,
-no commentary on the previous answer, no markdown. Output only the question
-text.
+You are conducting a mock technical interview for a **Flutter** engineer
+working in Dart. Every question must be about Flutter and Dart specifically -
+widgets, elements, BuildContext, the widget lifecycle, bloc or other Flutter
+state management, Dart isolates and the event loop, Flutter rendering and
+raster performance, go_router, flutter_test.
 
-Keep it to two sentences at most. Ground it in a concrete situation the
-candidate would actually hit rather than asking for a definition.
+Never ask about React Native, Jetpack Compose, SwiftUI, RecyclerView,
+FlatList, UIKit, or any other framework. The topic name you are given refers to
+the Flutter concept of that name - "keys" means Flutter's Key, ValueKey and
+GlobalKey, not map keys or database keys.
+
+Ask one question at a time and nothing else: no preamble, no restatement of the
+topic, no commentary on the previous answer, no markdown. Output only the
+question text.
+
+Keep it to two sentences at most. Ground it in a concrete situation a Flutter
+developer would actually hit rather than asking for a definition.
 
 Do not include internal or system XML tags in your response.
 """
@@ -57,17 +69,31 @@ class AnthropicProvider:
         self._fallbacks: dict[str, object] = (
             {"betas": [FALLBACK_BETA], "fallbacks": "default"} if enable_fallbacks else {}
         )
+        self._supports_tuning = not model.startswith(NO_TUNING_PREFIXES)
 
-    def keywords_for(self, topic: str, bank_index: int) -> list[str]:
-        return []
+    def _question_tuning(self) -> dict[str, object]:
+        if not self._supports_tuning:
+            return {"thinking": {"type": "disabled"}}
+        return {
+            "thinking": {"type": "disabled"},
+            "output_config": {"effort": self._question_effort},
+        }
+
+    def _grade_tuning(self) -> dict[str, object]:
+        schema = {"type": "json_schema", "schema": SCORE_SCHEMA}
+        if not self._supports_tuning:
+            return {"output_config": {"format": schema}}
+        return {
+            "thinking": {"type": "adaptive"},
+            "output_config": {"effort": self._grade_effort, "format": schema},
+        }
 
     async def stream_question(self, req: QuestionRequest) -> AsyncIterator[str]:
         async with self._client.beta.messages.stream(
             model=self._model,
             max_tokens=1024,
             **self._fallbacks,
-            thinking={"type": "disabled"},
-            output_config={"effort": self._question_effort},
+            **self._question_tuning(),
             system=[
                 {
                     "type": "text",
@@ -89,11 +115,7 @@ class AnthropicProvider:
             model=self._model,
             max_tokens=4096,
             **self._fallbacks,
-            thinking={"type": "adaptive"},
-            output_config={
-                "effort": self._grade_effort,
-                "format": {"type": "json_schema", "schema": SCORE_SCHEMA},
-            },
+            **self._grade_tuning(),
             system=[
                 {
                     "type": "text",
@@ -121,9 +143,14 @@ class AnthropicProvider:
     @staticmethod
     def _question_prompt(req: QuestionRequest) -> str:
         lines = [
-            f"Topic: {req.topic}",
-            f"Seniority: {req.seniority}",
+            f"Level: {req.difficulty} ({req.seniority})",
+            req.difficulty_brief,
+            "",
+            f"Topic: {req.topic_label}",
+            f"This topic covers: {req.topic_covers}",
+            "",
             f"Question {req.index} of {req.total}.",
+            "Stay inside this topic and pitch it at the level above.",
         ]
 
         if req.is_follow_up:
@@ -143,12 +170,16 @@ class AnthropicProvider:
 
     @staticmethod
     def _grade_prompt(req: GradeRequest) -> str:
-        lines = [f"Topic: {req.topic}", f"Question: {req.question}"]
-
-        if req.keywords:
-            lines.append(
-                f"Concepts a complete answer would touch: {', '.join(req.keywords)}"
-            )
-
-        lines += ["", f"Candidate answer:\n{req.answer or '(no answer given)'}"]
-        return "\n".join(lines)
+        return "\n".join(
+            [
+                f"Topic: {req.topic_label}",
+                f"Level: {req.difficulty} - asked of a {req.seniority} developer.",
+                "Judge the answer against the anchors exactly as written. Do not"
+                " soften them for a junior or raise them for a senior; the question"
+                " already carries the level.",
+                "",
+                f"Question: {req.question}",
+                "",
+                f"Candidate answer:\n{req.answer or '(no answer given)'}",
+            ]
+        )

@@ -67,3 +67,7 @@ api/*.db
 api/*.db-shm
 api/*.db-wal
 api/data/
+
+# Per-machine dart-define config (LAN IPs etc). Never put secrets here -
+# dart-define values are compiled into the app binary.
+app/dart_defines/local.json

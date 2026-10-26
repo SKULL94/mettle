@@ -5,6 +5,7 @@ import '../../../../core/widgets/selectable_tile.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/score_colors.dart';
 import '../../../../core/widgets/status_dot.dart';
+import '../../domain/entities/difficulty.dart';
 import '../../domain/entities/interview_topic.dart';
 import 'topic_label.dart';
 
@@ -105,6 +106,51 @@ class QuestionCountTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.labelSmall,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class DifficultyTile extends StatelessWidget {
+  const DifficultyTile({
+    required this.level,
+    required this.selected,
+    required this.onTap,
+    super.key,
+  });
+
+  final Difficulty level;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SelectableTile(
+      selected: selected,
+      onTap: onTap,
+      semanticLabel: '${level.label}, ${level.seniority}',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            level.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface,
+            ),
+          ),
+          Text(
+            level.seniority,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall,
+          ),
         ],
       ),
     );
