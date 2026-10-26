@@ -178,10 +178,18 @@ Consistency in grading therefore comes from a fixed rubric with explicit per-lev
 the better mechanism regardless, since `temperature=0` never guaranteed determinism.
 
 **Prompt caching is a large real win here.** The rubric plus system prompt is byte-identical across
-every turn and every session, so put the cache breakpoint on the last system block. The minimum
-cacheable prefix is 512 tokens, which a real rubric clears easily — a 5-question session pays for the
-rubric once instead of ten times. Guard it: keep timestamps and session IDs *out* of the system
-prompt, or the prefix changes per request and nothing caches.
+every turn and every session, so put the cache breakpoint on the last system block. Guard it: keep
+timestamps and session IDs *out* of the system prompt, or the prefix changes per request and nothing
+caches.
+
+**Mind the per-model cache floor — it is not uniform.** The minimum cacheable prefix is 512 tokens on
+Opus 5 but **1024 on Sonnet 5**, and a prefix under the floor silently does not cache: no error, just
+`cache_creation_input_tokens: 0` forever. The first rubric written here measured 483 tokens and
+therefore never cached on Sonnet. Expanding it to explicit per-level anchors plus two calibration
+examples brought it to 1324 tokens, which both clears the floor and is the mechanism the rubric was
+supposed to provide in the first place. Measured on `claude-sonnet-5`: 1771 tokens written on the
+first grade call, then read from cache on every subsequent one with ~102 uncached. Assert on
+`usage.cache_read_input_tokens` in a provider test rather than trusting that it engaged.
 
 **Handle refusals.** This matters more than it looks: a user practising for a **security** role asks
 for security interview questions, which can legitimately trip a provider's safety classifiers. A

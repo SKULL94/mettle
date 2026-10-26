@@ -248,10 +248,10 @@ To use real model calls, copy `.env.example` to `.env` and fill in your provider
 │   ├── lib/core/         constants · theme · result · error · router · di · storage · widgets
 │   ├── lib/features/     splash · home · interview · progress · settings
 │   └── test/             mirrors lib/
-├── api/              FastAPI + LangGraph service  ⬜ next Phase 1 slice
+├── api/              FastAPI + LangGraph service  ✅ in place
 ├── docs/             product plan · backend architecture
 ├── CONVENTIONS.md    Flutter conventions (binding, enforced in review)
-└── docker-compose.yml                             ⬜ lands with api/
+└── docker-compose.yml                             ✅ in place
 ```
 
 Platform targets are `android`, `ios`, and `web` only — the desktop platform

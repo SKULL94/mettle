@@ -1,0 +1,113 @@
+state-management:
+  - text: >-
+      You have a bloc that rebuilds a list on every keystroke in a search field.
+      Walk me through what you would change and why.
+    keywords: [debounce, buildwhen, transformer, rebuild, equatable]
+    follow_up: >-
+      You mentioned reducing rebuilds. What exactly does buildWhen compare, and
+      what breaks if your state class has no value equality?
+  - text: >-
+      When would you reach for a Cubit instead of a Bloc, and what do you give up
+      by doing so?
+    keywords: [event, traceability, simple, transformer, audit]
+    follow_up: >-
+      If events are documentation, what do you lose in debugging once a Cubit
+      replaces them?
+  - text: >-
+      A bloc needs data from two repositories that can each fail independently.
+      How do you model that state?
+    keywords: [sealed, partial, failure, union, copywith]
+    follow_up: >-
+      How does your model distinguish "still loading the second source" from "the
+      second source failed"?
+
+widget-lifecycle:
+  - text: >-
+      Why is it wrong to call an async API directly inside build(), and where
+      should that call go instead?
+    keywords: [initstate, rebuild, didchangedependencies, future, idempotent]
+    follow_up: >-
+      initState cannot await. How do you handle a widget disposed before the
+      future resolves?
+  - text: >-
+      What is the practical difference between didUpdateWidget and
+      didChangeDependencies?
+    keywords: [inherited, parent, configuration, oldwidget, theme]
+    follow_up: >-
+      Which of the two fires when the surrounding Theme changes, and why that
+      one?
+
+keys:
+  - text: >-
+      You reorder a list of stateful rows and the state attaches to the wrong
+      row. What is happening?
+    keywords: [key, valuekey, element, canupdate, runtimetype]
+    follow_up: >-
+      You mentioned keys. What does canUpdate actually compare, and what breaks
+      without a ValueKey in a reorderable list?
+  - text: When is a GlobalKey the right tool, and what does it cost?
+    keywords: [globalkey, expensive, state, reparent, form]
+    follow_up: >-
+      Why is holding a GlobalKey across a rebuild more expensive than a local
+      key?
+
+async-isolates:
+  - text: >-
+      Parsing a large JSON payload is janking your UI. What do you do, and what
+      are the constraints?
+    keywords: [isolate, compute, sendport, serializable, jank]
+    follow_up: >-
+      What kinds of objects can cross an isolate boundary, and what happens if
+      you try to send a closure?
+  - text: >-
+      Explain the difference between an async gap and a microtask in terms of
+      when your code actually runs.
+    keywords: ["event loop", microtask, scheduler, await, queue]
+    follow_up: >-
+      Given a microtask and a Future.delayed(Duration.zero), which runs first and
+      why?
+
+performance:
+  - text: >-
+      A scrolling list drops frames on a mid-range Android device. How do you
+      find the cause rather than guessing?
+    keywords: [devtools, timeline, raster, repaint, const]
+    follow_up: >-
+      You found the slow frames. How do you tell a UI-thread problem from a
+      raster-thread problem?
+  - text: >-
+      What does RepaintBoundary actually do, and when does adding one make things
+      worse?
+    keywords: [layer, repaint, memory, raster, boundary]
+    follow_up: >-
+      If every widget got a RepaintBoundary, what would you expect to regress?
+
+navigation:
+  - text: >-
+      Your app supports deep links and browser refresh on web. How does that
+      constrain what you pass between routes?
+    keywords: [identifier, path, serializable, extra, refetch]
+    follow_up: >-
+      You said pass identifiers. What specifically breaks on a browser refresh if
+      you pass an object instead?
+  - text: >-
+      How do you keep per-tab navigation stacks independent in a bottom
+      navigation app?
+    keywords: [shell, indexedstack, branch, navigator, state]
+    follow_up: >-
+      What happens to the other tabs state when you rebuild the shell route?
+
+testing:
+  - text: >-
+      What do you assert in a bloc test that you would not assert in a widget
+      test, and why keep them separate?
+    keywords: [sequence, emit, render, pump, isolation]
+    follow_up: >-
+      Your bloc test passes but the screen is blank. Which test was missing?
+  - text: >-
+      Golden tests keep failing in CI but pass locally. What are the likely
+      causes?
+    keywords: [font, platform, shader, tolerance, ci]
+    follow_up: >-
+      How would you make the goldens deterministic without weakening what they
+      catch?

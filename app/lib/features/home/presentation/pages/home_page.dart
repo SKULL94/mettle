@@ -12,8 +12,8 @@ import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../widgets/home_header.dart';
+import '../widgets/last_session.dart';
 import '../widgets/progress_card.dart';
-import '../widgets/recent_sessions.dart';
 import '../widgets/start_session_button.dart';
 import '../widgets/weak_topic_chips.dart';
 
@@ -84,7 +84,7 @@ class _HomeSkeleton extends StatelessWidget {
         SizedBox(height: AppDimens.xl),
         Align(alignment: Alignment.centerLeft, child: SkeletonBox.text()),
         SizedBox(height: AppDimens.md),
-        RecentSessionsSkeleton(),
+        LastSessionSkeleton(),
       ],
     );
   }
@@ -100,7 +100,7 @@ class _HomeEmpty extends StatelessWidget {
     return _Body(
       children: [
         const SizedBox(height: AppDimens.lg),
-        const ProgressCard(averageScore: null, trend: [], sessionCount: 0),
+        const ProgressCard(averageScore: null, delta: null, sessionCount: 0),
         const SizedBox(height: AppDimens.xl),
         Text(
           AppStrings.homeEmptyTitle,
@@ -143,8 +143,9 @@ class _HomeLoaded extends StatelessWidget {
         const SizedBox(height: AppDimens.lg),
         ProgressCard(
           averageScore: overview.averageScore,
-          trend: overview.recentScores,
-          sessionCount: overview.recentSessions.length,
+          delta: overview.delta,
+          sessionCount: overview.sessionCount,
+          onTap: () => context.goNamed(AppRoutes.progressName),
         ),
         const SizedBox(height: AppDimens.lg),
         StartSessionButton(weakTopics: weakTopics),
@@ -157,8 +158,8 @@ class _HomeLoaded extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppDimens.xl),
-        RecentSessions(
-          sessions: overview.recentSessions,
+        LastSession(
+          session: overview.lastSession,
           onSelected: (session) => context.pushNamed(
             AppRoutes.scorecardName,
             pathParameters: {AppRoutes.idParam: session.id},

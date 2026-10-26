@@ -6,6 +6,7 @@ import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/usecases/get_home_overview.dart';
 import '../../features/home/domain/usecases/watch_sessions.dart' as home;
 import '../../features/home/presentation/bloc/home_bloc.dart';
+import '../../features/interview/data/datasources/interview_http_data_source.dart';
 import '../../features/interview/data/datasources/interview_remote_data_source.dart';
 import '../../features/interview/data/repositories/interview_repository_impl.dart';
 import '../../features/interview/domain/repositories/interview_repository.dart';
@@ -26,6 +27,7 @@ import '../../features/settings/domain/usecases/clear_sessions.dart';
 import '../../features/settings/domain/usecases/get_theme_mode.dart';
 import '../../features/settings/domain/usecases/set_theme_mode.dart';
 import '../../features/settings/presentation/cubit/settings_cubit.dart';
+import '../network/api_client.dart';
 import '../storage/app_preferences.dart';
 
 final sl = GetIt.instance;
@@ -41,8 +43,9 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton<SessionLocalDataSource>(
     () => SessionLocalDataSourceStored(sl()),
   );
+  sl.registerLazySingleton<ApiClient>(() => ApiClient(sl()));
   sl.registerLazySingleton<InterviewRemoteDataSource>(
-    InterviewScriptedDataSource.new,
+    () => InterviewHttpDataSource(sl()),
   );
 
   sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl(sl()));

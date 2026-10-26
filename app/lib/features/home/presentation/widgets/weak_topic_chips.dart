@@ -43,7 +43,7 @@ class WeakTopicChips extends StatelessWidget {
               _WeakTopicChip(
                 topic: entry.topic,
                 score: entry.score,
-                onTap: () => {},
+                onTap: () => onSelected(entry.topic),
               ),
           ],
         ),
@@ -77,35 +77,45 @@ class _WeakTopicChip extends StatelessWidget {
         ),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppDimens.md),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minHeight: AppDimens.minTouchTarget,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              StatusDot(color: color),
-              const SizedBox(width: AppDimens.sm),
-              Flexible(
-                child: Text(
-                  topicLabel(topic),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyLarge,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: Semantics(
+          button: true,
+          label: AppStrings.practiceTopic(topicLabel(topic)),
+          child: ExcludeSemantics(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppDimens.md),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: AppDimens.minTouchTarget,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    StatusDot(color: color),
+                    const SizedBox(width: AppDimens.sm),
+                    Flexible(
+                      child: Text(
+                        topicLabel(topic),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                    ),
+                    const SizedBox(width: AppDimens.sm),
+                    Text(
+                      '$score',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: AppDimens.sm),
-              Text(
-                '$score',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

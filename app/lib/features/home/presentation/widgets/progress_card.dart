@@ -5,54 +5,65 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/score_colors.dart';
 import '../../../../core/widgets/score_ring.dart';
 import '../../../../core/widgets/skeleton_box.dart';
-import '../../../../core/widgets/sparkline.dart';
+import '../../domain/entities/score_delta.dart';
 
 class ProgressCard extends StatelessWidget {
   const ProgressCard({
     required this.averageScore,
-    required this.trend,
+    required this.delta,
     required this.sessionCount,
+    this.onTap,
     this.animate = true,
     super.key,
   });
 
   final int? averageScore;
-  final List<int> trend;
+  final ScoreDelta? delta;
   final int sessionCount;
+  final VoidCallback? onTap;
   final bool animate;
 
   @override
   Widget build(BuildContext context) {
-    final hasTrend = trend.length > 1;
+    final measure = delta;
+
+    final content = Padding(
+      padding: const EdgeInsets.all(AppDimens.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const _CardLabel(),
+              const Spacer(),
+              if (measure != null) ...[
+                const SizedBox(width: AppDimens.sm),
+                Flexible(child: _Delta(delta: measure)),
+              ],
+            ],
+          ),
+          const SizedBox(height: AppDimens.sm),
+          const Divider(height: AppDimens.hairline),
+          const SizedBox(height: AppDimens.md),
+          _Average(
+            score: averageScore,
+            sessionCount: sessionCount,
+            animate: animate,
+          ),
+        ],
+      ),
+    );
+
+    if (onTap == null) return Card(child: content);
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimens.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _CardLabel(),
-            const SizedBox(height: AppDimens.md),
-            IntrinsicHeight(
-              child: Row(
-                mainAxisAlignment: hasTrend
-                    ? MainAxisAlignment.start
-                    : MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _Average(
-                    score: averageScore,
-                    sessionCount: sessionCount,
-                    animate: animate,
-                  ),
-                  if (hasTrend) ...[
-                    const VerticalDivider(width: AppDimens.lg),
-                    Expanded(child: _Trend(values: trend)),
-                  ],
-                ],
-              ),
-            ),
-          ],
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Semantics(
+          button: true,
+          label: AppStrings.viewProgress,
+          child: content,
         ),
       ),
     );
@@ -69,7 +80,7 @@ class _CardLabel extends StatelessWidget {
     return Row(
       children: [
         Icon(
-          Icons.bar_chart_rounded,
+          Icons.analytics_rounded,
           size: AppDimens.iconSm,
           color: theme.colorScheme.primary,
         ),
@@ -95,69 +106,69 @@ class _Average extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SizedBox(
-      width: AppDimens.scoreRingLarge,
-      child: Column(
-        children: [
-          ScoreRing(
-            score: score,
-            size: AppDimens.scoreRingLarge,
-            animate: animate,
-          ),
-          const SizedBox(height: AppDimens.sm),
-          Text(
-            AppStrings.averageScore,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall,
-          ),
-          if (sessionCount > 0)
-            Text(
-              AppStrings.sessionCount(sessionCount),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelSmall,
-            ),
-        ],
-      ),
+    return Column(
+      children: [
+        ScoreRing(
+          score: score,
+          size: AppDimens.scoreRingLarge,
+          animate: animate,
+        ),
+        const SizedBox(height: AppDimens.md),
+        Text(
+          sessionCount > 0
+              ? AppStrings.averageAcross(sessionCount)
+              : AppStrings.averageScore,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall,
+        ),
+      ],
     );
   }
 }
 
-class _Trend extends StatelessWidget {
-  const _Trend({required this.values});
+class _Delta extends StatelessWidget {
+  const _Delta({required this.delta});
 
-  final List<int> values;
+  final ScoreDelta delta;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final latest = values.last;
-    final color = context.scoreColors.forScore(latest);
+    final scores = context.scoreColors;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          AppStrings.sessionTrend(values.length),
-          style: theme.textTheme.labelSmall,
-        ),
-        const SizedBox(height: AppDimens.sm),
-        Sparkline(values: values, dotColor: color),
-        const SizedBox(height: AppDimens.sm),
-        Row(
+    final color = switch (delta) {
+      ScoreDelta(isUp: true) => scores.strong,
+      ScoreDelta(isFlat: true) => theme.colorScheme.onSurfaceVariant,
+      _ => scores.developing,
+    };
+
+    final icon = switch (delta) {
+      ScoreDelta(isUp: true) => Icons.trending_up_rounded,
+      ScoreDelta(isFlat: true) => Icons.trending_flat_rounded,
+      _ => Icons.trending_down_rounded,
+    };
+
+    return Semantics(
+      label: AppStrings.deltaSemantics(delta.points),
+      child: ExcludeSemantics(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(AppStrings.latest, style: theme.textTheme.bodySmall),
+            Icon(icon, size: AppDimens.iconSm, color: color),
             const SizedBox(width: AppDimens.xs),
-            Text(
-              '$latest',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontFeatures: const [FontFeature.tabularFigures()],
+            Flexible(
+              child: Text(
+                AppStrings.deltaSummary(delta.points),
+                textAlign: TextAlign.end,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -171,26 +182,23 @@ class ProgressCardSkeleton extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(AppDimens.md),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SkeletonBox.text(width: 110),
-            SizedBox(height: AppDimens.md),
             Row(
               children: [
-                SkeletonBox.circle(size: AppDimens.scoreRingLarge),
-                SizedBox(width: AppDimens.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SkeletonBox.text(width: 96),
-                      SizedBox(height: AppDimens.sm),
-                      SkeletonBox(height: AppDimens.sparklineHeight),
-                    ],
-                  ),
-                ),
+                SkeletonBox.text(width: 110),
+                Spacer(),
+                SkeletonBox.text(width: 120),
               ],
             ),
+            SizedBox(height: AppDimens.sm),
+            Divider(height: AppDimens.hairline),
+            SizedBox(height: AppDimens.md),
+            Center(
+              child: SkeletonBox.circle(size: AppDimens.scoreRingLarge),
+            ),
+            SizedBox(height: AppDimens.md),
+            Center(child: SkeletonBox.text(width: 180)),
           ],
         ),
       ),

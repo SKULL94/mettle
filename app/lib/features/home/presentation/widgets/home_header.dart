@@ -34,7 +34,7 @@ class HomeHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppDimens.md),
-        Text(AppStrings.dashboardTitle, style: theme.textTheme.displaySmall),
+        Text(AppStrings.homeTitle, style: theme.textTheme.displaySmall),
       ],
     );
   }

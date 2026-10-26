@@ -54,3 +54,16 @@ app/android/app/release
 # Secrets
 .env
 .env.local
+
+# Python / api
+api/.venv/
+api/__pycache__/
+**/__pycache__/
+*.py[cod]
+api/.pytest_cache/
+api/.ruff_cache/
+api/.mypy_cache/
+api/*.db
+api/*.db-shm
+api/*.db-wal
+api/data/

@@ -7,13 +7,13 @@ abstract final class AppStrings {
   static const navProgress = 'Progress';
   static const navSettings = 'Settings';
 
-  static const dashboardTitle = 'Practice Dashboard';
+  static const homeTitle = 'Practice';
   static const startSession = 'Start session';
   static const yourProgress = 'YOUR PROGRESS';
   static const averageScore = 'Average score';
   static const latest = 'Latest';
   static const weakTopics = 'Weak topics';
-  static const recentSessions = 'Recent sessions';
+  static const lastSession = 'Your last session';
   static const homeEmptyTitle = 'No sessions yet';
   static const homeEmptyBody =
       'Run your first interview and Mettle will score each answer against a '
@@ -50,6 +50,23 @@ abstract final class AppStrings {
       count == 1 ? '1 question' : '$count questions';
 
   static String sessionTrend(int count) => '$count-SESSION TREND';
+
+  static String averageAcross(int count) =>
+      'Average score across ${sessionCount(count)}';
+
+  static String deltaSummary(int points) => switch (points) {
+    > 0 => '+$points pts above average',
+    < 0 => '${points.abs()} pts below average',
+    _ => 'In line with your average',
+  };
+
+  static String deltaSemantics(int points) => switch (points) {
+    > 0 => 'Last session, $points points above your average',
+    < 0 => 'Last session, ${points.abs()} points below your average',
+    _ => 'Last session, level with your average',
+  };
+
+  static const viewProgress = 'View progress';
 
   static const progressTitle = 'Progress';
   static const topicMastery = 'Topic mastery';

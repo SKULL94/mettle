@@ -6,36 +6,37 @@ import '../../../../core/widgets/section_header.dart';
 import '../../../sessions/domain/entities/session_summary.dart';
 import '../../../sessions/presentation/widgets/session_list.dart';
 
-class RecentSessions extends StatelessWidget {
-  const RecentSessions({
-    required this.sessions,
+class LastSession extends StatelessWidget {
+  const LastSession({
+    required this.session,
     required this.onSelected,
     super.key,
   });
 
-  final List<SessionSummary> sessions;
+  final SessionSummary? session;
   final ValueChanged<SessionSummary> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    if (sessions.isEmpty) return const SizedBox.shrink();
+    final last = session;
+    if (last == null) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: AppStrings.recentSessions),
+        const SectionHeader(title: AppStrings.lastSession),
         const SizedBox(height: AppDimens.md),
-        SessionList(sessions: sessions, onSelected: onSelected),
+        SessionList(sessions: [last], onSelected: onSelected),
       ],
     );
   }
 }
 
-class RecentSessionsSkeleton extends StatelessWidget {
-  const RecentSessionsSkeleton({super.key});
+class LastSessionSkeleton extends StatelessWidget {
+  const LastSessionSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const SessionListSkeleton();
+    return const SessionListSkeleton(rows: 1);
   }
 }

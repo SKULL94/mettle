@@ -39,7 +39,7 @@ void main() {
 
   Future<void> scrollToSessions(WidgetTester tester) async {
     await tester.scrollUntilVisible(
-      find.text(AppStrings.recentSessions),
+      find.text(AppStrings.lastSession),
       240,
       scrollable: find.byType(Scrollable).first,
     );
@@ -52,7 +52,7 @@ void main() {
     await openWith(tester, legacyPayload);
 
     expect(find.text(AppStrings.cacheError), findsNothing);
-    expect(find.text(AppStrings.dashboardTitle), findsOneWidget);
+    expect(find.text(AppStrings.homeTitle), findsOneWidget);
 
     await scrollToSessions(tester);
     expect(find.byType(SessionRow), findsWidgets);
