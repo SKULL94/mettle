@@ -6,12 +6,14 @@ import '../../../../core/constants/app_strings.dart';
 class AnswerComposer extends StatefulWidget {
   const AnswerComposer({
     required this.enabled,
+    required this.isSubmitting,
     required this.onSubmit,
     required this.onSkip,
     super.key,
   });
 
   final bool enabled;
+  final bool isSubmitting;
   final ValueChanged<String> onSubmit;
   final VoidCallback onSkip;
 
@@ -62,29 +64,60 @@ class _AnswerComposerState extends State<AnswerComposer> {
         const SizedBox(height: AppDimens.sm),
         Row(
           children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: widget.enabled ? widget.onSkip : null,
-                child: const Text(AppStrings.skip),
-              ),
+            TextButton(
+              onPressed: widget.enabled ? widget.onSkip : null,
+              child: const Text(AppStrings.skip),
             ),
             const SizedBox(width: AppDimens.sm),
             Expanded(
               child: ValueListenableBuilder<TextEditingValue>(
                 valueListenable: _controller,
-                builder: (context, value, _) {
-                  final canSubmit =
-                      widget.enabled && value.text.trim().isNotEmpty;
-                  return FilledButton(
-                    onPressed: canSubmit ? _submit : null,
-                    child: const Text(AppStrings.submit),
-                  );
-                },
+                builder: (context, value, _) => _SubmitButton(
+                  isSubmitting: widget.isSubmitting,
+                  onPressed: widget.enabled && value.text.trim().isNotEmpty
+                      ? _submit
+                      : null,
+                ),
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _SubmitButton extends StatelessWidget {
+  const _SubmitButton({required this.isSubmitting, required this.onPressed});
+
+  final bool isSubmitting;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: isSubmitting ? null : onPressed,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Flexible(
+            child: Text(
+              AppStrings.submit,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: AppDimens.sm),
+          if (isSubmitting)
+            const SizedBox(
+              width: AppDimens.iconSm,
+              height: AppDimens.iconSm,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else
+            const Icon(Icons.arrow_forward_rounded, size: AppDimens.iconMd),
+        ],
+      ),
     );
   }
 }

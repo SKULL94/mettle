@@ -4,7 +4,8 @@ FastAPI + LangGraph service backing the Flutter app. Companion to
 [`product-plan.md`](./product-plan.md); Flutter conventions in [`../CONVENTIONS.md`](../CONVENTIONS.md).
 
 **Design goal:** the graph is the product. A reviewer should be able to read `graph/build.py` and see
-the interview logic in twenty lines — and run the whole stack with no API key.
+the interview logic in twenty lines. Running it needs an Anthropic key — see §4 for why that trade
+was made.
 
 ---
 
@@ -44,14 +45,17 @@ stateDiagram-v2
 ```python
 class InterviewState(TypedDict):
     session_id: str
-    role: str                    # "flutter"
-    seniority: str               # "senior"
-    topic: str                   # "state-management"
+    topic: str                   # "concurrency" — resolves to a label + difficulty
+    difficulty: str              # "easy" | "medium" | "hard"
+    question_total: int
     questions_remaining: int
+    asked_count: int
     history: list[Turn]          # question + answer + score
-    pending: Question | None     # awaiting an answer
+    pending: PendingQuestion | None   # awaiting an answer
     follow_up_depth: int         # 0..2 — hard cap on probing
-    scorecard: Scorecard | None
+    follow_up_reason: str | None # the weakest dimension, drives the probe
+    probe: bool                  # the routing decision, taken in grade_answer
+    scorecard: dict | None
 ```
 
 ### Nodes
@@ -94,9 +98,9 @@ GET    /v1/sessions/{id}/turns/stream    SSE: question tokens + grade events
 POST   /v1/sessions/{id}/answer          submit answer → 202
 POST   /v1/sessions/{id}/skip            skip current question → 202
 GET    /v1/sessions/{id}/scorecard       final scorecard
-GET    /v1/sessions?device_id=…          history list (read model)
-GET    /v1/meta                          {version, model, demo_mode}
-GET    /healthz                          liveness
+GET    /v1/topics                        the difficulty-tiered topic catalogue
+GET    /v1/meta                          {version, model, demo_mode, configured}
+GET    /healthz                          liveness + provider + checkpointer
 ```
 
 ### Why answer-submit and streaming are separate calls
@@ -112,22 +116,36 @@ dropped connection can't double-submit an answer.
 ### SSE event protocol (versioned — the Flutter app depends on this)
 
 ```
-event: turn.started     data: {"turn":3,"kind":"follow_up","reason":"depth","topic":"keys"}
+event: turn.started     data: {"index":3,"total":5,"kind":"follow_up","reason":"depth","topic":"concurrency"}
 event: question.delta   data: {"text":"What actually "}
-event: question.done    data: {"question_id":"q_…","text":"…"}
+event: question.done    data: {"question_id":"q-2-1","text":"…","index":3,"total":5,"kind":"follow_up","reason":"depth"}
 event: grade.started    data: {}
-event: grade.done       data: {"correctness":3,"depth":2,"clarity":4,"structure":3,"notes":"…"}
+event: grade.done       data: {"correctness":3,"depth":2,"clarity":4,"structure":3,"missing":["…"],"notes":"…"}
 event: session.done     data: {"scorecard_url":"/v1/sessions/…/scorecard"}
-event: error            data: {"code":"provider_unavailable","retryable":true}
+event: error            data: {"code":"graph_failed","message":"…","retryable":true}
 ```
 
 Named events with typed payloads, not a bag of JSON on a single channel. **`turn.started` carrying
 `kind: "follow_up"` and the `reason` is what drives the badge on the Interview screen** — the graph's
 routing decision travels over the wire as a first-class event rather than being inferred client-side.
 
+**The client-side shape is the spec.** Every payload above exists to deconstruct cleanly into the
+Dart sealed class in `app/.../entities/turn_event.dart`, which is the real contract. Four fields are
+easy to leave out and each breaks something specific:
+
+| Field | Without it |
+|---|---|
+| `index` + `total` on `turn.started` | The `Q 3 of 5` counter has nothing to render |
+| `index`/`total`/`kind` on `question.done` | `Question` can't be constructed without the client holding state across events |
+| `missing` on `grade.done` | The scorecard's "what was missing" and the weak-topic chips are empty |
+| `message` on `error` | The UI has a code and no sentence to show a human |
+
+`reason` must be one of `depth` / `correctness` / `clarity` / `structure` — the Dart
+`FollowUpReason` enum has no other values, and an unrecognised one silently degrades to no badge.
+
 ---
 
-## 4. The provider abstraction — the highest-signal detail in the repo
+## 4. The provider abstraction
 
 ```python
 class LLMProvider(Protocol):
@@ -135,19 +153,41 @@ class LLMProvider(Protocol):
     async def grade(self, req: GradeRequest) -> TurnScore: ...
 ```
 
-| Implementation | Behavior |
+Two methods, and the graph never imports the SDK. `nodes.py` asks for a question and a score; it has
+no idea which model answers, what the prompt looks like, or that caching exists. That is what makes
+the routing logic readable on its own.
+
+There is **one implementation**, `AnthropicProvider`, and it requires a key.
+
+### Why there is no scripted provider
+
+The original design had a second, deterministic implementation reading from a checked-in
+`questions.yaml` and grading by keyword coverage, so the repo would run with no credentials. It was
+built, shipped, and then deleted. Three reasons, in order of weight:
+
+1. **Difficulty tiers made the bank untenable.** 20 topics × 3 levels is a hand-written corpus that
+   would be perpetually thin and perpetually stale.
+2. **Keyword grading actively lied.** It scored `correctness` by substring hits, so a wrong answer
+   containing the right word scored well and a right answer phrased differently scored badly. On a
+   product whose thesis is "measurement, not chat," a fake grader is worse than no grader.
+3. **It hid a real bug.** The graph fetched keywords from the scripted bank *regardless of which
+   provider was live*, so live grading was being handed concepts belonging to a different question.
+   Deleting the bank deleted the bug class, not just the bug.
+
+The cost is real and worth stating plainly: a reviewer cannot run this repo without their own API
+key. That is a deliberate trade of reviewer convenience for grading that means something.
+
+### What the provider does carry
+
+Model capability differences live here, not in the graph:
+
+| Concern | Handling |
 |---|---|
-| `AnthropicProvider` | Real hosted-model calls. |
-| `ScriptedProvider` | Deterministic. Questions from `data/questions.yaml`, grading by rubric keyword coverage. Zero network. |
-
-Selected by `settings.llm_provider`, **defaulting to `scripted` whenever no API key is present**. So:
-
-- `docker compose up` works for a reviewer in 30 seconds with no credentials
-- CI runs the full suite — graph routing included — with no secrets and no flake
-- The Flutter app's demo mode is the same code path, not a mock
-
-This is the detail that converts "interesting repo" into "this person has shipped things." Most
-portfolio AI projects can't be run at all by the person evaluating them.
+| `effort` + adaptive thinking | Sent to Sonnet-class models; **omitted for Haiku 4.5**, which rejects both with a 400 |
+| Question generation | `thinking: disabled` at low effort — thinking-on stalls the token stream behind a silent pause |
+| Grading | Adaptive thinking at high effort, schema-validated structured output |
+| Rubric caching | One breakpoint on the system block; **mind the per-model floor** (§5) |
+| Refusals | `stop_reason` checked before reading `content`, with server-side fallbacks opted in |
 
 ---
 
@@ -178,10 +218,18 @@ Consistency in grading therefore comes from a fixed rubric with explicit per-lev
 the better mechanism regardless, since `temperature=0` never guaranteed determinism.
 
 **Prompt caching is a large real win here.** The rubric plus system prompt is byte-identical across
-every turn and every session, so put the cache breakpoint on the last system block. The minimum
-cacheable prefix is 512 tokens, which a real rubric clears easily — a 5-question session pays for the
-rubric once instead of ten times. Guard it: keep timestamps and session IDs *out* of the system
-prompt, or the prefix changes per request and nothing caches.
+every turn and every session, so put the cache breakpoint on the last system block. Guard it: keep
+timestamps and session IDs *out* of the system prompt, or the prefix changes per request and nothing
+caches.
+
+**Mind the per-model cache floor — it is not uniform.** The minimum cacheable prefix is 512 tokens on
+Opus 5 but **1024 on Sonnet 5**, and a prefix under the floor silently does not cache: no error, just
+`cache_creation_input_tokens: 0` forever. The first rubric written here measured 483 tokens and
+therefore never cached on Sonnet. Expanding it to explicit per-level anchors plus two calibration
+examples brought it to 1324 tokens, which both clears the floor and is the mechanism the rubric was
+supposed to provide in the first place. Measured on `claude-sonnet-5`: 1771 tokens written on the
+first grade call, then read from cache on every subsequent one with ~102 uncached. Assert on
+`usage.cache_read_input_tokens` in a provider test rather than trusting that it engaged.
 
 **Handle refusals.** This matters more than it looks: a user practising for a **security** role asks
 for security interview questions, which can legitimately trip a provider's safety classifiers. A
@@ -229,11 +277,14 @@ api/
 │   │   ├── rubric.py        the rubric text — one constant, cached
 │   │   └── build.py         StateGraph assembly + compile
 │   ├── providers/
-│   │   ├── base.py          the Protocol
-│   │   ├── anthropic.py
-│   │   └── scripted.py
-│   ├── store/               repositories + migrations
-│   └── data/questions.yaml
+│   │   ├── base.py          the Protocol + wire models
+│   │   ├── anthropic.py     prompts, caching, capability flags
+│   │   └── factory.py       one provider, or a clear 503
+│   ├── session/             per-session mailbox, worker, SSE fan-out
+│   ├── store/checkpointer.py  SQLite or Postgres, chosen by DATABASE_URL
+│   └── data/
+│       ├── topics.yaml      20 topics across 3 difficulty tiers
+│       └── catalog.py       loads and resolves them
 ├── tests/
 ├── Dockerfile
 └── pyproject.toml
@@ -250,9 +301,9 @@ Same dependency discipline as the Flutter side: `routes` know nothing about the 
 |---|---|
 | Graph routing | **A weak answer routes to a follow-up; a strong one advances.** The single most important test in the repo. |
 | Graph resume | Interrupt mid-session, rebuild from the checkpointer, continue — state intact |
-| Routes | `httpx.AsyncClient` against the app, `ScriptedProvider` injected |
+| Routes | `httpx.AsyncClient` against the app, the provider faked at the Protocol |
 | SSE contract | Event names and ordering match §3 — this is what the Flutter client parses |
-| Providers | `ScriptedProvider` is deterministic; `AnthropicProvider` request-shaping tested against a recorded response |
+| Providers | `AnthropicProvider` request-shaping tested against a recorded response; capability flags asserted per model (Haiku must not receive `effort`) |
 
 CI makes **no network calls**. `ruff`, `mypy --strict`, `pytest` all green with zero secrets
 configured — which is also what makes the badges meaningful rather than decorative.
@@ -272,14 +323,18 @@ configured — which is also what makes the badges meaningful rather than decora
 
 ## 11. Build order
 
-1. `ScriptedProvider` + `questions.yaml` — a working fake before anything real
-2. State, nodes, and the conditional edge; routing tests passing with no network
-3. SQLite checkpointer; resume test
-4. FastAPI routes + the SSE event protocol; contract tests
-5. `AnthropicProvider` with structured-output grading and prompt caching
-6. Read models + history/trend endpoints
-7. Docker, compose, CI, deploy
+1. ✅ Topic catalogue (`topics.yaml` + `catalog.py`) — the vocabulary both halves agree on
+2. ✅ State, nodes, and the conditional edge
+3. ✅ SQLite checkpointer, plus handle rehydration so a restart resumes mid-interview
+4. ✅ FastAPI routes, the SSE event protocol, and the per-session mailbox that joins
+   `POST /answer` to the open `GET /turns/stream`
+5. ✅ `AnthropicProvider` with structured-output grading and a cached rubric
+6. ✅ Docker + compose, verified on a real device over Wi-Fi
+7. ⬜ Tests — graph routing first, then the SSE contract
+8. ⬜ CI, then deploy
 
-Steps 1–4 produce a fully testable backend with no API key and no model calls — which means the
-Flutter app (building against fakes per the product plan) and the backend converge on a contract that
-both sides have already tested independently.
+**Step 4 is the one that bites.** The request that resumes the graph is not the request that streams
+the result back, because `EventSource` is GET-only on web. A per-session `asyncio.Queue` and a single
+consumer worker join them, which is also why this runs as **one instance with one worker** — the
+mailbox is process memory. Moving it to Redis is the price of horizontal scaling, and the Postgres
+checkpointer does not buy it for you.

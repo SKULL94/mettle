@@ -13,11 +13,15 @@ final class ServerFailure extends Failure {
 }
 
 final class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = AppStrings.noConnection]);
+  const NetworkFailure([super.message = AppStrings.serverUnreachable]);
 }
 
 final class CacheFailure extends Failure {
   const CacheFailure([super.message = AppStrings.cacheError]);
+}
+
+final class NotFoundFailure extends Failure {
+  const NotFoundFailure([super.message = AppStrings.sessionNotFound]);
 }
 
 final class UnknownFailure extends Failure {

@@ -22,6 +22,8 @@ class Scorecard {
 
   int get followUpCount => turns.where((t) => t.question.isFollowUp).length;
 
+  int get questionCount => turns.where((t) => !t.question.isFollowUp).length;
+
   List<String> get missing {
     final seen = <String>{};
     for (final turn in turns) {

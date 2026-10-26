@@ -1,19 +1,34 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/result/result.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/usecases/get_home_overview.dart';
+import '../../domain/usecases/watch_sessions.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
 final class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  HomeBloc(this._getOverview) : super(const HomeInitial()) {
+  HomeBloc(this._getOverview, WatchSessions watchSessions)
+    : super(const HomeInitial()) {
     on<HomeRequested>(_onRequested);
     on<HomeRefreshed>(_onRefreshed);
     on<HomeErrorDismissed>(_onErrorDismissed);
+
+    _changes = watchSessions(const NoParams())
+        .listen((_) => add(const HomeRefreshed()));
   }
 
   final GetHomeOverview _getOverview;
+
+  late final StreamSubscription<void> _changes;
+
+  @override
+  Future<void> close() async {
+    await _changes.cancel();
+    return super.close();
+  }
 
   Future<void> _onRequested(
     HomeRequested event,

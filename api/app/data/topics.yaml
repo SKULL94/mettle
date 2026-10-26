@@ -1,0 +1,121 @@
+easy:
+  label: Easy
+  seniority: junior
+  brief: >-
+    Pitch at a developer with roughly a year of Flutter. Check that they know
+    their way around the framework and Dart basics. Ask about things they would
+    meet in everyday feature work. Do not ask about architecture at scale,
+    isolates, platform channels, or CI.
+  topics:
+    - id: fundamentals
+      label: Flutter & Dart Fundamentals
+      covers: >-
+        What Flutter is and what it buys you, StatelessWidget vs
+        StatefulWidget, and Dart basics such as final, const and static.
+    - id: widgets-lifecycle
+      label: Widgets & Lifecycle
+      covers: >-
+        The widget tree, BuildContext, and the StatefulWidget lifecycle methods
+        - initState, build, dispose.
+    - id: layouts
+      label: Basic UI & Layouts
+      covers: >-
+        Row, Column and Container, and the difference between
+        mainAxisAlignment and crossAxisAlignment.
+    - id: navigation-basics
+      label: Navigation
+      covers: Simple routing with Navigator.push and Navigator.pop.
+    - id: async-basics
+      label: Asynchronous Basics
+      covers: Future, Stream, and using async/await.
+    - id: simple-state
+      label: Simple State Management
+      covers: >-
+        setState for local state, and basic awareness of packages such as
+        Provider.
+
+medium:
+  label: Medium
+  seniority: mid-level
+  brief: >-
+    Pitch at a developer who has shipped a few production apps. Probe how they
+    build something maintainable rather than whether they know the API. Expect
+    them to weigh options and name tradeoffs.
+  topics:
+    - id: state-management
+      label: State Management in Depth
+      covers: >-
+        Comparing Provider, Riverpod, BLoC and GetX - the pros, cons, and when
+        each is the right call.
+    - id: architecture
+      label: Architecture & Patterns
+      covers: >-
+        MVVM and Clean Architecture, and separating concerns as a codebase
+        grows.
+    - id: networking
+      label: Networking & Data
+      covers: >-
+        API calls with http or Dio, parsing JSON, and handling loading and
+        error states properly.
+    - id: local-storage
+      label: Local Storage
+      covers: >-
+        Choosing between SharedPreferences, SQLite, Hive and Isar for different
+        persistence needs.
+    - id: advanced-widgets
+      label: Advanced Widgets & UI
+      covers: >-
+        FutureBuilder and StreamBuilder, ListView.builder for performance, keys
+        including GlobalKey vs LocalKey, and writing custom widgets.
+    - id: testing
+      label: Testing
+      covers: Unit tests, widget tests, and mocking dependencies.
+    - id: intermediate-dart
+      label: Intermediate Dart
+      covers: Mixins, extension methods, and the mounted check.
+
+hard:
+  label: Hard
+  seniority: senior
+  brief: >-
+    Pitch at a senior engineer who leads technical work. Probe engineering
+    judgement, system design and how they handle consequences at scale, not
+    recall. A good answer names a tradeoff and the condition that decides it.
+  topics:
+    - id: modularization
+      label: Advanced Architecture & Modularization
+      covers: >-
+        Designing scalable architectures, splitting a large codebase into
+        packages with tooling such as Melos, and managing dependencies between
+        teams.
+    - id: performance-engineering
+      label: Performance Engineering
+      covers: >-
+        Profiling in profile mode, frame timing, memory management, shader and
+        Impeller awareness, and building performance checks into CI.
+    - id: concurrency
+      label: Concurrency & Isolates
+      covers: >-
+        Dart's concurrency model, and when an isolate is the right tool versus
+        staying on the main isolate.
+    - id: platform-channels
+      label: Native Integration & Platform Channels
+      covers: >-
+        Writing plugins, platform channels, and the risks a native SDK brings -
+        permissions, lifecycle, and build systems.
+    - id: complex-scenarios
+      label: Complex Scenarios
+      covers: >-
+        Offline-first workflows with conflict resolution and sync queues,
+        leading large migrations such as Dart 3, and incident response
+        including crash triage and rollback.
+    - id: testing-at-scale
+      label: Testing Strategy at Scale
+      covers: >-
+        Building a testing strategy for a large team, handling flaky tests, and
+        holding a quality bar across many contributors.
+    - id: release-management
+      label: CI/CD & Release Management
+      covers: >-
+        Robust pipelines, app flavours for dev, staging and prod, and
+        automating releases.

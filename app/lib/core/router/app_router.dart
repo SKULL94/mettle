@@ -19,13 +19,13 @@ const _destinations = <AdaptiveDestination>[
     label: AppStrings.navHome,
   ),
   AdaptiveDestination(
-    icon: Icons.insights_outlined,
-    selectedIcon: Icons.insights,
+    icon: Icons.trending_up_rounded,
+    selectedIcon: Icons.trending_up_rounded,
     label: AppStrings.navProgress,
   ),
   AdaptiveDestination(
-    icon: Icons.settings_outlined,
-    selectedIcon: Icons.settings,
+    icon: Icons.tune_rounded,
+    selectedIcon: Icons.tune_rounded,
     label: AppStrings.navSettings,
   ),
 ];

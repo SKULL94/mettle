@@ -17,6 +17,7 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
+app/design
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -53,3 +54,20 @@ app/android/app/release
 # Secrets
 .env
 .env.local
+
+# Python / api
+api/.venv/
+api/__pycache__/
+**/__pycache__/
+*.py[cod]
+api/.pytest_cache/
+api/.ruff_cache/
+api/.mypy_cache/
+api/*.db
+api/*.db-shm
+api/*.db-wal
+api/data/
+
+# Per-machine dart-define config (LAN IPs etc). Never put secrets here -
+# dart-define values are compiled into the app binary.
+app/dart_defines/local.json

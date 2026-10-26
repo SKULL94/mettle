@@ -22,8 +22,10 @@ abstract final class AppTheme {
           outline: AppColors.outlineDark,
           outlineVariant: AppColors.outlineDark,
           error: AppColors.danger,
+          surfaceTint: Colors.transparent,
         ),
     mutedText: AppColors.textMutedDark,
+    navSurface: AppColors.navSurfaceDark,
   );
 
   static ThemeData light() => _build(
@@ -43,14 +45,17 @@ abstract final class AppTheme {
           outline: AppColors.outlineLight,
           outlineVariant: AppColors.outlineLight,
           error: AppColors.danger,
+          surfaceTint: Colors.transparent,
         ),
     mutedText: AppColors.textMutedLight,
+    navSurface: AppColors.surfaceLight,
   );
 
   static ThemeData _build({
     required Brightness brightness,
     required ColorScheme scheme,
     required Color mutedText,
+    required Color navSurface,
   }) {
     final isDark = brightness == Brightness.dark;
     final text = _textTheme(scheme, mutedText);
@@ -66,8 +71,9 @@ abstract final class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: isDark ? 0 : 1,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: text.titleMedium,
       ),
@@ -156,10 +162,48 @@ abstract final class AppTheme {
       ),
 
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surfaceContainer,
-        indicatorColor: scheme.primary.withValues(alpha: 0.16),
+        backgroundColor: navSurface,
+        shadowColor: Colors.transparent,
+        indicatorColor: scheme.primary.withValues(alpha: 0.22),
+        indicatorShape: const StadiumBorder(),
         elevation: 0,
-        labelTextStyle: WidgetStatePropertyAll(text.labelSmall),
+        height: AppDimens.navBarHeight,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            size: AppDimens.navIcon,
+            color: states.contains(WidgetState.selected)
+                ? scheme.primary
+                : mutedText,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? text.labelSmall?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w600,
+                )
+              : text.labelSmall,
+        ),
+      ),
+
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: navSurface,
+        indicatorColor: scheme.primary.withValues(alpha: 0.22),
+        useIndicator: true,
+        selectedIconTheme: IconThemeData(
+          size: AppDimens.navIcon,
+          color: scheme.primary,
+        ),
+        unselectedIconTheme: IconThemeData(
+          size: AppDimens.navIcon,
+          color: mutedText,
+        ),
+        selectedLabelTextStyle: text.labelSmall?.copyWith(
+          color: scheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelTextStyle: text.labelSmall,
       ),
 
       bottomSheetTheme: BottomSheetThemeData(
@@ -194,6 +238,13 @@ abstract final class AppTheme {
         height: 32 / 24,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.25,
+        color: scheme.onSurface,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 20,
+        height: 28 / 20,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.2,
         color: scheme.onSurface,
       ),
       titleMedium: TextStyle(

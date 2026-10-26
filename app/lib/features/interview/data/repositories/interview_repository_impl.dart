@@ -1,6 +1,11 @@
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/result/result.dart';
+import '../../../sessions/data/datasources/session_local_data_source.dart';
+import '../../../sessions/data/models/session_record_model.dart';
+import '../../domain/entities/interview_topic.dart';
+import '../../domain/entities/interview_turn.dart';
 import '../../domain/entities/scorecard.dart';
 import '../../domain/entities/session_config.dart';
 import '../../domain/entities/turn_event.dart';
@@ -9,16 +14,17 @@ import '../../domain/repositories/interview_repository.dart';
 import '../datasources/interview_remote_data_source.dart';
 
 final class InterviewRepositoryImpl implements InterviewRepository {
-  const InterviewRepositoryImpl(this._remote);
+  const InterviewRepositoryImpl(this._remote, this._sessions);
 
   final InterviewRemoteDataSource _remote;
+  final SessionLocalDataSource _sessions;
 
   @override
   Future<Result<String>> startSession(SessionConfig config) async {
     try {
       return Success(await _remote.startSession(config));
-    } on NetworkException {
-      return const Failed(NetworkFailure());
+    } on NetworkException catch (error) {
+      return Failed(NetworkFailure(error.detail ?? AppStrings.serverUnreachable));
     } on ServerException {
       return const Failed(ServerFailure());
     } on Object {
@@ -46,8 +52,8 @@ final class InterviewRepositoryImpl implements InterviewRepository {
         answer: answer,
       );
       return const Success(null);
-    } on NetworkException {
-      return const Failed(NetworkFailure());
+    } on NetworkException catch (error) {
+      return Failed(NetworkFailure(error.detail ?? AppStrings.serverUnreachable));
     } on StreamException {
       return const Failed(ServerFailure());
     } on Object {
@@ -63,8 +69,8 @@ final class InterviewRepositoryImpl implements InterviewRepository {
     try {
       await _remote.skipQuestion(sessionId: sessionId, turnId: turnId);
       return const Success(null);
-    } on NetworkException {
-      return const Failed(NetworkFailure());
+    } on NetworkException catch (error) {
+      return Failed(NetworkFailure(error.detail ?? AppStrings.serverUnreachable));
     } on Object {
       return const Failed(UnknownFailure());
     }
@@ -73,32 +79,72 @@ final class InterviewRepositoryImpl implements InterviewRepository {
   @override
   Future<Result<Scorecard>> getScorecard(String sessionId) async {
     try {
-      final turns = _remote.turnsFor(sessionId);
-      if (turns.isEmpty) return const Failed(CacheFailure());
+      final live = await _liveScorecard(sessionId);
+      if (live != null) return Success(live);
 
-      final scores = turns
-          .map((turn) => turn.score)
-          .whereType<TurnScore>()
-          .toList();
-      if (scores.isEmpty) return const Failed(CacheFailure());
+      final stored = await _sessions.findById(sessionId);
+      if (stored == null) return const Failed(NotFoundFailure());
 
       return Success(
-        Scorecard(
+        _scorecard(
           sessionId: sessionId,
-          topic: _remote.configFor(sessionId).topic,
-          turns: turns,
-          overall: _mean(scores.map((s) => s.overall)),
-          dimensions: TurnScore(
-            correctness: _mean(scores.map((s) => s.correctness)),
-            depth: _mean(scores.map((s) => s.depth)),
-            clarity: _mean(scores.map((s) => s.clarity)),
-            structure: _mean(scores.map((s) => s.structure)),
-          ),
+          topic: InterviewTopic.fromId(stored.topic),
+          turns: stored.turns,
         ),
       );
+    } on CacheException {
+      return const Failed(CacheFailure());
     } on Object {
       return const Failed(UnknownFailure());
     }
+  }
+
+  Future<Scorecard?> _liveScorecard(String sessionId) async {
+    final List<InterviewTurn> turns;
+    final InterviewTopic topic;
+
+    try {
+      turns = _remote.turnsFor(sessionId);
+      topic = _remote.configFor(sessionId).topic;
+    } on Object {
+      return null;
+    }
+
+    if (turns.isEmpty) return null;
+
+    await _sessions.save(
+      SessionRecordModel(
+        id: sessionId,
+        topic: topic.id,
+        completedAt: DateTime.now(),
+        turns: turns,
+      ),
+    );
+
+    return _scorecard(sessionId: sessionId, topic: topic, turns: turns);
+  }
+
+  static Scorecard _scorecard({
+    required String sessionId,
+    required InterviewTopic topic,
+    required List<InterviewTurn> turns,
+  }) {
+    final scores = turns.map((turn) => turn.score).whereType<TurnScore>();
+
+    final dimensions = TurnScore(
+      correctness: _mean(scores.map((s) => s.correctness)),
+      depth: _mean(scores.map((s) => s.depth)),
+      clarity: _mean(scores.map((s) => s.clarity)),
+      structure: _mean(scores.map((s) => s.structure)),
+    );
+
+    return Scorecard(
+      sessionId: sessionId,
+      topic: topic,
+      turns: turns,
+      overall: dimensions.overall,
+      dimensions: dimensions,
+    );
   }
 
   static int _mean(Iterable<int> values) {

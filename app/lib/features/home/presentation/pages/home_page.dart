@@ -5,18 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/result/result.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/skeleton_box.dart';
 import '../../../interview/domain/entities/interview_topic.dart';
-import '../../../interview/domain/entities/session_config.dart';
-import '../../../interview/domain/usecases/start_session.dart';
-import '../../../interview/presentation/widgets/session_setup_sheet.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
-import '../widgets/session_row.dart';
-import '../widgets/stat_card.dart';
+import '../widgets/home_header.dart';
+import '../widgets/last_session.dart';
+import '../widgets/progress_card.dart';
+import '../widgets/start_session_button.dart';
 import '../widgets/weak_topic_chips.dart';
 
 class HomePage extends StatelessWidget {
@@ -36,17 +34,14 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.appName)),
-      body: SafeArea(
-        child: BlocBuilder<HomeBloc, HomeState>(
-          builder: (context, state) => switch (state) {
-            HomeInitial() || HomeLoading() => const _HomeSkeleton(),
-            HomeEmpty() => const _HomeEmpty(),
-            HomeLoaded() => _HomeLoaded(state: state),
-            HomeError(:final message) => _HomeError(message: message),
-          },
-        ),
+    return SafeArea(
+      child: BlocBuilder<HomeBloc, HomeState>(
+        builder: (context, state) => switch (state) {
+          HomeInitial() || HomeLoading() => const _HomeSkeleton(),
+          HomeEmpty() => const _HomeEmpty(),
+          HomeLoaded() => _HomeLoaded(state: state),
+          HomeError(:final message) => _HomeError(message: message),
+        },
       ),
     );
   }
@@ -61,8 +56,13 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final list = ListView(
-      padding: const EdgeInsets.all(AppDimens.md),
-      children: children,
+      padding: const EdgeInsets.fromLTRB(
+        AppDimens.md,
+        AppDimens.md,
+        AppDimens.md,
+        AppDimens.xl,
+      ),
+      children: [const HomeHeader(), ...children],
     );
 
     if (onRefresh == null) return list;
@@ -77,28 +77,15 @@ class _HomeSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return const _Body(
       children: [
-        StatCardSkeleton(),
         SizedBox(height: AppDimens.lg),
-        SkeletonHeader(),
-        SessionRowSkeleton(),
-        SessionRowSkeleton(),
-        SessionRowSkeleton(),
+        ProgressCardSkeleton(),
+        SizedBox(height: AppDimens.lg),
+        SkeletonBox(height: AppDimens.ctaHeight, radius: AppDimens.radius),
+        SizedBox(height: AppDimens.xl),
+        Align(alignment: Alignment.centerLeft, child: SkeletonBox.text()),
+        SizedBox(height: AppDimens.md),
+        LastSessionSkeleton(),
       ],
-    );
-  }
-}
-
-class SkeletonHeader extends StatelessWidget {
-  const SkeletonHeader({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(bottom: AppDimens.sm),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: SkeletonBox.text(width: 110),
-      ),
     );
   }
 }
@@ -109,13 +96,15 @@ class _HomeEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return _Body(
       children: [
-        const StatCard(averageScore: null, trend: []),
+        const SizedBox(height: AppDimens.lg),
+        const ProgressCard(averageScore: null, delta: null, sessionCount: 0),
         const SizedBox(height: AppDimens.xl),
         Text(
           AppStrings.homeEmptyTitle,
-          style: theme.textTheme.headlineSmall,
+          style: theme.textTheme.titleLarge,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppDimens.sm),
@@ -125,7 +114,7 @@ class _HomeEmpty extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppDimens.lg),
-        const _StartSessionButton(),
+        const StartSessionButton(),
       ],
     );
   }
@@ -138,44 +127,44 @@ class _HomeLoaded extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final overview = state.overview;
+    final weakTopics = overview.weakTopics
+        .map((mastery) => InterviewTopic.fromId(mastery.topic))
+        .toSet();
 
     return _Body(
       onRefresh: () async =>
           context.read<HomeBloc>().add(const HomeRefreshed()),
       children: [
-        if (state.staleWarning != null)
+        if (state.staleWarning != null) ...[
+          const SizedBox(height: AppDimens.md),
           _StaleBanner(message: state.staleWarning!),
-        StatCard(
+        ],
+        const SizedBox(height: AppDimens.lg),
+        ProgressCard(
           averageScore: overview.averageScore,
-          trend: overview.recentScores,
+          delta: overview.delta,
+          sessionCount: overview.sessionCount,
+          onTap: () => context.goNamed(AppRoutes.progressName),
         ),
         const SizedBox(height: AppDimens.lg),
-        const _StartSessionButton(),
+        StartSessionButton(weakTopics: weakTopics),
         if (overview.weakTopics.isNotEmpty) ...[
           const SizedBox(height: AppDimens.xl),
           WeakTopicChips(
             topics: overview.weakTopics,
-            onSelected: (mastery) => beginSession(
-              context,
-              topic: InterviewTopic.fromId(
-                mastery.topic.toLowerCase().replaceAll(' ', '-'),
-              ),
-            ),
+            onSelected: (topic) =>
+                beginSession(context, topic: topic, weakTopics: weakTopics),
           ),
         ],
         const SizedBox(height: AppDimens.xl),
-        Text(AppStrings.recentSessions, style: theme.textTheme.labelSmall),
-        const SizedBox(height: AppDimens.xs),
-        for (final session in overview.recentSessions)
-          SessionRow(
-            session: session,
-            onTap: () => context.pushNamed(
-              AppRoutes.scorecardName,
-              pathParameters: {AppRoutes.idParam: session.id},
-            ),
+        LastSession(
+          session: overview.lastSession,
+          onSelected: (session) => context.pushNamed(
+            AppRoutes.scorecardName,
+            pathParameters: {AppRoutes.idParam: session.id},
           ),
+        ),
       ],
     );
   }
@@ -189,6 +178,7 @@ class _HomeError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppDimens.lg),
@@ -221,8 +211,8 @@ class _StaleBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: AppDimens.md),
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimens.md,
         vertical: AppDimens.sm,
@@ -230,7 +220,10 @@ class _StaleBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(AppDimens.radius),
-        border: Border.all(color: theme.colorScheme.outline),
+        border: Border.all(
+          color: theme.colorScheme.outline,
+          width: AppDimens.hairline,
+        ),
       ),
       child: Row(
         children: [
@@ -243,43 +236,5 @@ class _StaleBanner extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _StartSessionButton extends StatelessWidget {
-  const _StartSessionButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton.icon(
-      onPressed: () => beginSession(context),
-      icon: const Icon(Icons.play_arrow_rounded),
-      label: const Text(AppStrings.startSession),
-    );
-  }
-}
-
-Future<void> beginSession(BuildContext context, {InterviewTopic? topic}) async {
-  final homeBloc = context.read<HomeBloc>();
-  final messenger = ScaffoldMessenger.of(context);
-  final router = GoRouter.of(context);
-
-  final SessionConfig? config = await showSessionSetupSheet(
-    context,
-    topic: topic,
-  );
-  if (config == null) return;
-
-  final result = await sl<StartSession>()(config);
-
-  switch (result) {
-    case Success(:final data):
-      await router.pushNamed(
-        AppRoutes.sessionName,
-        pathParameters: {AppRoutes.idParam: data},
-      );
-      homeBloc.add(const HomeRefreshed());
-    case Failed(:final failure):
-      messenger.showSnackBar(SnackBar(content: Text(failure.message)));
   }
 }

@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart' show ThemeMode;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/api_constants.dart';
@@ -24,16 +23,9 @@ final class AppPreferences {
     return generated;
   }
 
-  ThemeMode themeMode() {
-    return switch (_prefs.getString(_kThemeMode)) {
-      'light' => ThemeMode.light,
-      'dark' => ThemeMode.dark,
-      _ => ThemeMode.system,
-    };
-  }
+  String? themeMode() => _prefs.getString(_kThemeMode);
 
-  Future<void> setThemeMode(ThemeMode mode) =>
-      _prefs.setString(_kThemeMode, mode.name);
+  Future<void> setThemeMode(String name) => _prefs.setString(_kThemeMode, name);
 
   String apiBaseUrl() {
     final stored = _prefs.getString(_kApiBaseUrl);
