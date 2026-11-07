@@ -1,6 +1,6 @@
 abstract final class AppStrings {
   static const appName = 'Mettle';
-  static const appTagline = 'AI mock interviews for Flutter engineers';
+  static const appTagline = 'AI mock interviews for Software engineers';
   static const brandMark = 'M';
 
   static const navHome = 'Home';
