@@ -113,6 +113,15 @@ client on Flutter web. Two cheap round-trips beat a platform-specific transport 
 `POST /answer` takes a client-generated `turn_id` and is **idempotent** — a mobile retry after a
 dropped connection can't double-submit an answer.
 
+### Authentication (M2)
+
+M1 has **none** — `X-Device-Id` is accepted and, today, not even checked, so any caller holding a
+`session_id` can read or mutate that session. M2 closes this: a Supabase-issued JWT on
+`Authorization: Bearer`, verified locally against cached JWKS, with `sub` becoming the owner of
+every session and the prefix of every `thread_id`. Google and email sign-in produce identical
+tokens — the backend cannot distinguish them and must not try. Full design in
+[`auth-plan.md`](./auth-plan.md).
+
 ### SSE event protocol (versioned — the Flutter app depends on this)
 
 ```

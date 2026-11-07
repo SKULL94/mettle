@@ -22,11 +22,12 @@ you'll find if you clone it.
 | Milestone | Scope | Status |
 |---|---|---|
 | **M1** | Splash · Home · Interview · Scorecard · Progress (basic) · Settings (basic). Text only, no auth, difficulty-tiered topics, end to end | 🚧 In progress |
-| **M2** | Auth · onboarding (stack · experience · focus) · personalised Home · voice answers + waveform · progress filters | ⬜ Planned |
+| **M2** | Auth (Google + email) · onboarding (stack · experience · focus) · personalised Home · voice answers + waveform · progress filters | ⬜ Planned |
 | **M3** | Multi-stack catalogues · JD-targeted questions · checkpointer resume · human-in-the-loop · deployed web build | ⬜ Planned |
 
 Design docs are checked in and current: [product & UI plan](docs/product-plan.md) ·
-[backend architecture](docs/backend-plan.md) · [Flutter conventions](CONVENTIONS.md).
+[backend architecture](docs/backend-plan.md) · [auth & data plan](docs/auth-plan.md) ·
+[Flutter conventions](CONVENTIONS.md).
 
 ---
 
@@ -368,8 +369,8 @@ dependency-rule guard and the iOS compile check.
 ## Roadmap
 
 - **M1** — complete text-only loop, difficulty-tiered topics, basic Progress and Settings
-- **M2** — accounts and onboarding (stack · experience · focus), a personalised Home, voice answers
-  with a custom-painted waveform, progress filters
+- **M2** — accounts (Google + email) and onboarding (stack · experience · focus), a personalised
+  Home, voice answers with a custom-painted waveform, progress filters
 - **M3** — catalogues for the remaining stacks, job-description targeting, session resume, deployed
   web demo
 - **v2** — cross-device sync on top of M2's accounts, team or cohort features

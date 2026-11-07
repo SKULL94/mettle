@@ -282,10 +282,14 @@ anonymous practice tool and starts being *your* practice tool.
 
 #### Auth
 
+Full design in [`auth-plan.md`](./auth-plan.md).
+
 - **`Splash`** — gains a real decision instead of always landing on Home: restore a session, or route
   to sign-in. The async bootstrap already exists; this adds one branch.
-- **`SignIn` `/sign-in`** — email plus at least one provider. No password-reset screens hand-rolled;
-  lean on the provider.
+- **`SignIn` `/sign-in`** — **built**. A Sign in / Sign up segmented pair, *Continue with Google*, an
+  email and password form with inline validation, show/hide password, *Forgot password?*, and a
+  remember-this-device checkbox. Supabase owns hashing, reset tokens and rate limiting; the app owns
+  the screens. Full design in [`auth-plan.md`](./auth-plan.md).
 - The backend's `X-Device-Id` becomes a fallback rather than the whole identity story. A real user id
   means scores follow the person across devices — the thing device-local storage cannot do.
 
@@ -399,7 +403,7 @@ from one small helper. Disproportionate visual coverage for an afternoon.
 | | Scope | Proves |
 |---|---|---|
 | **M1** · wk 1 | Splash · Home · setup sheet · Interview · Scorecard. Text only, no auth, difficulty-tiered topics. End-to-end on a real device. | It's real and it runs |
-| **M2** · wk 2–3 | Auth + onboarding (stack · experience · focus), personalised Home, Progress charts, History, voice + waveform | Product thinking, not just screens |
+| **M2** · wk 2–3 | Auth (Google + email) + onboarding (stack · experience · focus), personalised Home, Progress charts, History, voice + waveform | Product thinking, not just screens |
 | **M3** · wk 4 | Multi-stack catalogues, JD-targeted questions, checkpointer resume, human-in-the-loop, deployed web build | Agent depth + a live link |
 
 Each milestone ships as a tagged release with a changelog entry. `v0.1.0 → v0.3.0` reads as
