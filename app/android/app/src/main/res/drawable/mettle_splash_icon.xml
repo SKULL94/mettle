@@ -7,17 +7,17 @@
     android:viewportHeight="288">
 
     <path
-        android:pathData="M100,48 L188,48 A52,52 0 0 1 240,100 L240,188 A52,52 0 0 1 188,240 L100,240 A52,52 0 0 1 48,188 L48,100 A52,52 0 0 1 100,48 Z"
+        android:pathData="M107,64 L181,64 A43,43 0 0 1 224,107 L224,181 A43,43 0 0 1 181,224 L107,224 A43,43 0 0 1 64,181 L64,107 A43,43 0 0 1 107,64 Z"
         android:fillColor="@color/mettle_tile" />
 
-    <path android:pathData="M100,48 L188,48 A52,52 0 0 1 240,100 L240,188 A52,52 0 0 1 188,240 L100,240 A52,52 0 0 1 48,188 L48,100 A52,52 0 0 1 100,48 Z">
+    <path android:pathData="M107,64 L181,64 A43,43 0 0 1 224,107 L224,181 A43,43 0 0 1 181,224 L107,224 A43,43 0 0 1 64,181 L64,107 A43,43 0 0 1 107,64 Z">
         <aapt:attr name="android:fillColor">
             <gradient
                 android:type="linear"
-                android:startX="48"
-                android:startY="240"
-                android:endX="240"
-                android:endY="48">
+                android:startX="64"
+                android:startY="224"
+                android:endX="224"
+                android:endY="64">
                 <item android:offset="0.0" android:color="@color/mettle_sheen_start" />
                 <item android:offset="0.5" android:color="@color/mettle_sheen_mid" />
                 <item android:offset="1.0" android:color="@color/mettle_sheen_end" />
@@ -26,16 +26,16 @@
     </path>
 
     <path
-        android:pathData="M120,162 L144,134 L168,162"
+        android:pathData="M124,159 L144,136 L164,159"
         android:strokeColor="@color/mettle_accent"
-        android:strokeWidth="9"
+        android:strokeWidth="7.5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 
     <path
-        android:pathData="M132,170 L144,156 L156,170"
+        android:pathData="M134,166 L144,154 L154,166"
         android:strokeColor="@color/mettle_chevron"
-        android:strokeWidth="9"
+        android:strokeWidth="7.5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 </vector>

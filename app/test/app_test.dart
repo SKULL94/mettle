@@ -40,26 +40,16 @@ void main() {
   group('app bootstrap', () {
     testWidgets('starts on splash and lands on home', (tester) async {
       await tester.pumpWidget(const MettleApp());
+      await tester.pump();
 
       expect(find.byType(SplashPage), findsOneWidget);
-      expect(find.textContaining(AppStrings.appName), findsWidgets);
+      expect(find.text(AppStrings.appTagline), findsOneWidget);
 
+      await tester.pump(const Duration(seconds: 3));
       await tester.pumpAndSettle();
 
-      expect(find.byType(HomePage), findsOneWidget);
-    });
-
-    testWidgets('splash leaves the stack, so back from home exits', (
-      tester,
-    ) async {
-      await tester.pumpWidget(const MettleApp());
-      await tester.pumpAndSettle();
-
-      final router = tester
-          .state<NavigatorState>(find.byType(Navigator).first)
-          .widget;
-      expect(router, isNotNull);
       expect(find.byType(SplashPage), findsNothing);
+      expect(find.byType(HomePage), findsOneWidget);
     });
   });
 

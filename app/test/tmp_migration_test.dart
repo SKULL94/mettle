@@ -34,6 +34,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const MettleApp());
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
   }
 

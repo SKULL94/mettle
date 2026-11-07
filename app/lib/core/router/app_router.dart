@@ -36,16 +36,15 @@ GoRouter createRouter() {
     initialLocation: AppRoutes.splash,
     routes: [
       GoRoute(
-        path: AppRoutes.signIn,
-        name: AppRoutes.signInName,
-        builder: (context, state) => const SignInPage(),
-      ),
-      GoRoute(
         path: AppRoutes.splash,
         name: AppRoutes.splashName,
         builder: (context, state) => const SplashPage(),
       ),
-
+      GoRoute(
+        path: AppRoutes.signIn,
+        name: AppRoutes.signInName,
+        builder: (context, state) => const SignInPage(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AdaptiveScaffold(

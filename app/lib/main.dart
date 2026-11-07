@@ -11,8 +11,6 @@ import 'features/settings/presentation/cubit/settings_cubit.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await configureDependencies();
-  await sl<SettingsCubit>().load();
-
   runApp(const MettleApp());
 }
 
@@ -24,25 +22,27 @@ class MettleApp extends StatefulWidget {
 }
 
 class _MettleAppState extends State<MettleApp> {
-  late final _router = createRouter();
+  final _router = createRouter();
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
-      value: sl<SettingsCubit>(),
+      value: sl<SettingsCubit>()..load(),
       child: BlocBuilder<SettingsCubit, AppThemeMode>(
-        builder: (context, mode) => MaterialApp.router(
-          title: AppStrings.appName,
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light(),
-          darkTheme: AppTheme.dark(),
-          themeMode: switch (mode) {
-            AppThemeMode.system => ThemeMode.system,
-            AppThemeMode.light => ThemeMode.light,
-            AppThemeMode.dark => ThemeMode.dark,
-          },
-          routerConfig: _router,
-        ),
+        builder: (context, themeMode) {
+          return MaterialApp.router(
+            title: AppStrings.appName,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: switch (themeMode) {
+              AppThemeMode.system => ThemeMode.system,
+              AppThemeMode.light => ThemeMode.light,
+              AppThemeMode.dark => ThemeMode.dark,
+            },
+            routerConfig: _router,
+          );
+        },
       ),
     );
   }

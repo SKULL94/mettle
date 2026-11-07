@@ -2,6 +2,8 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_background" />
     <item
-        android:drawable="@drawable/mettle_splash_logo"
-        android:gravity="center" />
+        android:drawable="@drawable/mettle_splash_icon"
+        android:gravity="center"
+        android:width="173dp"
+        android:height="173dp" />
 </layer-list>

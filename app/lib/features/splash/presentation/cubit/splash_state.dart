@@ -2,8 +2,8 @@ sealed class SplashState {
   const SplashState();
 }
 
-final class SplashBootstrapping extends SplashState {
-  const SplashBootstrapping();
+final class SplashWarmingUp extends SplashState {
+  const SplashWarmingUp();
 }
 
 final class SplashReady extends SplashState {
@@ -12,5 +12,6 @@ final class SplashReady extends SplashState {
 
 final class SplashFailed extends SplashState {
   const SplashFailed(this.message);
+
   final String message;
 }
