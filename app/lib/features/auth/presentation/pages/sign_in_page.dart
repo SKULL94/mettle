@@ -6,7 +6,6 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/widgets/mettle_mark.dart';
 import '../cubit/sign_in_cubit.dart';
 import '../cubit/sign_in_state.dart';
 import '../widgets/auth_field.dart';
@@ -50,17 +49,6 @@ class SignInView extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: const Text(AppStrings.authTitle),
-          leading: Navigator.of(context).canPop()
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  onPressed: Navigator.of(context).pop,
-                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                )
-              : null,
-        ),
         body: SafeArea(
           child: BlocBuilder<SignInCubit, SignInState>(
             builder: (context, state) => _Form(state: state),
@@ -90,7 +78,7 @@ class _Form extends StatelessWidget {
         AppDimens.xl,
       ),
       children: [
-        const _BrandRow(),
+        // const _BrandRow(),
         const SizedBox(height: AppDimens.lg),
 
         AuthModeTabs(mode: state.mode, onChanged: cubit.setMode),
@@ -175,41 +163,6 @@ class _Form extends StatelessWidget {
           mode: state.mode,
           onPressed: () => cubit.setMode(
             isSignIn ? AuthMode.signUp : AuthMode.signIn,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BrandRow extends StatelessWidget {
-  const _BrandRow();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Row(
-      children: [
-        const MettleMark(size: AppDimens.xxl),
-        const SizedBox(width: AppDimens.sm),
-        MettleWordmark(style: theme.textTheme.titleLarge),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimens.sm,
-            vertical: AppDimens.xs,
-          ),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(AppDimens.radiusPill),
-          ),
-          child: Text(
-            'v${AppStrings.appVersion}',
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontFamily: 'JetBrains Mono',
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
           ),
         ),
       ],

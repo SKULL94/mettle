@@ -7,7 +7,9 @@ final class SplashWarmingUp extends SplashState {
 }
 
 final class SplashReady extends SplashState {
-  const SplashReady();
+  const SplashReady({required this.signedIn});
+
+  final bool signedIn;
 }
 
 final class SplashFailed extends SplashState {

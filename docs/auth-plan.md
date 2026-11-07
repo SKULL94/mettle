@@ -3,6 +3,10 @@
 Google and email sign-in via Supabase, Supabase Postgres as the database. Companion to
 [`product-plan.md`](./product-plan.md) and [`backend-plan.md`](./backend-plan.md).
 
+> **Package versions and Supabase key naming last verified 2026-11-08** against pub.dev and the
+> Supabase docs: `supabase_flutter` 2.18.3, `google_sign_in` 7.2.0, publishable/secret keys.
+> This section of the stack moves; re-check before a long implementation session.
+
 **Scope:** this is the M2 identity milestone. M1 ships with no auth and device-local storage; this
 document is how that becomes an account without throwing the local path away.
 
@@ -17,6 +21,7 @@ document is how that becomes an account without throwing the local path away.
 | Phone OTP | **Not shipped** | Needs a paid SMS provider and per-country config. Not a trust decision — a phone JWT is exactly as valid as a Google one |
 | Auth service | **Supabase Auth** | Issues the JWT, rotates refresh tokens, owns the OAuth dance |
 | Database | **Supabase Postgres** | One managed Postgres serving app data *and* the LangGraph checkpointer |
+| API keys | **Publishable + secret**, not the legacy `anon` / `service_role` JWTs | The legacy pair still works but is deprecated end of 2026. Starting a new project on it buys a migration for nothing |
 | Token verification | **Local, via JWKS** | No network hop per request once keys are cached |
 | Anonymous start | **Yes — anonymous sign-in, later linked to a real identity** | Preserves M1's "zero friction to try it" (see §7) |
 
@@ -47,7 +52,7 @@ must handle.
 │   FastAPI    │ ───── (cached JWKS) ────▶ │   JWKS endpoint │
 │              │                          └─────────────────┘
 │  owns the    │
-│  interview   │  service_role key
+│  interview   │  secret key
 └──────┬───────┘ ─────────────────┐
        │                          ▼
        │                 ┌──────────────────┐
@@ -66,8 +71,8 @@ sessions and scores. It never issues or refreshes tokens.
 
 | Path | Used for | Auth |
 |---|---|---|
-| App → Supabase directly | Reading *your own* history, trend, topic mastery | Anon key + **RLS** |
-| FastAPI → Supabase | Writing sessions and scores; LangGraph checkpoints | **service_role** key, bypasses RLS |
+| App → Supabase directly | Reading *your own* history, trend, topic mastery | Publishable key + **RLS** |
+| FastAPI → Supabase | Writing sessions and scores; LangGraph checkpoints | **Secret** key, bypasses RLS |
 
 This split is the standard Supabase pattern and it is not laziness. Reads of your own rows need no
 business logic, so routing them through FastAPI adds a hop and a second thing to keep up. Writes
@@ -155,13 +160,13 @@ create policy "own turns" on public.turns
 
 **Select-only policies, on purpose.** There is no insert or update policy for the app, so the app
 *cannot* write a score even if someone tampers with the client. The backend writes with the
-service_role key, which bypasses RLS entirely. A self-reported score would make the whole product
+secret key, which bypasses RLS entirely. A self-reported score would make the whole product
 meaningless, so the database is where that gets prevented.
 
 **LangGraph's checkpoint tables live in the same database** and are created by
 `AsyncPostgresSaver.setup()`. The backend reaches them over a direct connection; the app must never
-see them. Keep them out of the `public` schema exposed to the anon key, or leave RLS on with no
-policy so the anon key cannot read them.
+see them. Keep them out of the `public` schema exposed to the publishable key, or leave RLS on with
+no policy so the publishable key cannot read them.
 
 ---
 
@@ -204,7 +209,7 @@ not just on new endpoints:
 ### Writing results
 
 When `summarize` completes, the backend writes one `sessions` row and N `turns` rows with the
-service_role key. This replaces the app writing to `shared_preferences`.
+secret key. This replaces the app writing to `shared_preferences`.
 
 ### Endpoint matrix
 
@@ -218,9 +223,13 @@ service_role key. This replaces the app writing to `shared_preferences`.
 
 ## 6. App changes
 
-- Add `supabase_flutter`, plus `google_sign_in` for the **native** Google flow. Native beats the
-  browser redirect on Android: no chrome tab, no visible redirect, and it works offline-ish to the
-  point of failure.
+- Add `supabase_flutter`, plus `google_sign_in` **7.x** for the **native** Google flow. Native beats
+  the browser redirect on Android: no chrome tab, no visible redirect, and it works offline-ish to
+  the point of failure. 7.x is a rewrite of the 6.x API — see §10.6.
+- **`SignInCubit` has to distinguish cancel from failure.** In `google_sign_in` 7.x `authenticate()`
+  *throws* when the user dismisses the sheet instead of returning null, so the naive mapping turns a
+  deliberate back-press into a red error snackbar. Cancel should return the cubit to
+  `SignInEditing` silently.
 - **Use the official Google button or logo asset.** The `GoogleMark` currently on the sign-in screen
   is a hand-drawn `CustomPainter` standing in so the screen renders without a dependency. Google's
   brand guidelines require their supplied mark on a sign-in affordance, so replace it before any
@@ -228,6 +237,9 @@ service_role key. This replaces the app writing to `shared_preferences`.
 - The sign-in screen is built (`features/auth`) with a `SignInCubit` driving mode (sign in / sign
   up), validation, obscure-toggle and remember-device. It talks to an `AuthRepository` interface
   with **no implementation yet** — wiring Supabase behind that interface is step 5/6 below.
+  There is also no `features/auth/data/` directory and nothing auth-related in `injection.dart`,
+  so `sign_in_page.dart`'s `SignInCubit(sl())` throws on resolve today. It is latent rather than
+  broken only because no route reaches `/sign-in` yet; the Splash branch below is what exposes it.
 - `Splash` gains the branch it doesn't have today: valid session → Home, otherwise → `/sign-in`.
 - `ApiClient` attaches the bearer token and, on a **401**, refreshes once via Supabase and retries
   exactly once before surfacing an error. Without the retry, every expired token looks like a server
@@ -264,10 +276,10 @@ fails if that Google identity is already attached to another account — which n
 | Thing | Detail |
 |---|---|
 | **Android SHA-1 fingerprints** | Google OAuth needs the signing certificate fingerprint registered. **Debug and release keystores differ** — register both, or sign-in works in development and fails in the Play build. The single most common cause of "it worked on my machine". |
-| **Two OAuth client IDs** | Android needs its own client ID *and* the Web client ID (Supabase uses the web one as the audience). Mixing them up yields an opaque `invalid_audience`. |
+| **Three OAuth client IDs** | Android and iOS each need their own client ID *and* the Web client ID (Supabase uses the web one as the audience). Mixing them up yields an opaque `invalid_audience`. |
 | **SSE cannot carry a bearer header on web** | `EventSource` cannot set headers — the same constraint that made the stream a GET. On mobile (`package:http`) headers work fine. The web build will need a short-lived token in the query string or a cookie, which is one more reason web is postponed. |
 | **Token lifetime vs long interviews** | Access tokens are short-lived (an hour by default). A long interview can outlive one. `supabase_flutter` refreshes in the background, but an **already-open SSE connection keeps the token it was opened with** — so the stream must tolerate being reopened, which the rehydration work already supports. |
-| **service_role key** | Full database access, bypasses every policy. Server-side only, never in the app, never in a `--dart-define`, never in a client-readable env file. |
+| **Secret key** (`sb_secret_…`) | Full database access, bypasses every policy. Server-side only, never in the app, never in a `--dart-define`, never in a client-readable env file. Same warning as the legacy `service_role` key it replaces. |
 | **Deep link scheme** | Even the native flow needs the callback scheme registered in the manifest and in Supabase's allowed redirect URLs. |
 | **Free-tier project pausing** | Supabase pauses inactive free projects. A paused project means auth *and* database *and* checkpointer all down at once — one failure taking out three things. |
 
@@ -277,11 +289,11 @@ fails if that Google identity is already attached to another account — which n
 
 Each step leaves the app working.
 
-1. **Supabase project + Google OAuth** — console config, both client IDs, both SHA-1s. No app code.
-   Verify by signing in from a throwaway script.
-2. **Schema + RLS** — create the tables and policies. Verify RLS by querying with the anon key as
-   two different users and confirming neither sees the other's rows. *Test the policy before any
-   code depends on it.*
+1. **Supabase project + Google OAuth** — console config, all three client IDs, both SHA-1s. No app
+   code. Verify by signing in from a throwaway script.
+2. **Schema + RLS** — create the tables and policies. Verify RLS by querying with the publishable
+   key as two different users and confirming neither sees the other's rows. *Test the policy before
+   any code depends on it.*
 3. **Backend verification + ownership** — the dependency, the owner check, `thread_id` partitioning.
    Close the ownership hole here, before any data is worth stealing.
 4. **Backend writes results** — `summarize` persists to Postgres. Both storage paths run in parallel
@@ -311,6 +323,7 @@ Supabase and Google both move their UI around — if a label below does not matc
 | What | Value |
 |---|---|
 | Android package name | `com.zeeshanhaider.mettle` |
+| iOS bundle identifier | **Still the template default** `com.example.flutterInterviewPractice` — set it before creating the iOS OAuth client, or the client is tied to a throwaway id |
 | Debug SHA-1 | `CE:02:BF:95:6E:AD:25:EC:6A:B2:1C:EE:A5:FE:DD:00:D9:2A:1D:35` |
 | Release SHA-1 | Not generated yet — see step 3 |
 
@@ -319,17 +332,22 @@ Supabase and Google both move their UI around — if a label below does not matc
 1. supabase.com → **New project**. Pick a region near your users; it cannot be changed later.
 2. Save the database password it generates — it is in the Postgres connection string you will need
    for the checkpointer.
-3. **Settings → API**: **copy this** — the *Project URL* and the *anon public* key. These two are
-   safe in the app.
-4. On the same page is the **service_role** key. **Server-side only.** It bypasses every RLS policy.
-   Never in the app, never in a `--dart-define`, never committed.
+3. **Settings → API Keys**: **copy this** — the *Project URL* and the **publishable** key
+   (`sb_publishable_…`). These two are safe in the app.
+4. On the same page, create a **secret** key (`sb_secret_…`). **Server-side only.** It bypasses
+   every RLS policy. Never in the app, never in a `--dart-define`, never committed.
+5. You will also see legacy `anon` and `service_role` keys — long JWTs starting `eyJ`. They still
+   work and both key systems run side by side, but the legacy pair is deprecated at the end of 2026.
+   Use the new short-string keys from the start; any tutorial asking for an `eyJ…` key is dated.
 
 ### 2. Create the Google Cloud project and consent screen
 
 1. console.cloud.google.com → new project.
-2. **APIs & Services → OAuth consent screen**. Choose *External*.
+2. **Google Auth Platform** (the consent-screen settings, formerly *APIs & Services → OAuth consent
+   screen*; the split into **Branding**, **Audience** and **Clients** pages is the same thing
+   reorganised). Choose *External* for the audience.
 3. Fill in app name, support email, developer email. Nothing else is required while testing.
-4. While the app is in *Testing*, only accounts you add under **Test users** can sign in. Add your
+4. While the app is in *Testing*, only accounts listed under **Test users** can sign in. Add your
    own Google account now — forgetting this produces a confusing `access_denied` later.
 
 ### 3. Get both SHA-1 fingerprints
@@ -349,14 +367,15 @@ keytool -list -v -alias <your-alias> -keystore <path-to-release.jks>
 If you ship via Play App Signing, Google re-signs the app, so the fingerprint that matters is the
 one in **Play Console → Setup → App signing**, not your upload key. Register that one too.
 
-### 4. Create *two* OAuth client IDs
+### 4. Create *three* OAuth client IDs
 
-This is the part that trips people up. You need both, and they do different jobs.
+This is the part that trips people up. You need all three, and they do different jobs.
 
 | Client type | Why | Where it goes |
 |---|---|---|
-| **Web application** | Supabase exchanges the token as this client; it is also the `aud` claim | Supabase dashboard, and the app's `serverClientId` |
+| **Web application** | Supabase exchanges the token as this client; it is also the `aud` claim | Supabase dashboard, and the app's `serverClientId` on *every* platform |
 | **Android** | Lets the *native* sign-in sheet trust your app | Nowhere in code — Google matches it by package + SHA-1 |
+| **iOS** | Same, for the iOS sheet | `clientId` at init, plus the reversed id as a URL scheme in `Info.plist` |
 
 **Web application client:**
 
@@ -372,60 +391,111 @@ This is the part that trips people up. You need both, and they do different jobs
    client per certificate.
 4. There is no secret for Android clients. That is expected, not a mistake.
 
+**iOS client:**
+
+1. **Create credentials → OAuth client ID → iOS**.
+2. Bundle ID: `com.zeeshanhaider.mettle`
+3. **copy this** — the client ID, and its *reversed* form
+   (`com.googleusercontent.apps.<id>`), which becomes a URL scheme in step 6.
+4. No secret here either, and no SHA-1 — iOS clients are matched on the bundle ID.
+
 ### 5. Enable Google in Supabase
 
 1. **Authentication → Providers → Google**, toggle on.
-2. Paste the **Web** client ID and secret from step 4. Not the Android one.
-3. **Authorized Client IDs** — add the **Android** client ID here. This is what lets the native
-   `signInWithIdToken` flow be accepted; without it, native sign-in returns a bad-audience error even
-   though the browser flow works.
-4. **Authentication → URL Configuration → Redirect URLs** — add your app's deep link, e.g.
+2. Paste the **Web** client ID and secret from step 4. Not the Android or iOS one.
+3. **Authorized Client IDs** — add the **Android** *and* **iOS** client IDs here, comma separated.
+   This is what lets the native `signInWithIdToken` flow be accepted; without it, native sign-in
+   returns a bad-audience error even though the browser flow works.
+4. **Authentication → URL Configuration → Redirect URLs** — add the app's deep link,
    `com.zeeshanhaider.mettle://login-callback`. Needed for the browser fallback and for password
    reset links.
+
+### 5a. Decide the email confirmation policy
+
+**Authentication → Providers → Email.** Decide *before* building the sign-up path, because it
+changes what a successful `signUp` means:
+
+- **Confirm email ON** — `signUp` returns a user with **no session**. The app must show a
+  "check your inbox" state, and `SignInSucceeded` cannot route straight to Home. The confirmation
+  link needs the redirect URL from step 4 registered or it dead-ends in a browser.
+- **Confirm email OFF** — `signUp` returns a usable session immediately and sign-up behaves exactly
+  like sign-in. Simpler, and fine while the project is a portfolio demo, but it means an unverified
+  address can start interviews.
+
+§3 leaves this open; pick one and note it here, because the sign-up branch of `SignInCubit` is
+written differently for each.
 
 ### 6. Wire the app
 
 ```yaml
 dependencies:
-  supabase_flutter: ^2.0.0
-  google_sign_in: ^6.0.0
+  supabase_flutter: ^2.18.0
+  google_sign_in: ^7.2.0
 ```
+
+> **`google_sign_in` 7.x is a rewrite.** The 6.x API in older tutorials — `GoogleSignIn(...)` as a
+> constructor, `signIn()`, `account.authentication` carrying both tokens — no longer exists. What
+> follows is the 7.x shape.
 
 ```dart
-await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+await Supabase.initialize(
+  url: supabaseUrl,
+  publishableKey: supabasePublishableKey,
+);
+
+await GoogleSignIn.instance.initialize(
+  clientId: Platform.isIOS ? iosClientId : null,
+  serverClientId: webClientId,
+);
 ```
 
-Pass both values with `--dart-define-from-file` rather than committing them. The anon key is safe in
-a client — RLS is what protects the data, not the key's secrecy — but keeping it out of git means
-rotating it does not need a code change.
+`initialize` must be called exactly once, before any other `GoogleSignIn` method. Pass every value
+with `--dart-define-from-file` rather than committing them. The publishable key is safe in a client
+— RLS is what protects the data, not the key's secrecy — but keeping it out of git means rotating it
+does not need a code change.
 
 Native sign-in, in outline:
 
 ```dart
-final google = GoogleSignIn(serverClientId: webClientId);   // the WEB id, not Android
-final account = await google.signIn();
-final auth    = await account!.authentication;
+if (!GoogleSignIn.instance.supportsAuthenticate()) {
+  // web: render Google's button via google_sign_in_web instead
+}
+
+final account = await GoogleSignIn.instance.authenticate();
 
 await supabase.auth.signInWithIdToken(
   provider: OAuthProvider.google,
-  idToken:  auth.idToken!,
-  accessToken: auth.accessToken,
+  idToken: account.authentication.idToken!,
 );
 ```
 
-The `serverClientId` being the *web* client ID is counter-intuitive and is the second most common
-mistake after the SHA-1.
+Three things that changed from the 6.x flow:
 
-Finally, register the deep link scheme in `android/app/src/main/AndroidManifest.xml` so the browser
-fallback and password-reset links return to the app.
+- **`serverClientId` is still the *web* client ID**, on Android and iOS alike. Counter-intuitive, and
+  the second most common mistake after the SHA-1. `clientId` is the *platform* client, and only iOS
+  needs it — passing one on Android is wrong, not merely redundant.
+- **`authenticate()` throws on cancellation** rather than returning null, so a user dismissing the
+  sheet arrives as an exception. Treat the cancellation code as a non-error and return the cubit to
+  `SignInEditing`; anything else is a real failure.
+- **No `accessToken` to pass.** In 7.x the OAuth access token moved behind
+  `authorizationClient.authorizationForScopes(...)`, separate from authentication. Supabase only
+  needs the `idToken`, so the argument is simply dropped — do not go hunting for it.
+
+Finally, register the deep link so the browser fallback and password-reset links return to the app:
+the scheme in `android/app/src/main/AndroidManifest.xml`, and for iOS both the reversed iOS client
+ID and `com.zeeshanhaider.mettle` under `CFBundleURLSchemes` in `ios/Runner/Info.plist`.
 
 ### 7. Verify before writing more code
 
 In order, because each step rules out a different failure:
 
-1. Sign in on an emulator. A `sign_in_failed` with a numeric code almost always means the SHA-1 or
-   package name does not match the Android client.
+1. Sign in on a device. A `sign_in_failed` with a numeric code almost always means the SHA-1 or
+   package name does not match the Android client; on iOS the equivalent is a missing or misspelled
+   reversed-client-ID URL scheme.
 2. Check **Authentication → Users** in Supabase — the user should appear with a Google identity.
 3. Decode the access token at jwt.io and confirm `sub`, `iss` and `aud`. `sub` is what the backend
-   will treat as the user.
-4. Only then point the backend at the JWKS endpoint and start verifying.
+   will treat as the user. A bad `aud` here means the platform client ID is missing from
+   *Authorized Client IDs* in step 5.
+4. Repeat on the other platform before moving on. A release build is a third case again, on its own
+   SHA-1.
+5. Only then point the backend at the JWKS endpoint and start verifying.

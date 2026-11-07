@@ -24,3 +24,15 @@ final class CacheException extends AppException {
 final class StreamException extends AppException {
   const StreamException([super.detail]);
 }
+
+final class AuthException extends AppException {
+  const AuthException([super.detail]);
+}
+
+final class AuthCancelledException extends AppException {
+  const AuthCancelledException([super.detail]);
+}
+
+final class AuthConfirmationPendingException extends AppException {
+  const AuthConfirmationPendingException([super.detail]);
+}

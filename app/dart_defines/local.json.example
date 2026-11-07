@@ -1,3 +1,9 @@
 {
-  "METTLE_BASE_URL": "http://192.168.1.15:8000"
+  "METTLE_BASE_URL": "http://192.168.1.15:8000",
+
+  "SUPABASE_URL": "https://<project-ref>.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_...",
+
+  "GOOGLE_WEB_CLIENT_ID": "<web-client-id>.apps.googleusercontent.com",
+  "GOOGLE_IOS_CLIENT_ID": "<ios-client-id>.apps.googleusercontent.com"
 }

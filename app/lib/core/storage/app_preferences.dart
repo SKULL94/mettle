@@ -13,6 +13,7 @@ final class AppPreferences {
   static const _kDeviceId = 'device_id';
   static const _kThemeMode = 'theme_mode';
   static const _kApiBaseUrl = 'api_base_url';
+  static const _kRememberDevice = 'remember_device';
 
   Future<String> deviceId() async {
     final existing = _prefs.getString(_kDeviceId);
@@ -26,6 +27,11 @@ final class AppPreferences {
   String? themeMode() => _prefs.getString(_kThemeMode);
 
   Future<void> setThemeMode(String name) => _prefs.setString(_kThemeMode, name);
+
+  bool rememberDevice() => _prefs.getBool(_kRememberDevice) ?? true;
+
+  Future<void> setRememberDevice(bool value) =>
+      _prefs.setBool(_kRememberDevice, value);
 
   String apiBaseUrl() {
     final stored = _prefs.getString(_kApiBaseUrl);

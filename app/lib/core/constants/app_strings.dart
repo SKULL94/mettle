@@ -197,6 +197,16 @@ abstract final class AppStrings {
   static const authResetSent = 'Check your inbox for a reset link.';
   static const authShowPassword = 'Show password';
   static const authHidePassword = 'Hide password';
+  static const authFailed = 'Could not sign you in. Please try again.';
+  static const authCancelled = 'Sign-in cancelled.';
+  static const authNotConfigured =
+      'Supabase is not configured in this build.';
+  static const authGoogleNotConfigured =
+      'Google sign-in is not configured in this build.';
+  static const authGoogleUnavailable =
+      "Google sign-in isn't available on this device.";
+  static const authConfirmEmailSent =
+      'Check your inbox to confirm your email, then sign in.';
 
   static const setupTitle = 'New session';
   static const setupDifficulty = 'DIFFICULTY';

@@ -30,7 +30,7 @@ class SplashPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => SplashCubit(sl())..warmUp(),
+      create: (_) => SplashCubit(sl(), sl())..warmUp(),
       child: const SplashView(),
     );
   }
@@ -46,8 +46,10 @@ class SplashView extends StatelessWidget {
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: _overlay,
         child: BlocListener<SplashCubit, SplashState>(
-          listenWhen: (previous, current) => current is SplashReady,
-          listener: (context, state) => context.go(AppRoutes.home),
+          listener: (context, state) {
+            if (state is! SplashReady) return;
+            context.go(state.signedIn ? AppRoutes.home : AppRoutes.signIn);
+          },
           child: Scaffold(
             body: SafeArea(
               child: Center(

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -86,6 +87,8 @@ class SignInCubit extends Cubit<SignInState> {
     switch (result) {
       case Success(:final data):
         emit(state.copyWith(status: SignInSucceeded(data)));
+      case Failed(failure: AuthCancelledFailure()):
+        emit(state.copyWith(status: const SignInEditing()));
       case Failed(:final failure):
         emit(state.copyWith(status: SignInFailed(failure.message)));
     }
