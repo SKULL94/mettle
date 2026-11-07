@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="splash_background">#0E0E11</color>
+    <color name="mettle_tile_low">#2F2C42</color>
+    <color name="mettle_tile_mid">#17171C</color>
+    <color name="mettle_tile_high">#1F1F26</color>
+    <color name="mettle_accent">#9D8DF1</color>
+    <color name="mettle_on_surface">#EDEDF2</color>
+</resources>
