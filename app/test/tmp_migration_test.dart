@@ -37,15 +37,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> scrollToSessions(WidgetTester tester) async {
-    await tester.scrollUntilVisible(
-      find.text(AppStrings.lastSession),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-  }
-
   tearDown(resetDependencies);
 
   testWidgets('discards the legacy summary-only format without erroring', (
