@@ -107,37 +107,9 @@ class MettleWordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final resolved = style ?? theme.textTheme.displaySmall;
-    final dotSize = (resolved?.fontSize ?? 32) * 0.25;
-
-    return Semantics(
-      label: AppStrings.appName,
-      child: ExcludeSemantics(
-        child: Text.rich(
-          TextSpan(
-            text: AppStrings.appName,
-            style: resolved,
-            children: [
-              WidgetSpan(
-                alignment: PlaceholderAlignment.baseline,
-                baseline: TextBaseline.alphabetic,
-                child: Padding(
-                  padding: EdgeInsets.only(left: dotSize * 0.45),
-                  child: Container(
-                    width: dotSize,
-                    height: dotSize,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return Text(
+      AppStrings.appName,
+      style: style ?? Theme.of(context).textTheme.displaySmall,
     );
   }
 }
