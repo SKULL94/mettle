@@ -42,7 +42,7 @@ void main() {
       await tester.pumpWidget(const MettleApp());
 
       expect(find.byType(SplashPage), findsOneWidget);
-      expect(find.text(AppStrings.appName), findsWidgets);
+      expect(find.textContaining(AppStrings.appName), findsWidgets);
 
       await tester.pumpAndSettle();
 

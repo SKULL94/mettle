@@ -1,6 +1,6 @@
 abstract final class AppStrings {
   static const appName = 'Mettle';
-  static const appTagline = 'Test your mettle';
+  static const appTagline = 'AI mock interviews for Flutter engineers';
   static const brandMark = 'M';
 
   static const navHome = 'Home';
@@ -173,6 +173,30 @@ abstract final class AppStrings {
   static const notFoundTitle = 'Page not found';
   static const notFoundBody = "That route doesn't exist.";
   static const bootstrapFailed = "Couldn't start up.";
+
+  static const authTitle = 'Sign In';
+  static const authSignIn = 'Sign in';
+  static const authSignUp = 'Sign up';
+  static const authWelcomeBack = 'Welcome back';
+  static const authCreateAccount = 'Create your account';
+  static const authSubtitle =
+      'Prepare for staff-level Flutter & mobile system interviews.';
+  static const authContinueGoogle = 'Continue with Google';
+  static const authEmailDivider = 'OR CONTINUE WITH EMAIL';
+  static const authEmailLabel = 'EMAIL ADDRESS';
+  static const authEmailHint = 'you@domain.com';
+  static const authPasswordLabel = 'PASSWORD';
+  static const authForgotPassword = 'Forgot password?';
+  static const authRememberDevice = 'Remember this device for 30 days';
+  static const authSubmitSignIn = 'Sign In to Mettle';
+  static const authSubmitSignUp = 'Create Account';
+  static const authNoAccount = "Don't have an account?";
+  static const authHaveAccount = 'Already have an account?';
+  static const authEmailInvalid = 'Enter a valid email address.';
+  static const authPasswordTooShort = 'Use at least 8 characters.';
+  static const authResetSent = 'Check your inbox for a reset link.';
+  static const authShowPassword = 'Show password';
+  static const authHidePassword = 'Hide password';
 
   static const setupTitle = 'New session';
   static const setupDifficulty = 'DIFFICULTY';

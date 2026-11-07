@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/widgets/mettle_mark.dart';
 import '../cubit/splash_cubit.dart';
 import '../cubit/splash_state.dart';
 
@@ -50,13 +51,25 @@ class _Wordmark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(AppStrings.appName, style: theme.textTheme.displaySmall),
-        const SizedBox(height: AppDimens.xs),
-        Text(AppStrings.appTagline, style: theme.textTheme.labelSmall),
-      ],
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppDimens.xl),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const MettleMark(),
+          const SizedBox(height: AppDimens.lg),
+          const MettleWordmark(),
+          const SizedBox(height: AppDimens.sm),
+          Text(
+            AppStrings.appTagline,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
