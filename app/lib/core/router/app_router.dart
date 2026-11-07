@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/pages/sign_in_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/interview/presentation/pages/interview_page.dart';
 import '../../features/interview/presentation/pages/scorecard_page.dart';
@@ -34,6 +35,11 @@ GoRouter createRouter() {
   return GoRouter(
     initialLocation: AppRoutes.splash,
     routes: [
+      GoRoute(
+        path: AppRoutes.signIn,
+        name: AppRoutes.signInName,
+        builder: (context, state) => const SignInPage(),
+      ),
       GoRoute(
         path: AppRoutes.splash,
         name: AppRoutes.splashName,

@@ -2,6 +2,9 @@ abstract final class AppRoutes {
   static const splash = '/splash';
   static const splashName = 'splash';
 
+  static const signIn = '/sign-in';
+  static const signInName = 'signIn';
+
   static const home = '/';
   static const homeName = 'home';
 
