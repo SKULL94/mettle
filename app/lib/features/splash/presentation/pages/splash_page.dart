@@ -62,6 +62,7 @@ class _Wordmark extends StatelessWidget {
           const MettleWordmark(),
           const SizedBox(height: AppDimens.sm),
           Text(
+            
             AppStrings.appTagline,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(

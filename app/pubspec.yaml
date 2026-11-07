@@ -1,5 +1,5 @@
 name: mettle
-description: "AI mock interviews for mobile engineers - rubric-scored practice with progress tracking."
+description: "AI mock interviews for software engineers - rubric-scored practice with progress tracking."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
+  flutter_svg: ^2.0.17
   get_it: ^9.3.0
   go_router: ^18.1.0
   http: ^1.2.0
@@ -25,6 +26,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/brand/
 
   fonts:
     - family: Inter

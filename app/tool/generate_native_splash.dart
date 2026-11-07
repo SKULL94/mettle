@@ -4,13 +4,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mettle/core/constants/app_dimens.dart';
-import 'package:mettle/core/constants/app_strings.dart';
 import 'package:mettle/core/theme/app_theme.dart';
 import 'package:mettle/core/widgets/mettle_mark.dart';
-
-const _lockupWidth = 320.0;
 
 const _densities = <String, double>{
   'mdpi': 1.0,
@@ -37,43 +34,25 @@ Future<void> _loadFonts() async {
 void main() {
   setUpAll(_loadFonts);
 
-  testWidgets('render native splash lockup', (tester) async {
+  testWidgets('render native splash logo', (tester) async {
     final boundary = GlobalKey();
-    await tester.binding.setSurfaceSize(const Size(480.0, 480.0));
+    await tester.binding.setSurfaceSize(const Size(256.0, 256.0));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.runAsync(() async {
+      const loader = SvgAssetLoader(MettleMark.asset);
+      await svg.cache.putIfAbsent(
+        loader.cacheKey(null),
+        () => loader.loadBytes(null),
+      );
+    });
 
     await tester.pumpWidget(
       MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark(),
-        home: Builder(
-          builder: (context) {
-            final theme = Theme.of(context);
-            return Center(
-              child: RepaintBoundary(
-                key: boundary,
-                child: SizedBox(
-                  width: _lockupWidth,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const MettleMark(),
-                      const SizedBox(height: AppDimens.lg),
-                      const MettleWordmark(),
-                      const SizedBox(height: AppDimens.sm),
-                      Text(
-                        AppStrings.appTagline,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+        home: Center(
+          child: RepaintBoundary(key: boundary, child: const MettleMark()),
         ),
       ),
     );
@@ -97,7 +76,7 @@ void main() {
         directory.createSync(recursive: true);
       }
 
-      final file = File('${directory.path}/mettle_splash_lockup.png');
+      final file = File('${directory.path}/mettle_splash_logo.png');
       file.writeAsBytesSync(bytes!);
       stdout.writeln('wrote ${file.path} (${bytes.length} bytes)');
     }

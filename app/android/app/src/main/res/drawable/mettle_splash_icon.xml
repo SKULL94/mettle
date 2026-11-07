@@ -6,6 +6,10 @@
     android:viewportWidth="288"
     android:viewportHeight="288">
 
+    <path
+        android:pathData="M100,48 L188,48 A52,52 0 0 1 240,100 L240,188 A52,52 0 0 1 188,240 L100,240 A52,52 0 0 1 48,188 L48,100 A52,52 0 0 1 100,48 Z"
+        android:fillColor="@color/mettle_tile" />
+
     <path android:pathData="M100,48 L188,48 A52,52 0 0 1 240,100 L240,188 A52,52 0 0 1 188,240 L100,240 A52,52 0 0 1 48,188 L48,100 A52,52 0 0 1 100,48 Z">
         <aapt:attr name="android:fillColor">
             <gradient
@@ -14,9 +18,9 @@
                 android:startY="240"
                 android:endX="240"
                 android:endY="48">
-                <item android:offset="0.0" android:color="@color/mettle_tile_low" />
-                <item android:offset="0.45" android:color="@color/mettle_tile_mid" />
-                <item android:offset="1.0" android:color="@color/mettle_tile_high" />
+                <item android:offset="0.0" android:color="@color/mettle_sheen_start" />
+                <item android:offset="0.5" android:color="@color/mettle_sheen_mid" />
+                <item android:offset="1.0" android:color="@color/mettle_sheen_end" />
             </gradient>
         </aapt:attr>
     </path>
@@ -30,7 +34,7 @@
 
     <path
         android:pathData="M132,170 L144,156 L156,170"
-        android:strokeColor="@color/mettle_on_surface"
+        android:strokeColor="@color/mettle_chevron"
         android:strokeWidth="9"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
