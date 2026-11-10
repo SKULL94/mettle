@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/result/result.dart';
-import '../../../../core/widgets/demo_mode_chip.dart';
 import '../../domain/entities/difficulty.dart';
 import '../../domain/entities/interview_topic.dart';
 import '../../domain/entities/session_config.dart';
@@ -175,10 +173,6 @@ class _SheetHeader extends StatelessWidget {
             style: theme.textTheme.headlineSmall,
           ),
         ),
-        if (!ApiConstants.isBackendConfigured) ...[
-          const SizedBox(width: AppDimens.sm),
-          const DemoModeChip(),
-        ],
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
           tooltip: AppStrings.close,

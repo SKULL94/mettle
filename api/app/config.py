@@ -2,10 +2,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-ProviderName = Literal["scripted", "anthropic"]
 CheckpointBackend = Literal["sqlite", "postgres"]
 
 API_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +25,6 @@ class Settings(BaseSettings):
     )
 
     version: str = "0.1.0"
-    llm_provider: ProviderName | None = None
 
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-5"
@@ -43,35 +40,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:8080"
     log_level: str = "INFO"
 
-    token_delay_ms: int = 24
-    grade_delay_ms: int = 320
-
-    @field_validator("llm_provider", mode="before")
-    @classmethod
-    def _blank_means_auto_detect(cls, value: object) -> object:
-        if isinstance(value, str) and not value.strip():
-            return None
-        return value
-
     @property
     def has_api_key(self) -> bool:
         return bool(self.anthropic_api_key.strip())
-
-    @property
-    def resolved_provider(self) -> ProviderName:
-        if self.llm_provider is None:
-            return "anthropic" if self.has_api_key else "scripted"
-        if self.llm_provider == "anthropic" and not self.has_api_key:
-            return "scripted"
-        return self.llm_provider
-
-    @property
-    def demo_mode(self) -> bool:
-        return self.resolved_provider == "scripted"
-
-    @property
-    def reported_model(self) -> str:
-        return "scripted" if self.demo_mode else self.anthropic_model
 
     @property
     def checkpoint_backend(self) -> CheckpointBackend:

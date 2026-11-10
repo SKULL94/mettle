@@ -99,8 +99,8 @@ POST   /v1/sessions/{id}/answer          submit answer → 202
 POST   /v1/sessions/{id}/skip            skip current question → 202
 GET    /v1/sessions/{id}/scorecard       final scorecard
 GET    /v1/topics                        the difficulty-tiered topic catalogue
-GET    /v1/meta                          {version, model, demo_mode, configured}
-GET    /healthz                          liveness + provider + checkpointer
+GET    /v1/meta                          {version, model, configured}
+GET    /healthz                          liveness + model + checkpointer + configured
 ```
 
 ### Why answer-submit and streaming are separate calls
@@ -322,8 +322,8 @@ configured — which is also what makes the badges meaningful rather than decora
 ## 10. Ops
 
 - Multi-stage `Dockerfile` on `uv`; `docker compose up` brings up api + Postgres with seeded data
-- `/healthz` liveness, `/v1/meta` exposing version + model + `demo_mode` so the app can show a
-  `DEMO MODE` chip truthfully
+- `/healthz` liveness, `/v1/meta` exposing version + model + `configured`, so a missing key is
+  visible without starting a session
 - CORS restricted to the GitHub Pages origin; HTTPS both ends
 - Structured JSON logs with a per-session correlation id; log the provider's `request_id` on failures
 - Deploy to Fly.io free tier; GitHub Actions runs lint + types + tests, then builds the image

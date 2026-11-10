@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../core/widgets/demo_mode_chip.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key});
@@ -27,10 +25,6 @@ class HomeHeader extends StatelessWidget {
                 style: theme.textTheme.titleLarge,
               ),
             ),
-            if (!ApiConstants.isBackendConfigured) ...[
-              const SizedBox(width: AppDimens.sm),
-              const Flexible(child: DemoModeChip()),
-            ],
           ],
         ),
         const SizedBox(height: AppDimens.md),

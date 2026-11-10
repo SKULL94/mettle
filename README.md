@@ -210,7 +210,7 @@ POST /v1/sessions                     create a session
 GET  /v1/sessions/{id}/turns/stream   SSE — question tokens + grade events
 POST /v1/sessions/{id}/answer         submit an answer (idempotent on turn_id)
 GET  /v1/sessions/{id}/scorecard      final scorecard
-GET  /v1/meta                         version · model · demo_mode
+GET  /v1/meta                         version · model · configured
 ```
 
 Answer submission and streaming are **separate calls** on purpose: a POST returning
@@ -278,9 +278,9 @@ ANTHROPIC_API_KEY=sk-ant-...
 ANTHROPIC_MODEL=claude-haiku-4-5    # or claude-sonnet-5 for stronger grading
 ```
 
-Leave `LLM_PROVIDER` commented out — the backend selects the live provider automatically when a key
-is present. `.env` is gitignored; never commit it, and never pass it to `--dart-define-from-file`
-(those values are compiled into the app binary).
+There is one provider and no offline mode, so the key is the only switch — `.env` is gitignored;
+never commit it, and never pass it to `--dart-define-from-file` (those values are compiled into the
+app binary).
 
 ### 2. Configure sign-in
 
@@ -308,7 +308,7 @@ but the auth calls report themselves as unconfigured and the sign-in screen cann
 
 ```bash
 docker compose up -d          # http://localhost:8000
-curl localhost:8000/v1/meta   # expect "demo_mode":false and your model
+curl localhost:8000/v1/meta   # expect "configured":true and your model
 ```
 
 Without Docker:

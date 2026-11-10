@@ -25,15 +25,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
 
     log.info(
-        "starting version=%s provider=%s model=%s demo_mode=%s",
+        "starting version=%s model=%s configured=%s",
         settings.version,
-        settings.resolved_provider,
-        settings.reported_model,
-        settings.demo_mode,
+        settings.anthropic_model,
+        settings.has_api_key,
     )
 
-    if settings.llm_provider == "anthropic" and not settings.has_api_key:
-        log.warning("LLM_PROVIDER=anthropic but no API key is set; serving scripted mode")
+    if not settings.has_api_key:
+        log.warning("ANTHROPIC_API_KEY is not set; POST /v1/sessions will return 503")
 
     async with open_checkpointer(settings) as checkpointer:
         registry.set_graph(build_graph(checkpointer))
@@ -66,9 +65,9 @@ def create_app() -> FastAPI:
     async def healthz() -> dict[str, str | bool]:
         return {
             "status": "ok",
-            "provider": settings.resolved_provider,
+            "model": settings.anthropic_model,
             "checkpointer": settings.checkpoint_backend,
-            "demo_mode": settings.demo_mode,
+            "configured": settings.has_api_key,
         }
 
     return app

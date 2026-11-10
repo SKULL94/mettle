@@ -39,8 +39,7 @@ async def meta() -> MetaResponse:
     settings = get_settings()
     return MetaResponse(
         version=settings.version,
-        model=settings.reported_model,
-        demo_mode=settings.demo_mode,
+        model=settings.anthropic_model,
         configured=settings.has_api_key,
     )
 

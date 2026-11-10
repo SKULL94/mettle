@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/widgets/selectable_tile.dart';
 import '../../../../core/widgets/status_dot.dart';
 import '../../domain/entities/app_theme_mode.dart';
@@ -42,7 +42,7 @@ class SettingsView extends StatelessWidget {
           children: const [
             _Appearance(),
             SizedBox(height: AppDimens.xl),
-            _Mode(),
+            _Backend(),
             SizedBox(height: AppDimens.xl),
             _Data(),
             SizedBox(height: AppDimens.xl),
@@ -138,21 +138,20 @@ class _ThemeTile extends StatelessWidget {
   }
 }
 
-class _Mode extends StatelessWidget {
-  const _Mode();
+class _Backend extends StatelessWidget {
+  const _Backend();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const isDemo = !ApiConstants.isBackendConfigured;
 
     return SettingsSection(
-      title: AppStrings.mode,
+      title: AppStrings.backend,
       child: Card(
         child: SettingsRow(
           leading: StatusDot(color: theme.colorScheme.primary),
-          title: isDemo ? AppStrings.demoMode : AppStrings.liveModeTitle,
-          body: isDemo ? AppStrings.demoModeBody : AppStrings.liveModeBody,
+          title: sl<ApiClient>().baseUrl,
+          body: AppStrings.backendBody,
         ),
       ),
     );

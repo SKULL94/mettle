@@ -25,7 +25,6 @@ class SkipRequest(BaseModel):
 class MetaResponse(BaseModel):
     version: str
     model: str
-    demo_mode: bool
     configured: bool
 
 

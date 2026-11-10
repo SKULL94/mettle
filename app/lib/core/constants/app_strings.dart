@@ -137,10 +137,8 @@ abstract final class AppStrings {
   static const themeSystem = 'System';
   static const themeLight = 'Light';
   static const themeDark = 'Dark';
-  static const mode = 'Mode';
-  static const demoModeBody = 'Running on scripted questions.';
-  static const liveModeTitle = 'LIVE';
-  static const liveModeBody = 'Connected to a configured backend.';
+  static const backend = 'Backend';
+  static const backendBody = 'Interviews are generated and graded here.';
   static const data = 'Data';
   static const clearData = 'Clear data';
   static const clearDataBody = 'Deletes every stored session on this device.';
@@ -158,12 +156,10 @@ abstract final class AppStrings {
   static const dismiss = 'Dismiss';
   static const cancel = 'Cancel';
 
-  static const demoMode = 'DEMO MODE';
   static const offlineBanner = "Can't reach the server — showing saved data.";
 
   static const serverError = 'Something went wrong. Please try again.';
-  static const serverUnreachable =
-      "Can't reach the Mettle server.";
+  static const serverUnreachable = "Can't reach the Mettle server.";
   static const requestTimeout =
       'The server took too long to respond. Please retry.';
   static const streamInterrupted =
@@ -199,8 +195,7 @@ abstract final class AppStrings {
   static const authHidePassword = 'Hide password';
   static const authFailed = 'Could not sign you in. Please try again.';
   static const authCancelled = 'Sign-in cancelled.';
-  static const authNotConfigured =
-      'Supabase is not configured in this build.';
+  static const authNotConfigured = 'Supabase is not configured in this build.';
   static const authGoogleNotConfigured =
       'Google sign-in is not configured in this build.';
   static const authGoogleUnavailable =
