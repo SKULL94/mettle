@@ -9,6 +9,7 @@ from .api.v1.routes import router as v1_router
 from .config import get_settings
 from .graph.build import build_graph
 from .session import registry
+from .store import pool
 from .store.checkpointer import open_checkpointer
 
 LOCAL_ORIGINS = r"http://(localhost|127\.0\.0\.1|10\.0\.2\.2)(:\d+)?"
@@ -34,9 +35,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if not settings.has_api_key:
         log.warning("ANTHROPIC_API_KEY is not set; POST /v1/sessions will return 503")
 
+    if not settings.auth_enforced:
+        log.warning("SUPABASE_URL is not set; every request runs as a single local user")
+
     async with open_checkpointer(settings) as checkpointer:
         registry.set_graph(build_graph(checkpointer))
-        yield
+        await pool.open_pool(settings)
+        try:
+            yield
+        finally:
+            await pool.close_pool()
 
     log.info("shutdown complete")
 

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Any
 
 from langgraph.types import interrupt
@@ -7,8 +8,11 @@ from ..data.catalog import Topic, resolve
 from ..providers.base import DIMENSIONS, GradeRequest, QuestionRequest
 from ..providers.factory import get_provider
 from ..session import bus
+from ..store import results
 from .rubric import MAX_FOLLOW_UP_DEPTH, WEAK_DIMENSION_THRESHOLD
 from .state import InterviewState, PendingQuestion, Turn
+
+log = logging.getLogger("mettle.graph")
 
 SCRIPTED_WORD_DELAY = 0.02
 
@@ -196,6 +200,17 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
     }
 
 
+async def _persist(scorecard: dict[str, Any], state: InterviewState) -> None:
+    try:
+        await results.save(
+            scorecard,
+            user_id=state.get("user_id") or "",
+            question_total=state["question_total"],
+        )
+    except Exception:
+        log.exception("could not persist session=%s", state["session_id"])
+
+
 async def summarize(state: InterviewState) -> dict[str, Any]:
     history = state["history"]
     scored = [turn["score"] for turn in history if turn.get("score")]
@@ -224,6 +239,8 @@ async def summarize(state: InterviewState) -> dict[str, Any]:
         "missing": missing,
         "turns": history,
     }
+
+    await _persist(scorecard, state)
 
     await _emit(
         state["session_id"],

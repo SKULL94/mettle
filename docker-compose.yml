@@ -9,6 +9,10 @@ services:
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5}
       GRADE_EFFORT: ${GRADE_EFFORT:-high}
       QUESTION_EFFORT: ${QUESTION_EFFORT:-low}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
+      FREE_SESSIONS_PER_USER: ${FREE_SESSIONS_PER_USER:-3}
+      MONTHLY_SPEND_CAP_CENTS: ${MONTHLY_SPEND_CAP_CENTS:-2000}
       DATABASE_URL: sqlite+aiosqlite:////srv/data/mettle.db
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
     volumes:

@@ -1,10 +1,11 @@
 import json
 from collections.abc import AsyncIterator
-from typing import Annotated, Any
+from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Response, status
 from sse_starlette.sse import EventSourceResponse
 
+from ...auth.deps import CurrentUser
 from ...config import get_settings
 from ...data.catalog import UnknownTopic, catalog, resolve
 from ...providers.factory import ProviderNotConfigured, get_provider
@@ -21,15 +22,14 @@ from ...schemas.wire import (
     TopicOut,
 )
 from ...session import registry
+from ...store import quota
 
 router = APIRouter()
 
-DeviceId = Annotated[str, Header(alias="X-Device-Id")]
 
-
-async def _handle(session_id: str) -> registry.SessionHandle:
+async def _handle(session_id: str, user_id: str) -> registry.SessionHandle:
     try:
-        return await registry.get(session_id)
+        return await registry.get(session_id, user_id)
     except registry.UnknownSession:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "unknown session") from None
 
@@ -69,7 +69,7 @@ async def topics() -> CatalogResponse:
 )
 async def create_session(
     body: CreateSessionRequest,
-    x_device_id: DeviceId = "anonymous",
+    user_id: CurrentUser,
 ) -> CreateSessionResponse:
     try:
         get_provider()
@@ -85,11 +85,18 @@ async def create_session(
             status.HTTP_400_BAD_REQUEST, f"unknown topic: {body.topic}"
         ) from None
 
+    try:
+        await quota.claim(user_id, body.question_count)
+    except quota.QuotaExceeded as exc:
+        raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, str(exc)) from None
+    except quota.SpendCapReached as exc:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)) from None
+
     handle = await registry.create(
         topic=body.topic,
         difficulty=level.id,
         question_count=body.question_count,
-        device_id=x_device_id,
+        user_id=user_id,
     )
     return CreateSessionResponse(
         session_id=handle.session_id,
@@ -98,8 +105,8 @@ async def create_session(
 
 
 @router.get("/sessions/{session_id}", response_model=SessionStateResponse)
-async def get_session(session_id: str) -> SessionStateResponse:
-    handle = await _handle(session_id)
+async def get_session(session_id: str, user_id: CurrentUser) -> SessionStateResponse:
+    handle = await _handle(session_id, user_id)
     values = await handle.snapshot()
     return SessionStateResponse(
         session_id=session_id,
@@ -114,8 +121,8 @@ async def get_session(session_id: str) -> SessionStateResponse:
 
 
 @router.get("/sessions/{session_id}/turns/stream")
-async def stream_turns(session_id: str) -> EventSourceResponse:
-    handle = await _handle(session_id)
+async def stream_turns(session_id: str, user_id: CurrentUser) -> EventSourceResponse:
+    handle = await _handle(session_id, user_id)
     await handle.attach()
 
     async def publisher() -> AsyncIterator[dict[str, Any]]:
@@ -126,8 +133,10 @@ async def stream_turns(session_id: str) -> EventSourceResponse:
 
 
 @router.post("/sessions/{session_id}/answer", status_code=status.HTTP_202_ACCEPTED)
-async def submit_answer(session_id: str, body: AnswerRequest) -> Response:
-    handle = await _handle(session_id)
+async def submit_answer(
+    session_id: str, body: AnswerRequest, user_id: CurrentUser
+) -> Response:
+    handle = await _handle(session_id, user_id)
     try:
         await handle.submit(body.turn_id, body.answer)
     except registry.SessionConflict as exc:
@@ -136,8 +145,10 @@ async def submit_answer(session_id: str, body: AnswerRequest) -> Response:
 
 
 @router.post("/sessions/{session_id}/skip", status_code=status.HTTP_202_ACCEPTED)
-async def skip_question(session_id: str, body: SkipRequest) -> Response:
-    handle = await _handle(session_id)
+async def skip_question(
+    session_id: str, body: SkipRequest, user_id: CurrentUser
+) -> Response:
+    handle = await _handle(session_id, user_id)
     try:
         await handle.submit(body.turn_id, "")
     except registry.SessionConflict as exc:
@@ -146,8 +157,8 @@ async def skip_question(session_id: str, body: SkipRequest) -> Response:
 
 
 @router.get("/sessions/{session_id}/scorecard", response_model=ScorecardResponse)
-async def get_scorecard(session_id: str) -> ScorecardResponse:
-    handle = await _handle(session_id)
+async def get_scorecard(session_id: str, user_id: CurrentUser) -> ScorecardResponse:
+    handle = await _handle(session_id, user_id)
     values = await handle.snapshot()
     scorecard = values.get("scorecard")
     if scorecard is None:
@@ -156,6 +167,7 @@ async def get_scorecard(session_id: str) -> ScorecardResponse:
 
 
 @router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_session(session_id: str) -> Response:
+async def delete_session(session_id: str, user_id: CurrentUser) -> Response:
+    await _handle(session_id, user_id)
     await registry.remove(session_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

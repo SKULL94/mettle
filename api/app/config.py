@@ -37,12 +37,30 @@ class Settings(BaseSettings):
     pg_pool_max: int = 10
     pg_disable_prepared_statements: bool = True
 
+    supabase_url: str = ""
+    supabase_jwt_secret: str = ""
+
+    free_sessions_per_user: int = 3
+    monthly_spend_cap_cents: int = 2000
+
     cors_origins: str = "http://localhost:8080"
     log_level: str = "INFO"
 
     @property
     def has_api_key(self) -> bool:
         return bool(self.anthropic_api_key.strip())
+
+    @property
+    def auth_enforced(self) -> bool:
+        return bool(self.supabase_url.strip())
+
+    @property
+    def supabase_issuer(self) -> str:
+        return f"{self.supabase_url.rstrip('/')}/auth/v1"
+
+    @property
+    def supabase_jwks_url(self) -> str:
+        return f"{self.supabase_issuer}/.well-known/jwks.json"
 
     @property
     def checkpoint_backend(self) -> CheckpointBackend:
