@@ -5,7 +5,7 @@ from typing import Any
 from langgraph.types import interrupt
 
 from ..data.catalog import Topic, resolve
-from ..providers.base import DIMENSIONS, GradeRequest, QuestionRequest
+from ..providers.base import DIMENSIONS, GradeRequest, QuestionRequest, TurnScore
 from ..providers.factory import get_provider
 from ..session import bus
 from ..store import results
@@ -48,8 +48,14 @@ async def _stream_generated(session_id: str, request: QuestionRequest) -> str:
     return "".join(pieces)
 
 
-def should_probe(weakest: int, follow_up_depth: int) -> bool:
-    return weakest <= WEAK_DIMENSION_THRESHOLD and follow_up_depth < MAX_FOLLOW_UP_DEPTH
+def should_probe(score: TurnScore, answer: str, follow_up_depth: int) -> bool:
+    if follow_up_depth >= MAX_FOLLOW_UP_DEPTH:
+        return False
+    if not answer.strip():
+        return False
+    if score.is_non_answer:
+        return False
+    return score.weakest_substantive <= WEAK_DIMENSION_THRESHOLD
 
 
 async def plan_interview(state: InterviewState) -> dict[str, Any]:
@@ -176,7 +182,7 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
         score=score.model_dump(),
     )
 
-    probe = should_probe(score.weakest, state["follow_up_depth"])
+    probe = should_probe(score, state["last_answer"], state["follow_up_depth"])
     history = [*state["history"], turn]
 
     if probe:
@@ -185,7 +191,7 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
             "pending": None,
             "probe": True,
             "follow_up_depth": state["follow_up_depth"] + 1,
-            "follow_up_reason": score.weakest_dimension,
+            "follow_up_reason": score.weakest_substantive_dimension,
         }
 
     asked_count = state["asked_count"] + 1

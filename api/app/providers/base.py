@@ -4,6 +4,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 DIMENSIONS = ("correctness", "depth", "clarity", "structure")
+SUBSTANTIVE_DIMENSIONS = ("correctness", "depth")
 
 
 class QuestionRequest(BaseModel):
@@ -46,6 +47,19 @@ class TurnScore(BaseModel):
     def weakest_dimension(self) -> str:
         lowest = self.weakest
         return next(name for name in DIMENSIONS if getattr(self, name) == lowest)
+
+    @property
+    def weakest_substantive(self) -> int:
+        return min(getattr(self, name) for name in SUBSTANTIVE_DIMENSIONS)
+
+    @property
+    def weakest_substantive_dimension(self) -> str:
+        lowest = self.weakest_substantive
+        return next(name for name in SUBSTANTIVE_DIMENSIONS if getattr(self, name) == lowest)
+
+    @property
+    def is_non_answer(self) -> bool:
+        return all(getattr(self, name) == 1 for name in DIMENSIONS)
 
 
 class LLMProvider(Protocol):
