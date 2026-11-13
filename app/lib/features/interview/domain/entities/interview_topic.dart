@@ -80,6 +80,12 @@ enum InterviewTopic {
     'Intermediate Dart',
     'Mixins, extension methods and the mounted check',
   ),
+  misc(
+    'misc',
+    Difficulty.medium,
+    'Misc Scenarios',
+    'setState cost, wiring one class into another, app lifecycle',
+  ),
 
   modularization(
     'modularization',

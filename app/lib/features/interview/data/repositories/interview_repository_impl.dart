@@ -24,7 +24,9 @@ final class InterviewRepositoryImpl implements InterviewRepository {
     try {
       return Success(await _remote.startSession(config));
     } on NetworkException catch (error) {
-      return Failed(NetworkFailure(error.detail ?? AppStrings.serverUnreachable));
+      return Failed(
+        NetworkFailure(error.detail ?? AppStrings.serverUnreachable),
+      );
     } on ServerException {
       return const Failed(ServerFailure());
     } on Object {
@@ -53,7 +55,9 @@ final class InterviewRepositoryImpl implements InterviewRepository {
       );
       return const Success(null);
     } on NetworkException catch (error) {
-      return Failed(NetworkFailure(error.detail ?? AppStrings.serverUnreachable));
+      return Failed(
+        NetworkFailure(error.detail ?? AppStrings.serverUnreachable),
+      );
     } on StreamException {
       return const Failed(ServerFailure());
     } on Object {
@@ -70,7 +74,9 @@ final class InterviewRepositoryImpl implements InterviewRepository {
       await _remote.skipQuestion(sessionId: sessionId, turnId: turnId);
       return const Success(null);
     } on NetworkException catch (error) {
-      return Failed(NetworkFailure(error.detail ?? AppStrings.serverUnreachable));
+      return Failed(
+        NetworkFailure(error.detail ?? AppStrings.serverUnreachable),
+      );
     } on Object {
       return const Failed(UnknownFailure());
     }
@@ -112,16 +118,28 @@ final class InterviewRepositoryImpl implements InterviewRepository {
 
     if (turns.isEmpty) return null;
 
-    await _sessions.save(
-      SessionRecordModel(
-        id: sessionId,
-        topic: topic.id,
-        completedAt: DateTime.now(),
-        turns: turns,
-      ),
-    );
+    await _persist(sessionId, topic, turns);
 
     return _scorecard(sessionId: sessionId, topic: topic, turns: turns);
+  }
+
+  Future<void> _persist(
+    String sessionId,
+    InterviewTopic topic,
+    List<InterviewTurn> turns,
+  ) async {
+    try {
+      await _sessions.save(
+        SessionRecordModel(
+          id: sessionId,
+          topic: topic.id,
+          completedAt: DateTime.now(),
+          turns: turns,
+        ),
+      );
+    } on AppException catch (_) {
+      return;
+    }
   }
 
   static Scorecard _scorecard({

@@ -4,7 +4,9 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, Field
 
-TOPICS_PATH = Path(__file__).resolve().parent / "topics.yaml"
+DATA_DIR = Path(__file__).resolve().parent
+TOPICS_PATH = DATA_DIR / "topics.yaml"
+BANK_PATH = DATA_DIR / "question_bank.yaml"
 
 DIFFICULTY_ORDER = ("easy", "medium", "hard")
 
@@ -14,6 +16,7 @@ class Topic(BaseModel):
     label: str
     covers: str
     difficulty: str = ""
+    questions: list[str] = Field(default_factory=list)
 
 
 class Difficulty(BaseModel):
@@ -29,8 +32,20 @@ class UnknownTopic(Exception):
 
 
 @lru_cache
+def _bank() -> dict[str, list[str]]:
+    if not BANK_PATH.exists():
+        return {}
+    raw = yaml.safe_load(BANK_PATH.read_text(encoding="utf-8")) or {}
+    return {
+        topic_id: [" ".join(question.split()) for question in questions]
+        for topic_id, questions in raw.items()
+    }
+
+
+@lru_cache
 def catalog() -> list[Difficulty]:
     raw = yaml.safe_load(TOPICS_PATH.read_text(encoding="utf-8"))
+    bank = _bank()
 
     levels: list[Difficulty] = []
     for key in DIFFICULTY_ORDER:
@@ -41,6 +56,7 @@ def catalog() -> list[Difficulty]:
                 label=item["label"],
                 covers=" ".join(item["covers"].split()),
                 difficulty=key,
+                questions=bank.get(item["id"], []),
             )
             for item in entry["topics"]
         ]

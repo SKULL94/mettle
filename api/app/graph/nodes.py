@@ -1,19 +1,47 @@
+import asyncio
 from typing import Any
 
 from langgraph.types import interrupt
 
-from ..data.catalog import resolve
+from ..data.catalog import Topic, resolve
 from ..providers.base import DIMENSIONS, GradeRequest, QuestionRequest
 from ..providers.factory import get_provider
 from ..session import bus
 from .rubric import MAX_FOLLOW_UP_DEPTH, WEAK_DIMENSION_THRESHOLD
 from .state import InterviewState, PendingQuestion, Turn
 
+SCRIPTED_WORD_DELAY = 0.02
+
 
 async def _emit(session_id: str, event: str, data: dict[str, Any]) -> None:
     emitter = bus.emitter_for(session_id)
     if emitter is not None:
         await emitter.emit(event, data)
+
+
+def scripted_question(topic: Topic, asked_count: int) -> str | None:
+    if asked_count < len(topic.questions):
+        return topic.questions[asked_count]
+    return None
+
+
+async def _stream_scripted(session_id: str, text: str) -> str:
+    for position, word in enumerate(text.split()):
+        await _emit(
+            session_id,
+            "question.delta",
+            {"text": word if position == 0 else f" {word}"},
+        )
+        await asyncio.sleep(SCRIPTED_WORD_DELAY)
+    return text
+
+
+async def _stream_generated(session_id: str, request: QuestionRequest) -> str:
+    pieces: list[str] = []
+    async for piece in get_provider().stream_question(request):
+        pieces.append(piece)
+        await _emit(session_id, "question.delta", {"text": piece})
+    return "".join(pieces)
 
 
 def should_probe(weakest: int, follow_up_depth: int) -> bool:
@@ -62,12 +90,13 @@ async def ask_question(state: InterviewState) -> dict[str, Any]:
         asked=[turn["question"] for turn in state["history"]],
     )
 
-    pieces: list[str] = []
-    async for piece in get_provider().stream_question(request):
-        pieces.append(piece)
-        await _emit(session_id, "question.delta", {"text": piece})
+    scripted = None if is_follow_up else scripted_question(topic, state["asked_count"])
+    text = (
+        await _stream_scripted(session_id, scripted)
+        if scripted is not None
+        else await _stream_generated(session_id, request)
+    )
 
-    text = "".join(pieces)
     question_id = f"q-{state['asked_count']}-{state['follow_up_depth']}"
 
     pending = PendingQuestion(

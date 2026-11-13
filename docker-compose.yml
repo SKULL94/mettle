@@ -5,9 +5,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      LLM_PROVIDER: ${LLM_PROVIDER:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5}
+      GRADE_EFFORT: ${GRADE_EFFORT:-high}
+      QUESTION_EFFORT: ${QUESTION_EFFORT:-low}
       DATABASE_URL: sqlite+aiosqlite:////srv/data/mettle.db
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
     volumes:
