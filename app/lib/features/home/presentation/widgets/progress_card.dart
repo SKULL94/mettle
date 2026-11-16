@@ -194,9 +194,7 @@ class ProgressCardSkeleton extends StatelessWidget {
             SizedBox(height: AppDimens.sm),
             Divider(height: AppDimens.hairline),
             SizedBox(height: AppDimens.md),
-            Center(
-              child: SkeletonBox.circle(size: AppDimens.scoreRingLarge),
-            ),
+            Center(child: SkeletonBox.circle(size: AppDimens.scoreRingLarge)),
             SizedBox(height: AppDimens.md),
             Center(child: SkeletonBox.text(width: 180)),
           ],

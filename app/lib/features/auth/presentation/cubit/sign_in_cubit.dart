@@ -23,13 +23,11 @@ class SignInCubit extends Cubit<SignInState> {
     );
   }
 
-  void emailChanged(String value) => emit(
-    state.copyWith(email: value, status: const SignInEditing()),
-  );
+  void emailChanged(String value) =>
+      emit(state.copyWith(email: value, status: const SignInEditing()));
 
-  void passwordChanged(String value) => emit(
-    state.copyWith(password: value, status: const SignInEditing()),
-  );
+  void passwordChanged(String value) =>
+      emit(state.copyWith(password: value, status: const SignInEditing()));
 
   void toggleObscure() =>
       emit(state.copyWith(obscurePassword: !state.obscurePassword));
@@ -87,7 +85,7 @@ class SignInCubit extends Cubit<SignInState> {
     switch (result) {
       case Success(:final data):
         emit(state.copyWith(status: SignInSucceeded(data)));
-      case Failed(failure: AuthCancelledFailure()):
+      case Failed(failure: AuthCancelledFailure() || AuthRedirectingFailure()):
         emit(state.copyWith(status: const SignInEditing()));
       case Failed(:final failure):
         emit(state.copyWith(status: SignInFailed(failure.message)));
@@ -100,8 +98,9 @@ class SignInCubit extends Cubit<SignInState> {
     }
   }
 
-  String? get emailError =>
-      state.showErrors && !state.isEmailValid ? AppStrings.authEmailInvalid : null;
+  String? get emailError => state.showErrors && !state.isEmailValid
+      ? AppStrings.authEmailInvalid
+      : null;
 
   String? get passwordError => state.showErrors && !state.isPasswordValid
       ? AppStrings.authPasswordTooShort

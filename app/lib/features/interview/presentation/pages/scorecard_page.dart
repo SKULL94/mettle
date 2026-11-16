@@ -6,7 +6,9 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/widgets/app_shell.dart';
 import '../../../../core/widgets/skeleton_box.dart';
+import '../../../../core/widgets/window_size.dart';
 import '../../domain/entities/interview_topic.dart';
 import '../../domain/entities/scorecard.dart';
 import '../bloc/scorecard_cubit.dart';
@@ -14,6 +16,7 @@ import '../bloc/scorecard_state.dart';
 import '../widgets/overall_score_card.dart';
 import '../widgets/question_audit.dart';
 import '../widgets/rubric_bars.dart';
+import '../widgets/scorecard_dashboard.dart';
 import '../widgets/session_setup_sheet.dart';
 import '../widgets/topic_label.dart';
 
@@ -38,31 +41,67 @@ class ScorecardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ScorecardCubit, ScorecardState>(
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(
-          title: const Text(AppStrings.scorecard),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            tooltip: AppStrings.navHome,
-            onPressed: () => context.go(AppRoutes.home),
-          ),
+      builder: (context, state) {
+        if (context.isWideWindow) return _WideScorecard(state: state);
+        return _CompactScorecard(state: state);
+      },
+    );
+  }
+}
+
+class _WideScorecard extends StatelessWidget {
+  const _WideScorecard({required this.state});
+
+  final ScorecardState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppShell(
+      selectedIndex: AppShell.noSelection,
+      onStartSession: () => startSessionFlow(context),
+      body: switch (state) {
+        ScorecardLoading() => const _ScorecardSkeleton(),
+        ScorecardLoaded(:final scorecard) => ScorecardDashboard(
+          scorecard: scorecard,
+          onPractice: () => practiceAgain(context, scorecard.topic),
         ),
-        body: SafeArea(
-          child: switch (state) {
-            ScorecardLoading() => const _ScorecardSkeleton(),
-            ScorecardLoaded(:final scorecard) => _ScorecardBody(
-              scorecard: scorecard,
-            ),
-            ScorecardError(:final message) => _ScorecardError(message: message),
-          },
+        ScorecardError(:final message) => _ScorecardError(message: message),
+      },
+    );
+  }
+}
+
+class _CompactScorecard extends StatelessWidget {
+  const _CompactScorecard({required this.state});
+
+  final ScorecardState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(AppStrings.scorecard),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: AppStrings.navHome,
+          onPressed: () => context.go(AppRoutes.home),
         ),
-        bottomNavigationBar: switch (state) {
-          ScorecardLoaded(:final scorecard) => _PracticeBar(
-            topic: scorecard.topic,
+      ),
+      body: SafeArea(
+        child: switch (state) {
+          ScorecardLoading() => const _ScorecardSkeleton(),
+          ScorecardLoaded(:final scorecard) => _ScorecardBody(
+            scorecard: scorecard,
           ),
-          _ => null,
+          ScorecardError(:final message) => _ScorecardError(message: message),
         },
       ),
+      bottomNavigationBar: switch (state) {
+        ScorecardLoaded(:final scorecard) => _PracticeBar(
+          topic: scorecard.topic,
+        ),
+        _ => null,
+      },
     );
   }
 }

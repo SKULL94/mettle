@@ -18,6 +18,23 @@ abstract final class AppDimens {
 
   static const breakpointExpanded = 840.0;
 
+  static const breakpointWide = 900.0;
+
+  static const breakpointUltraWide = 1280.0;
+
+  static const sidebarWidth = 264.0;
+  static const topBarHeight = 64.0;
+  static const contentMaxWidth = 1320.0;
+  static const readableMaxWidth = 560.0;
+  static const dialogMaxWidth = 620.0;
+  static const indexWidth = 232.0;
+  static const authPaneWidth = 520.0;
+  static const avatar = 32.0;
+  static const controlHeight = 40.0;
+  static const gutter = 32.0;
+  static const paneGap = 24.0;
+  static const editorMinHeight = 280.0;
+
   static const minTouchTarget = 48.0;
   static const navBarHeight = 74.0;
   static const navIcon = 24.0;

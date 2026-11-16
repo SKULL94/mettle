@@ -5,11 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/widgets/window_size.dart';
 import '../cubit/sign_in_cubit.dart';
 import '../cubit/sign_in_state.dart';
 import '../widgets/auth_field.dart';
 import '../widgets/auth_mode_tabs.dart';
+import '../widgets/auth_shell.dart';
 import '../widgets/google_mark.dart';
 
 class SignInPage extends StatelessWidget {
@@ -51,7 +54,20 @@ class SignInView extends StatelessWidget {
       child: Scaffold(
         body: SafeArea(
           child: BlocBuilder<SignInCubit, SignInState>(
-            builder: (context, state) => _Form(state: state),
+            builder: (context, state) {
+              final isWide = context.isWideWindow;
+              final form = _Form(state: state, framed: isWide);
+              if (!isWide) return form;
+
+              return AuthShell(
+                heading: state.mode == AuthMode.signIn
+                    ? AppStrings.authWelcomeBack
+                    : AppStrings.authCreateAccount,
+                subtitle: AppStrings.authSubtitle,
+                backendHost: sl<ApiClient>().baseUrl,
+                child: form,
+              );
+            },
           ),
         ),
       ),
@@ -60,9 +76,10 @@ class SignInView extends StatelessWidget {
 }
 
 class _Form extends StatelessWidget {
-  const _Form({required this.state});
+  const _Form({required this.state, required this.framed});
 
   final SignInState state;
+  final bool framed;
 
   @override
   Widget build(BuildContext context) {
@@ -70,20 +87,13 @@ class _Form extends StatelessWidget {
     final cubit = context.read<SignInCubit>();
     final isSignIn = state.mode == AuthMode.signIn;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppDimens.md,
-        AppDimens.sm,
-        AppDimens.md,
-        AppDimens.xl,
-      ),
-      children: [
-        // const _BrandRow(),
-        const SizedBox(height: AppDimens.lg),
+    final children = <Widget>[
+      const SizedBox(height: AppDimens.lg),
 
-        AuthModeTabs(mode: state.mode, onChanged: cubit.setMode),
-        const SizedBox(height: AppDimens.xl),
+      AuthModeTabs(mode: state.mode, onChanged: cubit.setMode),
+      const SizedBox(height: AppDimens.xl),
 
+      if (!framed) ...[
         Text(
           isSignIn ? AppStrings.authWelcomeBack : AppStrings.authCreateAccount,
           style: theme.textTheme.displaySmall,
@@ -96,76 +106,95 @@ class _Form extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppDimens.xl),
+      ],
 
-        _GoogleButton(
-          busy: state.busyAction == AuthAction.google,
-          onPressed: state.isBusy ? null : cubit.continueWithGoogle,
-        ),
-        const SizedBox(height: AppDimens.lg),
+      _GoogleButton(
+        busy: state.busyAction == AuthAction.google,
+        onPressed: state.isBusy ? null : cubit.continueWithGoogle,
+      ),
+      const SizedBox(height: AppDimens.lg),
 
-        const _EmailDivider(),
-        const SizedBox(height: AppDimens.lg),
+      const _EmailDivider(),
+      const SizedBox(height: AppDimens.lg),
 
-        AuthField(
-          label: AppStrings.authEmailLabel,
-          hint: AppStrings.authEmailHint,
-          icon: Icons.mail_outline_rounded,
-          errorText: cubit.emailError,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          onChanged: cubit.emailChanged,
-        ),
-        const SizedBox(height: AppDimens.md),
+      AuthField(
+        label: AppStrings.authEmailLabel,
+        hint: AppStrings.authEmailHint,
+        icon: Icons.mail_outline_rounded,
+        errorText: cubit.emailError,
+        keyboardType: TextInputType.emailAddress,
+        textInputAction: TextInputAction.next,
+        onChanged: cubit.emailChanged,
+      ),
+      const SizedBox(height: AppDimens.md),
 
-        AuthField(
-          label: AppStrings.authPasswordLabel,
-          icon: Icons.lock_outline_rounded,
-          obscure: state.obscurePassword,
-          errorText: cubit.passwordError,
-          textInputAction: TextInputAction.done,
-          onChanged: cubit.passwordChanged,
-          onSubmitted: (_) => cubit.submit(),
-          trailingLabel: isSignIn
-              ? _ForgotPassword(
-                  onPressed: state.isBusy ? null : cubit.forgotPassword,
-                )
-              : null,
-          suffix: IconButton(
-            onPressed: cubit.toggleObscure,
-            tooltip: state.obscurePassword
-                ? AppStrings.authShowPassword
-                : AppStrings.authHidePassword,
-            icon: Icon(
-              state.obscurePassword
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-            ),
+      AuthField(
+        label: AppStrings.authPasswordLabel,
+        icon: Icons.lock_outline_rounded,
+        obscure: state.obscurePassword,
+        errorText: cubit.passwordError,
+        textInputAction: TextInputAction.done,
+        onChanged: cubit.passwordChanged,
+        onSubmitted: (_) => cubit.submit(),
+        trailingLabel: isSignIn
+            ? _ForgotPassword(
+                onPressed: state.isBusy ? null : cubit.forgotPassword,
+              )
+            : null,
+        suffix: IconButton(
+          onPressed: cubit.toggleObscure,
+          tooltip: state.obscurePassword
+              ? AppStrings.authShowPassword
+              : AppStrings.authHidePassword,
+          icon: Icon(
+            state.obscurePassword
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
           ),
         ),
-        const SizedBox(height: AppDimens.md),
+      ),
+      const SizedBox(height: AppDimens.md),
 
-        _RememberDevice(
-          value: state.rememberDevice,
-          onChanged: (_) => cubit.toggleRemember(),
-        ),
+      _RememberDevice(
+        value: state.rememberDevice,
+        onChanged: (_) => cubit.toggleRemember(),
+      ),
+      const SizedBox(height: AppDimens.lg),
+
+      _SubmitButton(
+        label: isSignIn
+            ? AppStrings.authSubmitSignIn
+            : AppStrings.authSubmitSignUp,
+        busy: state.busyAction == AuthAction.email,
+        onPressed: state.isBusy ? null : cubit.submit,
+      ),
+
+      if (!framed) ...[
         const SizedBox(height: AppDimens.lg),
-
-        _SubmitButton(
-          label: isSignIn
-              ? AppStrings.authSubmitSignIn
-              : AppStrings.authSubmitSignUp,
-          busy: state.busyAction == AuthAction.email,
-          onPressed: state.isBusy ? null : cubit.submit,
-        ),
-        const SizedBox(height: AppDimens.lg),
-
         _SwitchModePrompt(
           mode: state.mode,
-          onPressed: () => cubit.setMode(
-            isSignIn ? AuthMode.signUp : AuthMode.signIn,
-          ),
+          onPressed: () =>
+              cubit.setMode(isSignIn ? AuthMode.signUp : AuthMode.signIn),
         ),
       ],
+    ];
+
+    if (framed) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: children,
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimens.md,
+        AppDimens.sm,
+        AppDimens.md,
+        AppDimens.xl,
+      ),
+      children: children,
     );
   }
 }
@@ -315,11 +344,12 @@ class _SubmitButton extends StatelessWidget {
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Flexible(
-                    child: Text(label, overflow: TextOverflow.ellipsis),
-                  ),
+                  Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
                   const SizedBox(width: AppDimens.sm),
-                  const Icon(Icons.arrow_forward_rounded, size: AppDimens.iconMd),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: AppDimens.iconMd,
+                  ),
                 ],
               ),
       ),
@@ -352,9 +382,7 @@ class _SwitchModePrompt extends StatelessWidget {
         ),
         TextButton(
           onPressed: onPressed,
-          child: Text(
-            isSignIn ? AppStrings.authSignUp : AppStrings.authSignIn,
-          ),
+          child: Text(isSignIn ? AppStrings.authSignUp : AppStrings.authSignIn),
         ),
       ],
     );

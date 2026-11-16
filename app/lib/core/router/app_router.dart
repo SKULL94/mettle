@@ -1,35 +1,16 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/sign_in_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/interview/presentation/pages/interview_page.dart';
 import '../../features/interview/presentation/pages/scorecard_page.dart';
+import '../../features/interview/presentation/widgets/session_setup_sheet.dart';
 import '../../features/progress/presentation/pages/progress_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
-import '../constants/app_strings.dart';
-import '../widgets/adaptive_scaffold.dart';
+import '../widgets/app_shell.dart';
 import '../widgets/not_found_view.dart';
 import 'app_routes.dart';
-
-const _destinations = <AdaptiveDestination>[
-  AdaptiveDestination(
-    icon: Icons.home_outlined,
-    selectedIcon: Icons.home,
-    label: AppStrings.navHome,
-  ),
-  AdaptiveDestination(
-    icon: Icons.trending_up_rounded,
-    selectedIcon: Icons.trending_up_rounded,
-    label: AppStrings.navProgress,
-  ),
-  AdaptiveDestination(
-    icon: Icons.tune_rounded,
-    selectedIcon: Icons.tune_rounded,
-    label: AppStrings.navSettings,
-  ),
-];
 
 GoRouter createRouter() {
   return GoRouter(
@@ -47,14 +28,14 @@ GoRouter createRouter() {
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return AdaptiveScaffold(
-            destinations: _destinations,
+          return AppShell(
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: (index) => navigationShell.goBranch(
               index,
 
               initialLocation: index == navigationShell.currentIndex,
             ),
+            onStartSession: () => startSessionFlow(context),
             body: navigationShell,
           );
         },

@@ -36,3 +36,7 @@ final class AuthCancelledException extends AppException {
 final class AuthConfirmationPendingException extends AppException {
   const AuthConfirmationPendingException([super.detail]);
 }
+
+final class AuthRedirectingException extends AppException {
+  const AuthRedirectingException([super.detail]);
+}

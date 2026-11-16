@@ -9,6 +9,7 @@ class AnswerComposer extends StatefulWidget {
     required this.isSubmitting,
     required this.onSubmit,
     required this.onSkip,
+    this.expand = false,
     super.key,
   });
 
@@ -16,6 +17,7 @@ class AnswerComposer extends StatefulWidget {
   final bool isSubmitting;
   final ValueChanged<String> onSubmit;
   final VoidCallback onSkip;
+  final bool expand;
 
   @override
   State<AnswerComposer> createState() => _AnswerComposerState();
@@ -49,18 +51,22 @@ class _AnswerComposerState extends State<AnswerComposer> {
 
   @override
   Widget build(BuildContext context) {
+    final field = TextField(
+      controller: _controller,
+      focusNode: _focus,
+      enabled: widget.enabled,
+      minLines: widget.expand ? null : 3,
+      maxLines: widget.expand ? null : 6,
+      expands: widget.expand,
+      textAlignVertical: TextAlignVertical.top,
+      textInputAction: TextInputAction.newline,
+      keyboardType: TextInputType.multiline,
+      decoration: const InputDecoration(hintText: AppStrings.answerHint),
+    );
+
     return Column(
       children: [
-        TextField(
-          controller: _controller,
-          focusNode: _focus,
-          enabled: widget.enabled,
-          minLines: 3,
-          maxLines: 6,
-          textInputAction: TextInputAction.newline,
-          keyboardType: TextInputType.multiline,
-          decoration: const InputDecoration(hintText: AppStrings.answerHint),
-        ),
+        if (widget.expand) Expanded(child: field) else field,
         const SizedBox(height: AppDimens.sm),
         Row(
           children: [

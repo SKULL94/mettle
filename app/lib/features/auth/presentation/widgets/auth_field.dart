@@ -45,10 +45,7 @@ class AuthField extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            if (trailingLabel != null) ...[
-              const Spacer(),
-              trailingLabel!,
-            ],
+            if (trailingLabel != null) ...[const Spacer(), trailingLabel!],
           ],
         ),
         const SizedBox(height: AppDimens.sm),

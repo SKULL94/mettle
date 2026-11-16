@@ -7,10 +7,13 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/skeleton_box.dart';
+import '../../../../core/widgets/window_size.dart';
 import '../../../interview/domain/entities/interview_topic.dart';
+import '../../domain/entities/home_overview.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
+import '../widgets/home_dashboard.dart';
 import '../widgets/home_header.dart';
 import '../widgets/last_session.dart';
 import '../widgets/progress_card.dart';
@@ -97,6 +100,10 @@ class _HomeEmpty extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    if (context.isWideWindow) {
+      return const HomeDashboard(overview: HomeOverview.empty());
+    }
+
     return _Body(
       children: [
         const SizedBox(height: AppDimens.lg),
@@ -131,6 +138,13 @@ class _HomeLoaded extends StatelessWidget {
     final weakTopics = overview.weakTopics
         .map((mastery) => InterviewTopic.fromId(mastery.topic))
         .toSet();
+
+    if (context.isWideWindow) {
+      return HomeDashboard(
+        overview: overview,
+        staleWarning: state.staleWarning,
+      );
+    }
 
     return _Body(
       onRefresh: () async =>

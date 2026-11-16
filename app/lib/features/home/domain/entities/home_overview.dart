@@ -8,6 +8,7 @@ class HomeOverview {
     required this.sessionCount,
     required this.delta,
     required this.lastSession,
+    required this.recentSessions,
     required this.weakTopics,
   });
 
@@ -16,7 +17,10 @@ class HomeOverview {
       sessionCount = 0,
       delta = null,
       lastSession = null,
+      recentSessions = const [],
       weakTopics = const [];
+
+  static const recentLimit = 5;
 
   final int? averageScore;
   final int sessionCount;
@@ -24,6 +28,7 @@ class HomeOverview {
   final ScoreDelta? delta;
 
   final SessionSummary? lastSession;
+  final List<SessionSummary> recentSessions;
   final List<TopicMastery> weakTopics;
 
   bool get isEmpty => lastSession == null;

@@ -33,6 +33,9 @@ final class HomeRepositoryImpl implements HomeRepository {
           sessionCount: sessions.length,
           delta: _delta(sessions, average),
           lastSession: sessions.first,
+          recentSessions: sessions
+              .take(HomeOverview.recentLimit)
+              .toList(growable: false),
           weakTopics: _weakTopics(sessions),
         ),
       );

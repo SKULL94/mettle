@@ -2,13 +2,47 @@ abstract final class AppStrings {
   static const appName = 'Mettle';
   static const appTagline = 'AI Mock Interviews for Software Engineers';
   static const brandMark = 'M';
+  static const brandTag = 'FLUTTER';
+  static const appScheme = 'mettle://';
 
   static const navHome = 'Home';
   static const navProgress = 'Progress';
   static const navSettings = 'Settings';
 
+  static const navDashboard = 'Dashboard';
+  static const navInterview = 'Interview Session';
+  static const navAnalytics = 'Progress & Analytics';
+
+  static const startInterview = 'Start Interview';
+  static const quickStart = 'Quick Start';
+  static const backendLabel = 'BACKEND';
+  static const signedOut = 'Not signed in';
+  static const accountFallback = 'Engineer';
+  static const openSettings = 'Open settings';
+
   static const homeTitle = 'Practice';
   static const startSession = 'Start session';
+
+  static const dashboardEyebrow = 'Session hub';
+  static const dashboardTitle = 'Welcome back';
+  static const configureSession = 'Configure session';
+  static const launchInterview = 'Launch AI interview';
+  static const calibration = 'Calibration';
+  static const readiness = 'OVERALL READINESS';
+  static const statSessions = 'Sessions';
+  static const statWeakTopics = 'Weak topics';
+  static const statLatest = 'Latest';
+  static const recentSessions = 'Recent sessions';
+  static const refresh = 'Refresh';
+  static const practice = 'Practice';
+  static const colDate = 'Date';
+  static const colTopic = 'Topic';
+  static const colQuestions = 'Questions';
+  static const colScore = 'Score';
+  static const colScorecard = 'Scorecard';
+
+  static String recentSessionsCaption(int count) =>
+      'Showing the last ${sessionCount(count)}';
   static const yourProgress = 'YOUR PROGRESS';
   static const averageScore = 'Average score';
   static const latest = 'Latest';
@@ -20,6 +54,7 @@ abstract final class AppStrings {
       'rubric, then track how you improve.';
 
   static const emptyValue = '—';
+  static const outOfHundred = '/ 100';
   static const noScoreYet = 'No score yet';
 
   static String scoreSemantics(int score, String band) =>
@@ -69,6 +104,8 @@ abstract final class AppStrings {
   static const viewProgress = 'View progress';
 
   static const progressTitle = 'Progress';
+  static const progressSubtitle =
+      'Score trend, topic mastery and session history.';
   static const topicMastery = 'Topic mastery';
   static const history = 'History';
   static const progressEmptyTitle = 'Nothing to chart yet';
@@ -99,6 +136,13 @@ abstract final class AppStrings {
       'Q $current of $total';
 
   static const scorecard = 'Assessment Scorecard';
+  static const scorecardEyebrow = 'Evaluation report';
+  static const scorecardSubtitle =
+      'Every answer scored against the same four-dimension rubric.';
+  static const backToDashboard = 'Back to dashboard';
+  static const endSession = 'End session';
+  static const answerPane = 'Your answer';
+  static const interviewPane = 'Interviewer';
   static const correctness = 'Correctness';
   static const depth = 'Depth';
   static const clarity = 'Clarity';
@@ -133,6 +177,9 @@ abstract final class AppStrings {
   static String scoreOutOf(int value, int max) => '$value / $max';
 
   static const settingsTitle = 'Settings';
+  static const settingsSubtitle =
+      'Appearance, evaluation backend and local data.';
+  static const settingsIndex = 'Configuration';
   static const appearance = 'Appearance';
   static const themeSystem = 'System';
   static const themeLight = 'Light';
@@ -191,6 +238,12 @@ abstract final class AppStrings {
   static const authEmailInvalid = 'Enter a valid email address.';
   static const authPasswordTooShort = 'Use at least 8 characters.';
   static const authResetSent = 'Check your inbox for a reset link.';
+  static const authRedirecting = 'Opening Google sign-in…';
+  static const authValueProps = <String>[
+    'Every answer scored against a four-dimension rubric.',
+    'Follow-up probes when an answer runs thin.',
+    'Topic mastery and score trend tracked across sessions.',
+  ];
   static const authShowPassword = 'Show password';
   static const authHidePassword = 'Hide password';
   static const authFailed = 'Could not sign you in. Please try again.';

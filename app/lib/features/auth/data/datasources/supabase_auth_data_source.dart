@@ -70,6 +70,15 @@ final class SupabaseAuthDataSource implements AuthRemoteDataSource {
     if (!SupabaseConstants.isConfigured) {
       throw const AuthException(AppStrings.authNotConfigured);
     }
+
+    if (kIsWeb) {
+      await _client.auth.signInWithOAuth(
+        sb.OAuthProvider.google,
+        redirectTo: Uri.base.origin,
+      );
+      throw const AuthRedirectingException(AppStrings.authRedirecting);
+    }
+
     if (SupabaseConstants.googleWebClientId.isEmpty) {
       throw const AuthException(AppStrings.authGoogleNotConfigured);
     }

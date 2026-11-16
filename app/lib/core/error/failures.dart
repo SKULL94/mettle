@@ -35,3 +35,7 @@ final class AuthFailure extends Failure {
 final class AuthCancelledFailure extends Failure {
   const AuthCancelledFailure([super.message = AppStrings.authCancelled]);
 }
+
+final class AuthRedirectingFailure extends Failure {
+  const AuthRedirectingFailure([super.message = AppStrings.authRedirecting]);
+}

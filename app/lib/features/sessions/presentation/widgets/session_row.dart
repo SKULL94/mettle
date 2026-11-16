@@ -58,21 +58,21 @@ class SessionRow extends StatelessWidget {
   }
 
   static String _subtitle(SessionSummary session) =>
-      '${_dateLabel(session.completedAt)}${AppStrings.metaSeparator}'
+      '${sessionDateLabel(session.completedAt)}${AppStrings.metaSeparator}'
       '${AppStrings.questionCount(session.questionCount)}';
+}
 
-  static String _dateLabel(DateTime when) {
-    final local = when.toLocal();
-    final days = DateUtils.dateOnly(DateTime.now())
-        .difference(DateUtils.dateOnly(local))
-        .inDays;
+String sessionDateLabel(DateTime when) {
+  final local = when.toLocal();
+  final days = DateUtils.dateOnly(DateTime.now())
+      .difference(DateUtils.dateOnly(local))
+      .inDays;
 
-    return switch (days) {
-      <= 0 => AppStrings.today,
-      1 => AppStrings.yesterday,
-      _ => '${AppStrings.monthsShort[local.month - 1]} ${local.day}',
-    };
-  }
+  return switch (days) {
+    <= 0 => AppStrings.today,
+    1 => AppStrings.yesterday,
+    _ => '${AppStrings.monthsShort[local.month - 1]} ${local.day}',
+  };
 }
 
 class SessionRowSkeleton extends StatelessWidget {

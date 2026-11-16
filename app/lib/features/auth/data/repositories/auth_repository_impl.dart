@@ -91,10 +91,13 @@ final class AuthRepositoryImpl implements AuthRepository {
 
   static Failure _failureFor(Object error) => switch (error) {
     AuthCancelledException() => const AuthCancelledFailure(),
+    AuthRedirectingException() => const AuthRedirectingFailure(),
     AuthConfirmationPendingException(:final detail) => AuthFailure(
       detail ?? AppStrings.authConfirmEmailSent,
     ),
-    AuthException(:final detail) => AuthFailure(detail ?? AppStrings.authFailed),
+    AuthException(:final detail) => AuthFailure(
+      detail ?? AppStrings.authFailed,
+    ),
     sb.AuthRetryableFetchException() => const NetworkFailure(),
     sb.AuthException(:final message) => AuthFailure(message),
     SocketException() => const NetworkFailure(),

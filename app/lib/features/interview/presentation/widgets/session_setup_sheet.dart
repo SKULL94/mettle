@@ -1,30 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/result/result.dart';
-import '../../domain/entities/difficulty.dart';
+import '../../../../core/router/app_routes.dart';
+import '../../../../core/widgets/window_size.dart';
 import '../../domain/entities/interview_topic.dart';
 import '../../domain/entities/session_config.dart';
 import '../../domain/usecases/start_session.dart';
-import 'selectable_tile.dart';
-import 'topic_label.dart';
+import 'session_setup_form.dart';
+
+Future<void> startSessionFlow(
+  BuildContext context, {
+  InterviewTopic? topic,
+  Set<InterviewTopic> weakTopics = const {},
+}) async {
+  final router = GoRouter.of(context);
+
+  final sessionId = await launchSession(
+    context,
+    topic: topic,
+    weakTopics: weakTopics,
+  );
+  if (sessionId == null) return;
+
+  await router.pushNamed(
+    AppRoutes.sessionName,
+    pathParameters: {AppRoutes.idParam: sessionId},
+  );
+}
 
 Future<String?> launchSession(
   BuildContext context, {
   InterviewTopic? topic,
   Set<InterviewTopic> weakTopics = const {},
 }) async {
-  final messenger = ScaffoldMessenger.of(context);
-
-  final config = await showSessionSetupSheet(
+  final config = await showSessionSetup(
     context,
     topic: topic,
     weakTopics: weakTopics,
   );
-  if (config == null) return null;
+  if (config == null || !context.mounted) return null;
 
+  return startConfiguredSession(context, config);
+}
+
+Future<String?> startConfiguredSession(
+  BuildContext context,
+  SessionConfig config,
+) async {
+  final messenger = ScaffoldMessenger.of(context);
   final result = await sl<StartSession>()(config);
 
   switch (result) {
@@ -36,11 +63,19 @@ Future<String?> launchSession(
   }
 }
 
-Future<SessionConfig?> showSessionSetupSheet(
+Future<SessionConfig?> showSessionSetup(
   BuildContext context, {
   InterviewTopic? topic,
   Set<InterviewTopic> weakTopics = const {},
 }) {
+  if (context.isWideWindow) {
+    return showDialog<SessionConfig>(
+      context: context,
+      builder: (dialogContext) =>
+          _SessionSetupDialog(initialTopic: topic, weakTopics: weakTopics),
+    );
+  }
+
   return showModalBottomSheet<SessionConfig>(
     context: context,
     isScrollControlled: true,
@@ -53,7 +88,54 @@ Future<SessionConfig?> showSessionSetupSheet(
   );
 }
 
-class SessionSetupSheet extends StatefulWidget {
+class _SessionSetupDialog extends StatelessWidget {
+  const _SessionSetupDialog({this.initialTopic, this.weakTopics = const {}});
+
+  final InterviewTopic? initialTopic;
+  final Set<InterviewTopic> weakTopics;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Dialog(
+      backgroundColor: theme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimens.radiusCard),
+        side: BorderSide(
+          color: theme.colorScheme.outline,
+          width: AppDimens.hairline,
+        ),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: AppDimens.dialogMaxWidth),
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimens.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SetupHeader(),
+              const SizedBox(height: AppDimens.lg),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: SessionSetupForm(
+                    initialTopic: initialTopic,
+                    weakTopics: weakTopics,
+                    submitIcon: Icons.rocket_launch_rounded,
+                    onSubmit: (config) => Navigator.of(context).pop(config),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SessionSetupSheet extends StatelessWidget {
   const SessionSetupSheet({
     this.initialTopic,
     this.weakTopics = const {},
@@ -64,28 +146,7 @@ class SessionSetupSheet extends StatefulWidget {
   final Set<InterviewTopic> weakTopics;
 
   @override
-  State<SessionSetupSheet> createState() => _SessionSetupSheetState();
-}
-
-class _SessionSetupSheetState extends State<SessionSetupSheet> {
-  late Difficulty _difficulty =
-      widget.initialTopic?.difficulty ?? Difficulty.defaultLevel;
-  late InterviewTopic? _topic = widget.initialTopic;
-  int _questionCount = SessionConfig.defaultQuestionCount;
-
-  void _selectDifficulty(Difficulty value) {
-    if (value == _difficulty) return;
-    setState(() {
-      _difficulty = value;
-      _topic = null;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final topic = _topic;
-
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -98,57 +159,17 @@ class _SessionSetupSheetState extends State<SessionSetupSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _SheetHeader(),
+            const SetupHeader(),
             const SizedBox(height: AppDimens.lg),
             Flexible(
               child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DifficultyPicker(
-                      selected: _difficulty,
-                      onSelected: _selectDifficulty,
-                    ),
-                    const SizedBox(height: AppDimens.lg),
-                    _TopicPicker(
-                      difficulty: _difficulty,
-                      selected: topic,
-                      weakTopics: widget.weakTopics,
-                      onSelected: (value) => setState(() => _topic = value),
-                    ),
-                    const SizedBox(height: AppDimens.lg),
-                    _QuestionCountPicker(
-                      selected: _questionCount,
-                      onSelected: (value) =>
-                          setState(() => _questionCount = value),
-                    ),
-                  ],
+                child: SessionSetupForm(
+                  initialTopic: initialTopic,
+                  weakTopics: weakTopics,
+                  onSubmit: (config) => Navigator.of(context).pop(config),
                 ),
               ),
             ),
-            const SizedBox(height: AppDimens.lg),
-            FilledButton(
-              onPressed: topic == null
-                  ? null
-                  : () => Navigator.of(context).pop(
-                      SessionConfig(
-                        topic: topic,
-                        questionCount: _questionCount,
-                      ),
-                    ),
-              child: const Text(AppStrings.setupStart),
-            ),
-            if (topic != null) ...[
-              const SizedBox(height: AppDimens.sm),
-              SizedBox(
-                width: double.infinity,
-                child: Text(
-                  AppStrings.setupSummary(topicLabel(topic), _questionCount),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.labelSmall,
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -156,8 +177,8 @@ class _SessionSetupSheetState extends State<SessionSetupSheet> {
   }
 }
 
-class _SheetHeader extends StatelessWidget {
-  const _SheetHeader();
+class SetupHeader extends StatelessWidget {
+  const SetupHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -178,138 +199,6 @@ class _SheetHeader extends StatelessWidget {
           tooltip: AppStrings.close,
           icon: const Icon(Icons.close_rounded, size: AppDimens.iconMd),
         ),
-      ],
-    );
-  }
-}
-
-class _TopicPicker extends StatelessWidget {
-  const _TopicPicker({
-    required this.difficulty,
-    required this.selected,
-    required this.weakTopics,
-    required this.onSelected,
-  });
-
-  final Difficulty difficulty;
-  final InterviewTopic? selected;
-  final Set<InterviewTopic> weakTopics;
-  final ValueChanged<InterviewTopic> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _PickerLabel(
-          label: AppStrings.setupTopic,
-          trailing: weakTopics.isEmpty ? null : const WeakLegend(),
-        ),
-        const SizedBox(height: AppDimens.sm),
-        Wrap(
-          spacing: AppDimens.sm,
-          runSpacing: AppDimens.sm,
-          children: [
-            for (final topic in InterviewTopic.forDifficulty(difficulty))
-              TopicTile(
-                topic: topic,
-                selected: topic == selected,
-                isWeak: weakTopics.contains(topic),
-                onTap: () => onSelected(topic),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _DifficultyPicker extends StatelessWidget {
-  const _DifficultyPicker({required this.selected, required this.onSelected});
-
-  final Difficulty selected;
-  final ValueChanged<Difficulty> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _PickerLabel(label: AppStrings.setupDifficulty),
-        const SizedBox(height: AppDimens.sm),
-        Row(
-          children: [
-            for (final level in Difficulty.values) ...[
-              if (level != Difficulty.values.first)
-                const SizedBox(width: AppDimens.sm),
-              Expanded(
-                child: DifficultyTile(
-                  level: level,
-                  selected: level == selected,
-                  onTap: () => onSelected(level),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _QuestionCountPicker extends StatelessWidget {
-  const _QuestionCountPicker({
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final int selected;
-  final ValueChanged<int> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _PickerLabel(label: AppStrings.setupLength),
-        const SizedBox(height: AppDimens.sm),
-        Row(
-          children: [
-            for (final count in SessionConfig.allowedQuestionCounts) ...[
-              if (count != SessionConfig.allowedQuestionCounts.first)
-                const SizedBox(width: AppDimens.sm),
-              Expanded(
-                child: QuestionCountTile(
-                  count: count,
-                  minutes: SessionConfig.estimatedMinutes[count],
-                  selected: count == selected,
-                  onTap: () => onSelected(count),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _PickerLabel extends StatelessWidget {
-  const _PickerLabel({required this.label, this.trailing});
-
-  final String label;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Wrap(
-      spacing: AppDimens.sm,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Text(label, style: theme.textTheme.labelSmall),
-        ?trailing,
       ],
     );
   }

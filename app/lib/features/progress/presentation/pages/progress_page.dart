@@ -7,11 +7,13 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/window_size.dart';
 import '../../../interview/presentation/widgets/session_setup_sheet.dart';
 import '../../../sessions/presentation/widgets/session_list.dart';
 import '../../domain/entities/progress_overview.dart';
 import '../cubit/progress_cubit.dart';
 import '../cubit/progress_state.dart';
+import '../widgets/progress_dashboard.dart';
 import '../widgets/topic_mastery_list.dart';
 import '../widgets/trend_card.dart';
 
@@ -32,13 +34,20 @@ class ProgressView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isWide = context.isWideWindow;
+
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.progressTitle)),
+      appBar: isWide
+          ? null
+          : AppBar(title: const Text(AppStrings.progressTitle)),
       body: SafeArea(
         child: BlocBuilder<ProgressCubit, ProgressState>(
           builder: (context, state) => switch (state) {
             ProgressLoading() => const _ProgressSkeleton(),
             ProgressEmpty() => const _ProgressEmpty(),
+            ProgressLoaded(:final overview) when isWide => ProgressDashboard(
+              overview: overview,
+            ),
             ProgressLoaded(:final overview) => _ProgressBody(
               overview: overview,
             ),

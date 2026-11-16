@@ -103,12 +103,13 @@ final class SupabaseSessionDataSource implements SessionLocalDataSource {
 
   static SessionRecordModel _toModel(Map<String, dynamic> row) {
     try {
-      final turns = (row['turns'] as List<dynamic>? ?? const <dynamic>[])
-          .cast<Map<String, dynamic>>()
-          .toList()
-        ..sort(
-          (a, b) => (a['position'] as int).compareTo(b['position'] as int),
-        );
+      final turns =
+          (row['turns'] as List<dynamic>? ?? const <dynamic>[])
+              .cast<Map<String, dynamic>>()
+              .toList()
+            ..sort(
+              (a, b) => (a['position'] as int).compareTo(b['position'] as int),
+            );
 
       return SessionRecordModel(
         id: row['id'] as String,
