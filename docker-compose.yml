@@ -13,7 +13,8 @@ services:
       SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
       FREE_SESSIONS_PER_USER: ${FREE_SESSIONS_PER_USER:-3}
       MONTHLY_SPEND_CAP_CENTS: ${MONTHLY_SPEND_CAP_CENTS:-2000}
-      DATABASE_URL: sqlite+aiosqlite:////srv/data/mettle.db
+      DATABASE_URL: ${DATABASE_URL:-sqlite+aiosqlite:////srv/data/mettle.db}
+      PG_DISABLE_PREPARED_STATEMENTS: ${PG_DISABLE_PREPARED_STATEMENTS:-true}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
     volumes:
       - mettle-data:/srv/data

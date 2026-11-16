@@ -149,20 +149,28 @@ Future<void> _confirmClear(BuildContext context) async {
 
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text(AppStrings.clearData),
-      content: const Text(AppStrings.clearDataPrompt),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: const Text(AppStrings.cancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(dialogContext).pop(true),
-          child: const Text(AppStrings.clearDataConfirm),
-        ),
-      ],
-    ),
+    builder: (dialogContext) {
+      final scheme = Theme.of(dialogContext).colorScheme;
+
+      return AlertDialog(
+        title: const Text(AppStrings.clearData),
+        content: const Text(AppStrings.clearDataPrompt),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text(AppStrings.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: scheme.error,
+              foregroundColor: scheme.onError,
+            ),
+            child: const Text(AppStrings.clearDataConfirm),
+          ),
+        ],
+      );
+    },
   );
 
   if (confirmed != true) return;

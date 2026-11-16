@@ -126,6 +126,10 @@ create policy "own turns" on public.turns
       where s.id = turns.session_id and s.user_id = auth.uid()
     )
   );
+
+drop policy if exists "delete own sessions" on public.sessions;
+create policy "delete own sessions" on public.sessions
+  for delete using (auth.uid() = user_id);
 """
 
 

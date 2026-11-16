@@ -187,12 +187,14 @@ abstract final class AppStrings {
   static const backend = 'Backend';
   static const backendBody = 'Interviews are generated and graded here.';
   static const data = 'Data';
-  static const clearData = 'Clear data';
-  static const clearDataBody = 'Deletes every stored session on this device.';
+  static const clearData = 'Clear history';
+  static const clearDataBody = 'Deletes every session on your account.';
   static const clearDataPrompt =
-      'This removes all stored sessions and their scores. It cannot be undone.';
-  static const clearDataConfirm = 'Clear';
-  static const clearDataDone = 'Stored sessions deleted.';
+      'This permanently deletes every interview and score on your account — '
+      'here and anywhere else you are signed in, including your phone. '
+      'It cannot be undone.';
+  static const clearDataConfirm = 'Delete everything';
+  static const clearDataDone = 'Your interview history was deleted.';
   static const about = 'About';
   static const appVersion = '0.1.0';
   static const repository = 'Repository';

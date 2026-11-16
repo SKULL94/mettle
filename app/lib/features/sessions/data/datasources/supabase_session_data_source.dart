@@ -17,7 +17,6 @@ final class SupabaseSessionDataSource implements SessionLocalDataSource {
   final _changes = StreamController<void>.broadcast();
 
   static const _sessions = 'sessions';
-  static const _turns = 'turns';
 
   static const _columns =
       'id, topic, completed_at, '
@@ -50,28 +49,7 @@ final class SupabaseSessionDataSource implements SessionLocalDataSource {
   }
 
   @override
-  Future<void> save(SessionRecordModel record) async {
-    final userId = _requireUserId();
-
-    await _guard(() async {
-      await _client.from(_sessions).upsert(<String, dynamic>{
-        'id': record.id,
-        'user_id': userId,
-        'topic': record.topic,
-        'completed_at': record.completedAt.toIso8601String(),
-      });
-
-      await _client.from(_turns).delete().eq('session_id', record.id);
-
-      if (record.turns.isNotEmpty) {
-        await _client.from(_turns).insert([
-          for (final turn in record.turns) _toRow(record.id, turn),
-        ]);
-      }
-    });
-
-    _notify();
-  }
+  Future<void> save(SessionRecordModel record) async => _notify();
 
   @override
   Future<void> clear() async {
@@ -150,25 +128,5 @@ final class SupabaseSessionDataSource implements SessionLocalDataSource {
               ],
             ),
     );
-  }
-
-  static Map<String, dynamic> _toRow(String sessionId, InterviewTurn turn) {
-    final score = turn.score;
-
-    return <String, dynamic>{
-      'session_id': sessionId,
-      'position': turn.question.index,
-      'question_id': turn.question.id,
-      'question': turn.question.text,
-      'total': turn.question.total,
-      'kind': turn.question.kind.name,
-      'reason': turn.question.reason?.name,
-      'answer': turn.answer,
-      'correctness': score?.correctness,
-      'depth': score?.depth,
-      'clarity': score?.clarity,
-      'structure': score?.structure,
-      'missing': score?.missing ?? const <String>[],
-    };
   }
 }
