@@ -86,31 +86,31 @@ class _BrandPanel extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Row(
-            children: [
-              StatusDot(color: theme.colorScheme.primary),
-              const SizedBox(width: AppDimens.sm),
-              Flexible(
-                child: Text(
-                  backendHost,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.code(context).copyWith(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppDimens.md),
-              Text(
-                AppStrings.appVersion,
-                style: AppTheme.code(context).copyWith(
-                  fontSize: 12,
-                  color: theme.textTheme.labelSmall?.color,
-                ),
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     StatusDot(color: theme.colorScheme.primary),
+          //     const SizedBox(width: AppDimens.sm),
+          //     Flexible(
+          //       child: Text(
+          //         backendHost,
+          //         maxLines: 1,
+          //         overflow: TextOverflow.ellipsis,
+          //         style: AppTheme.code(context).copyWith(
+          //           fontSize: 12,
+          //           color: theme.colorScheme.onSurfaceVariant,
+          //         ),
+          //       ),
+          //     ),
+          //     const SizedBox(width: AppDimens.md),
+          //     Text(
+          //       AppStrings.appVersion,
+          //       style: AppTheme.code(context).copyWith(
+          //         fontSize: 12,
+          //         color: theme.textTheme.labelSmall?.color,
+          //       ),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );

@@ -35,7 +35,7 @@ class HomeDashboard extends StatelessWidget {
           context.read<HomeBloc>().add(const HomeRefreshed()),
       children: [
         PageHeader(
-          eyebrow: AppStrings.dashboardEyebrow,
+          // eyebrow: AppStrings.dashboardEyebrow,
           title: AppStrings.dashboardTitle,
           subtitle: AppStrings.appTagline,
           actions: [

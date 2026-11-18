@@ -22,11 +22,13 @@ abstract final class AppDimens {
 
   static const breakpointUltraWide = 1280.0;
 
-  static const sidebarWidth = 264.0;
+  static const sidebarWidth = 288.0;
   static const topBarHeight = 64.0;
   static const contentMaxWidth = 1320.0;
   static const readableMaxWidth = 560.0;
   static const dialogMaxWidth = 620.0;
+  static const confirmMaxWidth = 380.0;
+  static const panelMaxWidth = 720.0;
   static const indexWidth = 232.0;
   static const authPaneWidth = 520.0;
   static const avatar = 32.0;

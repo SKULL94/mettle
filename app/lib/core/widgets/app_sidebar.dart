@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_dimens.dart';
 import '../constants/app_strings.dart';
-import '../theme/app_theme.dart';
 import 'nav_destination.dart';
-import 'status_dot.dart';
 
 class AppSidebar extends StatelessWidget {
   const AppSidebar({
@@ -57,20 +55,8 @@ class AppSidebar extends StatelessWidget {
               const SizedBox(height: AppDimens.lg),
               _StartButton(onPressed: onStartSession),
               const SizedBox(height: AppDimens.lg),
-              _NavItem(
-                icon: navDestinations[0].icon,
-                label: navDestinations[0].longLabel,
-                selected: selectedIndex == 0,
-                onTap: () => onSelected(0),
-              ),
-              _NavItem(
-                icon: Icons.terminal_rounded,
-                label: AppStrings.navInterview,
-                selected: sessionActive,
-                onTap: onStartSession,
-              ),
               for (final (index, destination) in navDestinations.indexed)
-                if (index > 0)
+                if (destination.inSidebar)
                   _NavItem(
                     icon: destination.icon,
                     label: destination.longLabel,
@@ -78,12 +64,10 @@ class AppSidebar extends StatelessWidget {
                     onTap: () => onSelected(index),
                   ),
               const Spacer(),
-              _BackendCard(host: backendHost),
-              const SizedBox(height: AppDimens.sm),
               _AccountRow(
                 name: accountName,
                 detail: accountDetail,
-                onTap: () => onSelected(navDestinations.length - 1),
+                onTap: () => onSelected(settingsDestination),
               ),
             ],
           ),
@@ -113,26 +97,6 @@ class _Brand extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppDimens.sm),
-          StatusDot(color: theme.colorScheme.primary),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimens.sm,
-              vertical: AppDimens.xs,
-            ),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(AppDimens.xs),
-            ),
-            child: Text(
-              AppStrings.brandTag,
-              style: AppTheme.code(context).copyWith(
-                fontSize: 11,
-                height: 1.2,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -217,58 +181,6 @@ class _NavItem extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _BackendCard extends StatelessWidget {
-  const _BackendCard({required this.host});
-
-  final String host;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(AppDimens.sm),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(AppDimens.radius),
-        border: Border.all(
-          color: theme.colorScheme.outline,
-          width: AppDimens.hairline,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  AppStrings.backendLabel,
-                  style: theme.textTheme.labelSmall,
-                ),
-                const SizedBox(height: AppDimens.xs),
-                Text(
-                  host,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.code(context).copyWith(
-                    fontSize: 12,
-                    height: 1.2,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppDimens.sm),
-          StatusDot(color: theme.colorScheme.primary),
-        ],
       ),
     );
   }

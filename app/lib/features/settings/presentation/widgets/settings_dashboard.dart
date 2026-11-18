@@ -13,15 +13,16 @@ class SettingsDashboard extends StatefulWidget {
   State<SettingsDashboard> createState() => _SettingsDashboardState();
 }
 
+typedef SettingsPane = ({String title, Widget Function(Key key) build});
+
 class _SettingsDashboardState extends State<SettingsDashboard> {
-  static const _titles = <String>[
-    AppStrings.appearance,
-    AppStrings.backend,
-    AppStrings.data,
-    AppStrings.about,
+  static final _panes = <SettingsPane>[
+    (title: AppStrings.appearance, build: (key) => AppearanceSection(key: key)),
+    (title: AppStrings.data, build: (key) => DataSection(key: key)),
+    (title: AppStrings.about, build: (key) => AboutSection(key: key)),
   ];
 
-  final _keys = List.generate(_titles.length, (_) => GlobalKey());
+  late final _keys = List.generate(_panes.length, (_) => GlobalKey());
   int _active = 0;
 
   Future<void> _jumpTo(int index) async {
@@ -66,7 +67,7 @@ class _SettingsDashboardState extends State<SettingsDashboard> {
                   Padding(
                     padding: const EdgeInsets.only(left: AppDimens.gutter),
                     child: _Index(
-                      titles: _titles,
+                      titles: [for (final pane in _panes) pane.title],
                       active: _active,
                       onSelected: _jumpTo,
                     ),
@@ -79,13 +80,10 @@ class _SettingsDashboardState extends State<SettingsDashboard> {
                         bottom: AppDimens.xxl,
                       ),
                       children: [
-                        AppearanceSection(key: _keys[0]),
-                        const SizedBox(height: AppDimens.xl),
-                        BackendSection(key: _keys[1]),
-                        const SizedBox(height: AppDimens.xl),
-                        DataSection(key: _keys[2]),
-                        const SizedBox(height: AppDimens.xl),
-                        AboutSection(key: _keys[3]),
+                        for (final (index, pane) in _panes.indexed) ...[
+                          if (index > 0) const SizedBox(height: AppDimens.xl),
+                          pane.build(_keys[index]),
+                        ],
                       ],
                     ),
                   ),
@@ -112,8 +110,6 @@ class _Index extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return SizedBox(
       width: AppDimens.indexWidth,
       child: Card(
@@ -130,14 +126,6 @@ class _Index extends StatelessWidget {
                   selected: index == active,
                   onTap: () => onSelected(index),
                 ),
-              const SizedBox(height: AppDimens.xs),
-              Padding(
-                padding: const EdgeInsets.all(AppDimens.sm),
-                child: Text(
-                  AppStrings.appVersion,
-                  style: theme.textTheme.labelSmall,
-                ),
-              ),
             ],
           ),
         ),

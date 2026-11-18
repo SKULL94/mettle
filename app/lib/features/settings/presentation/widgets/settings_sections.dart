@@ -4,10 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../core/di/injection.dart';
-import '../../../../core/network/api_client.dart';
+import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/selectable_tile.dart';
-import '../../../../core/widgets/status_dot.dart';
 import '../../domain/entities/app_theme_mode.dart';
 import '../cubit/settings_cubit.dart';
 import 'settings_section.dart';
@@ -96,26 +94,6 @@ class _ThemeTile extends StatelessWidget {
   }
 }
 
-class BackendSection extends StatelessWidget {
-  const BackendSection({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SettingsSection(
-      title: AppStrings.backend,
-      child: Card(
-        child: SettingsRow(
-          leading: StatusDot(color: theme.colorScheme.primary),
-          title: sl<ApiClient>().baseUrl,
-          body: AppStrings.backendBody,
-        ),
-      ),
-    );
-  }
-}
-
 class DataSection extends StatelessWidget {
   const DataSection({super.key});
 
@@ -147,33 +125,15 @@ Future<void> _confirmClear(BuildContext context) async {
   final cubit = context.read<SettingsCubit>();
   final messenger = ScaffoldMessenger.of(context);
 
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) {
-      final scheme = Theme.of(dialogContext).colorScheme;
-
-      return AlertDialog(
-        title: const Text(AppStrings.clearData),
-        content: const Text(AppStrings.clearDataPrompt),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text(AppStrings.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: scheme.error,
-              foregroundColor: scheme.onError,
-            ),
-            child: const Text(AppStrings.clearDataConfirm),
-          ),
-        ],
-      );
-    },
+  final confirmed = await showConfirmDialog(
+    context,
+    title: AppStrings.clearData,
+    message: AppStrings.clearDataPrompt,
+    confirmLabel: AppStrings.clearDataConfirm,
+    destructive: true,
   );
 
-  if (confirmed != true) return;
+  if (!confirmed) return;
 
   final cleared = await cubit.clearSessions();
   messenger.showSnackBar(
@@ -196,13 +156,9 @@ class AboutSection extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: Column(
           children: [
-            SettingsRow(
+            const SettingsRow(
               title: AppStrings.appName,
               body: AppStrings.appTagline,
-              trailing: Text(
-                AppStrings.appVersion,
-                style: theme.textTheme.labelSmall,
-              ),
             ),
             const Divider(height: AppDimens.hairline),
             SettingsRow(

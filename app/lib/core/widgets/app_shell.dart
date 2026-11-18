@@ -65,13 +65,13 @@ class AppShell extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                AppTopBar(
-                  onStartSession: onStartSession,
-                  onAccountPressed: () =>
-                      _select(context, navDestinations.length - 1),
-                  lead: topBarLead ?? TopBarPath(location: location),
-                  actions: topBarActions,
-                ),
+                // AppTopBar(
+                //   onStartSession: onStartSession,
+                //   onAccountPressed: () =>
+                //       _select(context, navDestinations.length - 1),
+                //   lead: topBarLead ?? TopBarPath(location: location),
+                //   actions: topBarActions,
+                // ),
                 Expanded(child: body),
               ],
             ),

@@ -75,6 +75,7 @@ final class SupabaseAuthDataSource implements AuthRemoteDataSource {
       await _client.auth.signInWithOAuth(
         sb.OAuthProvider.google,
         redirectTo: Uri.base.origin,
+        queryParams: const {'prompt': 'select_account'},
       );
       throw const AuthRedirectingException(AppStrings.authRedirecting);
     }

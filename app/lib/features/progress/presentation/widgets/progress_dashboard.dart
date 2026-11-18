@@ -38,21 +38,23 @@ class ProgressDashboard extends StatelessWidget {
             ),
           ],
         ),
-        PaneRow(
-          panes: [
-            (flex: 7, child: TrendCard(trend: overview.trend)),
-            (
-              flex: 5,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SectionHeader(title: AppStrings.topicMastery),
-                  const SizedBox(height: AppDimens.md),
-                  TopicMasteryList(mastery: overview.mastery),
-                ],
-              ),
+        TrendCard(trend: overview.trend),
+        const SizedBox(height: AppDimens.xl),
+        SectionHeader(
+          title: AppStrings.topicMastery,
+          trailing: MetaTag(
+            label: AppStrings.topicCount(overview.mastery.length),
+          ),
+        ),
+        const SizedBox(height: AppDimens.md),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: AppDimens.panelMaxWidth,
             ),
-          ],
+            child: TopicMasteryList(mastery: overview.mastery),
+          ),
         ),
         const SizedBox(height: AppDimens.xl),
         SectionHeader(

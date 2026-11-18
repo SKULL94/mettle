@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/pages/sign_in_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/interview/presentation/pages/interview_page.dart';
+import '../../features/interview/presentation/pages/latest_scorecard_page.dart';
 import '../../features/interview/presentation/pages/scorecard_page.dart';
 import '../../features/interview/presentation/widgets/session_setup_sheet.dart';
 import '../../features/progress/presentation/pages/progress_page.dart';
@@ -55,6 +56,15 @@ GoRouter createRouter() {
                 path: AppRoutes.progress,
                 name: AppRoutes.progressName,
                 builder: (context, state) => const ProgressPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.latestScorecard,
+                name: AppRoutes.latestScorecardName,
+                builder: (context, state) => const LatestScorecardPage(),
               ),
             ],
           ),

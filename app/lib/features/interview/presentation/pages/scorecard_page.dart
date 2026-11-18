@@ -21,53 +21,65 @@ import '../widgets/session_setup_sheet.dart';
 import '../widgets/topic_label.dart';
 
 class ScorecardPage extends StatelessWidget {
-  const ScorecardPage({required this.sessionId, super.key});
+  const ScorecardPage({
+    required this.sessionId,
+    this.embedded = false,
+    super.key,
+  });
 
   final String sessionId;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
+      key: ValueKey(sessionId),
       create: (_) =>
           ScorecardCubit(sessionId: sessionId, getScorecard: sl())..load(),
-      child: const ScorecardView(),
+      child: ScorecardView(embedded: embedded),
     );
   }
 }
 
 class ScorecardView extends StatelessWidget {
-  const ScorecardView({super.key});
+  const ScorecardView({this.embedded = false, super.key});
+
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ScorecardCubit, ScorecardState>(
       builder: (context, state) {
-        if (context.isWideWindow) return _WideScorecard(state: state);
-        return _CompactScorecard(state: state);
+        if (!context.isWideWindow) return _CompactScorecard(state: state);
+
+        final body = _WideBody(state: state);
+        if (embedded) return body;
+
+        return AppShell(
+          selectedIndex: AppShell.noSelection,
+          onStartSession: () => startSessionFlow(context),
+          body: body,
+        );
       },
     );
   }
 }
 
-class _WideScorecard extends StatelessWidget {
-  const _WideScorecard({required this.state});
+class _WideBody extends StatelessWidget {
+  const _WideBody({required this.state});
 
   final ScorecardState state;
 
   @override
   Widget build(BuildContext context) {
-    return AppShell(
-      selectedIndex: AppShell.noSelection,
-      onStartSession: () => startSessionFlow(context),
-      body: switch (state) {
-        ScorecardLoading() => const _ScorecardSkeleton(),
-        ScorecardLoaded(:final scorecard) => ScorecardDashboard(
-          scorecard: scorecard,
-          onPractice: () => practiceAgain(context, scorecard.topic),
-        ),
-        ScorecardError(:final message) => _ScorecardError(message: message),
-      },
-    );
+    return switch (state) {
+      ScorecardLoading() => const _ScorecardSkeleton(),
+      ScorecardLoaded(:final scorecard) => ScorecardDashboard(
+        scorecard: scorecard,
+        onPractice: () => practiceAgain(context, scorecard.topic),
+      ),
+      ScorecardError(:final message) => _ScorecardError(message: message),
+    };
   }
 }
 

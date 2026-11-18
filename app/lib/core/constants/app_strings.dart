@@ -9,6 +9,7 @@ abstract final class AppStrings {
   static const navProgress = 'Progress';
   static const navSettings = 'Settings';
 
+  static const navScorecard = 'Scorecard';
   static const navDashboard = 'Dashboard';
   static const navInterview = 'Interview Session';
   static const navAnalytics = 'Progress & Analytics';
@@ -81,6 +82,9 @@ abstract final class AppStrings {
   static String sessionCount(int count) =>
       count == 1 ? '1 session' : '$count sessions';
 
+  static String topicCount(int count) =>
+      count == 1 ? '1 topic' : '$count topics';
+
   static String questionCount(int count) =>
       count == 1 ? '1 question' : '$count questions';
 
@@ -137,6 +141,9 @@ abstract final class AppStrings {
 
   static const scorecard = 'Assessment Scorecard';
   static const scorecardEyebrow = 'Evaluation report';
+  static const scorecardEmptyTitle = 'No scorecard yet';
+  static const scorecardEmptyBody =
+      'Finish an interview and its scorecard will appear here.';
   static const scorecardSubtitle =
       'Every answer scored against the same four-dimension rubric.';
   static const backToDashboard = 'Back to dashboard';
@@ -224,8 +231,7 @@ abstract final class AppStrings {
   static const authSignUp = 'Sign up';
   static const authWelcomeBack = 'Welcome back';
   static const authCreateAccount = 'Create your account';
-  static const authSubtitle =
-      'Prepare for staff-level Flutter & mobile system interviews.';
+  static const authSubtitle = 'Prepare for Flutter & Mobile System interviews.';
   static const authContinueGoogle = 'Continue with Google';
   static const authEmailDivider = 'OR CONTINUE WITH EMAIL';
   static const authEmailLabel = 'EMAIL ADDRESS';
