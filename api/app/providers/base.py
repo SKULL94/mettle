@@ -21,6 +21,9 @@ class QuestionRequest(BaseModel):
     previous_question: str | None = None
     previous_answer: str | None = None
     asked: list[str] = Field(default_factory=list)
+    seed_scenario: str | None = None
+    seed_probes: str | None = None
+    seed_must_cover: list[str] = Field(default_factory=list)
 
 
 class GradeRequest(BaseModel):

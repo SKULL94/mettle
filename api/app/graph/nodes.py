@@ -1,10 +1,11 @@
 import asyncio
 import logging
+import random
 from typing import Any
 
 from langgraph.types import interrupt
 
-from ..data.catalog import Topic, resolve
+from ..data.catalog import Seed, Topic, resolve
 from ..providers.base import DIMENSIONS, GradeRequest, QuestionRequest, TurnScore
 from ..providers.factory import get_provider
 from ..session import bus
@@ -23,10 +24,26 @@ async def _emit(session_id: str, event: str, data: dict[str, Any]) -> None:
         await emitter.emit(event, data)
 
 
-def scripted_question(topic: Topic, asked_count: int) -> str | None:
-    if asked_count < len(topic.questions):
-        return topic.questions[asked_count]
-    return None
+def _shuffled(count: int, session_id: str, salt: str) -> list[int]:
+    order = list(range(count))
+    random.Random(f"{session_id}:{salt}").shuffle(order)
+    return order
+
+
+def scripted_question(topic: Topic, session_id: str, asked_count: int) -> str | None:
+    if asked_count >= len(topic.questions):
+        return None
+
+    order = _shuffled(len(topic.questions), session_id, "bank")
+    return topic.questions[order[asked_count]]
+
+
+def seed_for(topic: Topic, session_id: str, asked_count: int) -> Seed | None:
+    if not topic.seeds:
+        return None
+
+    order = _shuffled(len(topic.seeds), session_id, "seeds")
+    return topic.seeds[order[asked_count % len(order)]]
 
 
 async def _stream_scripted(session_id: str, text: str) -> str:
@@ -84,6 +101,11 @@ async def ask_question(state: InterviewState) -> dict[str, Any]:
 
     level, topic = resolve(state["topic"])
     previous = state["history"][-1] if state["history"] else None
+    seed = (
+        None
+        if is_follow_up
+        else seed_for(topic, session_id, state["asked_count"])
+    )
     request = QuestionRequest(
         topic=topic.id,
         topic_label=topic.label,
@@ -98,9 +120,16 @@ async def ask_question(state: InterviewState) -> dict[str, Any]:
         previous_question=previous["question"] if previous else None,
         previous_answer=previous["answer"] if previous else None,
         asked=[turn["question"] for turn in state["history"]],
+        seed_scenario=seed.scenario if seed else None,
+        seed_probes=seed.probes if seed else None,
+        seed_must_cover=seed.must_cover if seed else [],
     )
 
-    scripted = None if is_follow_up else scripted_question(topic, state["asked_count"])
+    scripted = (
+        None
+        if is_follow_up
+        else scripted_question(topic, session_id, state["asked_count"])
+    )
     text = (
         await _stream_scripted(session_id, scripted)
         if scripted is not None

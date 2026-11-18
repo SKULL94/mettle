@@ -162,9 +162,30 @@ class AnthropicProvider:
                 f"Previous question: {req.previous_question}",
                 f"Their answer: {req.previous_answer}",
             ]
-        elif req.asked:
-            lines += ["", "Already asked, do not repeat:"]
-            lines += [f"- {question}" for question in req.asked]
+        else:
+            if req.seed_scenario:
+                lines += [
+                    "",
+                    "Build the question from the situation below. Retell it in your "
+                    "own words the way an interviewer would who had hit it on a real "
+                    "team: change the surface details, the names, the numbers and the "
+                    "framing. Never quote it back verbatim, and never mention that you "
+                    "were given a situation.",
+                    f"Situation: {req.seed_scenario}",
+                ]
+                if req.seed_probes:
+                    lines.append(f"What you are probing: {req.seed_probes}")
+                if req.seed_must_cover:
+                    lines += [
+                        "A complete answer would reach these points, so ask something "
+                        "that gives the candidate room to get there without listing "
+                        "them:",
+                    ]
+                    lines += [f"- {point}" for point in req.seed_must_cover]
+
+            if req.asked:
+                lines += ["", "Already asked, do not repeat:"]
+                lines += [f"- {question}" for question in req.asked]
 
         return "\n".join(lines)
 
