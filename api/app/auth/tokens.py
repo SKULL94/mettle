@@ -43,7 +43,7 @@ async def _signing_key(token: str, jwks_url: str) -> Any:
     return key.key
 
 
-async def verify(token: str, settings: Settings) -> str:
+async def decode(token: str, settings: Settings) -> dict[str, Any]:
     algorithm = _algorithm_of(token)
 
     if algorithm in SYMMETRIC_ALGORITHMS:
@@ -73,4 +73,25 @@ async def verify(token: str, settings: Settings) -> str:
     subject = claims.get("sub")
     if not isinstance(subject, str) or not subject:
         raise TokenError("the token carries no subject")
-    return subject
+    return claims
+
+
+async def verify(token: str, settings: Settings) -> str:
+    claims = await decode(token, settings)
+    return str(claims["sub"])
+
+
+def first_name_of(claims: dict[str, Any]) -> str:
+    metadata = claims.get("user_metadata")
+    source = metadata if isinstance(metadata, dict) else {}
+
+    for key in ("full_name", "name", "preferred_username"):
+        value = source.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip().split()[0]
+
+    email = claims.get("email")
+    if isinstance(email, str) and "@" in email:
+        return email.split("@")[0]
+
+    return ""

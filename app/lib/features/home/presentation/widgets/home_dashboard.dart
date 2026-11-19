@@ -30,24 +30,30 @@ class HomeDashboard extends StatelessWidget {
         .map((mastery) => InterviewTopic.fromId(mastery.topic))
         .toSet();
 
+    final isFirstRun = overview.sessionCount == 0;
+
     return PageFrame(
       onRefresh: () async =>
           context.read<HomeBloc>().add(const HomeRefreshed()),
       children: [
         PageHeader(
-          // eyebrow: AppStrings.dashboardEyebrow,
-          title: AppStrings.dashboardTitle,
-          subtitle: AppStrings.appTagline,
+          title: isFirstRun
+              ? AppStrings.dashboardTitleFirstRun
+              : AppStrings.dashboardTitle,
+          subtitle: isFirstRun
+              ? AppStrings.dashboardSubtitleFirstRun
+              : AppStrings.appTagline,
           actions: [
-            OutlinedButton.icon(
-              onPressed: () =>
-                  context.read<HomeBloc>().add(const HomeRefreshed()),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(0, AppDimens.controlHeight),
+            if (!isFirstRun)
+              OutlinedButton.icon(
+                onPressed: () =>
+                    context.read<HomeBloc>().add(const HomeRefreshed()),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, AppDimens.controlHeight),
+                ),
+                icon: const Icon(Icons.refresh_rounded, size: AppDimens.iconMd),
+                label: const Text(AppStrings.refresh),
               ),
-              icon: const Icon(Icons.refresh_rounded, size: AppDimens.iconMd),
-              label: const Text(AppStrings.refresh),
-            ),
           ],
         ),
         if (staleWarning != null) ...[
@@ -118,7 +124,6 @@ class _LauncherCard extends StatelessWidget {
           SessionSetupForm(
             weakTopics: weakTopics,
             submitLabel: AppStrings.launchInterview,
-            submitIcon: Icons.rocket_launch_rounded,
             onSubmit: (config) => _start(context, config),
           ),
         ],

@@ -64,3 +64,54 @@ class ScorecardResponse(BaseModel):
     dimensions: dict[str, int]
     missing: list[str]
     turns: list[dict[str, Any]]
+
+
+class TopicProgressOut(BaseModel):
+    id: str
+    name: str
+    covers: str
+    difficulty: str
+    status: str
+    score: int | None = None
+
+
+class InterviewSummaryOut(BaseModel):
+    session_id: str
+    title: str
+    date: str | None = None
+    questions: int
+    score: int | None = None
+
+
+class RecommendationOut(BaseModel):
+    topic_id: str
+    topic_name: str
+    reason: str
+    difficulty: str
+    question_count: int
+    minutes: int
+
+
+class ProgressSummaryOut(BaseModel):
+    first_score: int
+    latest_score: int
+    strongest: str
+    most_improved: str
+    practise_next: str
+
+
+class SummaryResponse(BaseModel):
+    first_name: str = ""
+    plan: str
+    free_total: int
+    free_remaining: int
+    completed_interviews: int
+    readiness: int | None = None
+    readiness_band: str | None = None
+    topics: list[TopicProgressOut] = Field(default_factory=list)
+    recent: list[InterviewSummaryOut] = Field(default_factory=list)
+    next: RecommendationOut | None = None
+    progress: ProgressSummaryOut | None = None
+    pro_price: str | None = None
+    next_free_interview_at: str | None = None
+    referral_available: bool = False

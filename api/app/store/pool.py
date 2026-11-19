@@ -108,8 +108,41 @@ create table if not exists public.turns (
   unique (session_id, ordinal)
 );
 
+alter table public.sessions
+  add column if not exists difficulty     text,
+  add column if not exists model          text,
+  add column if not exists overall        int,
+  add column if not exists correctness    int,
+  add column if not exists depth          int,
+  add column if not exists clarity        int,
+  add column if not exists structure      int,
+  add column if not exists missing        jsonb not null default '[]',
+  add column if not exists mode           text not null default 'topic',
+  add column if not exists answered_count int not null default 0,
+  add column if not exists started_at     timestamptz not null default now();
+
+alter table public.sessions
+  alter column topic        drop not null,
+  alter column overall      drop not null,
+  alter column correctness  drop not null,
+  alter column depth        drop not null,
+  alter column clarity      drop not null,
+  alter column structure    drop not null,
+  alter column completed_at drop not null;
+
+alter table public.turns
+  add column if not exists ordinal int,
+  add column if not exists topic   text;
+
 create index if not exists sessions_user_completed_idx
   on public.sessions (user_id, completed_at desc);
+
+create index if not exists sessions_user_answered_idx
+  on public.sessions (user_id, completed_at desc)
+  where answered_count > 0;
+
+create index if not exists turns_topic_idx
+  on public.turns (session_id, topic);
 
 alter table public.sessions enable row level security;
 alter table public.turns    enable row level security;

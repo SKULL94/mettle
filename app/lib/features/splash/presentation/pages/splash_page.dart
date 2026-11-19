@@ -48,7 +48,7 @@ class SplashView extends StatelessWidget {
         child: BlocListener<SplashCubit, SplashState>(
           listener: (context, state) {
             if (state is! SplashReady) return;
-            context.go(state.signedIn ? AppRoutes.home : AppRoutes.signIn);
+            context.go(state.signedIn ? AppRoutes.dashboard : AppRoutes.signIn);
           },
           child: Scaffold(
             body: SafeArea(

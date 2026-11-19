@@ -6,6 +6,8 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/page_frame.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/window_size.dart';
 import '../../../interview/presentation/widgets/session_setup_sheet.dart';
@@ -120,33 +122,32 @@ class _ProgressEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final empty = EmptyState(
+      icon: Icons.trending_up_rounded,
+      title: AppStrings.progressEmptyTitle,
+      message: AppStrings.progressEmptyBody,
+      actionLabel: AppStrings.startSession,
+      onAction: () => _startSession(context),
+    );
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimens.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.progressEmptyTitle,
-              style: theme.textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimens.sm),
-            Text(
-              AppStrings.progressEmptyBody,
-              style: theme.textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimens.lg),
-            FilledButton(
-              onPressed: () => _startSession(context),
-              child: const Text(AppStrings.startSession),
-            ),
-          ],
+    if (!context.isWideWindow) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimens.lg),
+          child: empty,
         ),
-      ),
+      );
+    }
+
+    return PageFrame(
+      children: [
+        const PageHeader(
+          eyebrow: AppStrings.navAnalytics,
+          title: AppStrings.progressTitle,
+          subtitle: AppStrings.progressSubtitle,
+        ),
+        empty,
+      ],
     );
   }
 }

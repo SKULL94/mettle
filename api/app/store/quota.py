@@ -34,12 +34,15 @@ def _period() -> str:
     return datetime.now(UTC).strftime("%Y-%m")
 
 
-async def claim(user_id: str, question_count: int) -> None:
+async def reserve(user_id: str, question_count: int) -> None:
     if not pool.enabled():
         return
 
     settings = get_settings()
     estimate = estimate_cents(question_count)
+
+    if await remaining(user_id) == 0:
+        raise QuotaExceeded("you have used all of your free interviews")
 
     async with pool.connection() as handle, handle.transaction():
         spend = await handle.execute(
@@ -62,6 +65,14 @@ async def claim(user_id: str, question_count: int) -> None:
             )
             raise SpendCapReached("the service is at its monthly budget, try again later")
 
+
+async def consume(user_id: str) -> None:
+    if not pool.enabled():
+        return
+
+    settings = get_settings()
+
+    async with pool.connection() as handle:
         claimed = await handle.execute(
             """
             insert into public.user_quota (user_id, sessions_used, session_limit)
@@ -76,6 +87,23 @@ async def claim(user_id: str, question_count: int) -> None:
         )
         if await claimed.fetchone() is None:
             raise QuotaExceeded("you have used all of your free interviews")
+
+
+async def limit(user_id: str) -> int:
+    settings = get_settings()
+    if not pool.enabled():
+        return settings.free_sessions_per_user
+
+    async with pool.connection() as handle:
+        found = await handle.execute(
+            "select session_limit from public.user_quota where user_id = %s",
+            (user_id,),
+        )
+        row = await found.fetchone()
+
+    if row is None:
+        return settings.free_sessions_per_user
+    return int(row["session_limit"])
 
 
 async def remaining(user_id: str) -> int | None:

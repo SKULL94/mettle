@@ -6,6 +6,11 @@ import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/datasources/supabase_auth_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/dashboard/data/datasources/dashboard_remote_data_source.dart';
+import '../../features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
+import '../../features/dashboard/domain/usecases/get_summary.dart';
+import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/usecases/get_home_overview.dart';
@@ -64,6 +69,13 @@ Future<void> configureDependencies() async {
     () => InterviewHttpDataSource(sl()),
   );
 
+  sl.registerLazySingleton<DashboardRemoteDataSource>(
+    () => DashboardHttpDataSource(sl()),
+  );
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(sl()),
+  );
+
   sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl(sl()));
   sl.registerLazySingleton<ProgressRepository>(
     () => ProgressRepositoryImpl(sl()),
@@ -75,6 +87,7 @@ Future<void> configureDependencies() async {
     () => SettingsRepositoryImpl(sl(), sl()),
   );
 
+  sl.registerLazySingleton(() => GetSummary(sl()));
   sl.registerLazySingleton(() => GetHomeOverview(sl()));
   sl.registerLazySingleton(() => home.WatchSessions(sl()));
   sl.registerLazySingleton(() => GetProgressOverview(sl()));
@@ -88,6 +101,7 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton(() => SetThemeMode(sl()));
   sl.registerLazySingleton(() => ClearSessions(sl()));
 
+  sl.registerFactory(() => DashboardCubit(sl()));
   sl.registerFactory(() => HomeBloc(sl(), sl()));
   sl.registerLazySingleton(() => SettingsCubit(sl(), sl(), sl()));
 

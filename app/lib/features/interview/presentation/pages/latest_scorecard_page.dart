@@ -4,7 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/page_frame.dart';
 import '../../../../core/widgets/skeleton_box.dart';
+import '../../../../core/widgets/window_size.dart';
 import '../../../home/presentation/bloc/home_bloc.dart';
 import '../../../home/presentation/bloc/home_event.dart';
 import '../../../home/presentation/bloc/home_state.dart';
@@ -58,33 +61,32 @@ class _Empty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final empty = EmptyState(
+      icon: Icons.assessment_outlined,
+      title: AppStrings.scorecardEmptyTitle,
+      message: message,
+      actionLabel: AppStrings.startSession,
+      onAction: () => startSessionFlow(context),
+    );
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimens.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.scorecardEmptyTitle,
-              style: theme.textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimens.sm),
-            Text(
-              message,
-              style: theme.textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimens.lg),
-            FilledButton(
-              onPressed: () => startSessionFlow(context),
-              child: const Text(AppStrings.startSession),
-            ),
-          ],
+    if (!context.isWideWindow) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimens.lg),
+          child: empty,
         ),
-      ),
+      );
+    }
+
+    return PageFrame(
+      children: [
+        const PageHeader(
+          eyebrow: AppStrings.scorecardEyebrow,
+          title: AppStrings.scorecard,
+          subtitle: AppStrings.scorecardSubtitle,
+        ),
+        empty,
+      ],
     );
   }
 }

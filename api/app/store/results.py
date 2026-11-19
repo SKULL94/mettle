@@ -36,6 +36,9 @@ async def save(scorecard: dict[str, Any], user_id: str, question_total: int) -> 
                    clarity      = excluded.clarity,
                    structure    = excluded.structure,
                    missing      = excluded.missing,
+                   model        = excluded.model,
+                   topic        = coalesce(public.sessions.topic, excluded.topic),
+                   difficulty   = excluded.difficulty,
                    completed_at = now()
             """,
             (
@@ -64,8 +67,9 @@ async def save(scorecard: dict[str, Any], user_id: str, question_total: int) -> 
                 """
                 insert into public.turns
                   (session_id, ordinal, position, question_id, question, total,
-                   kind, reason, answer, correctness, depth, clarity, structure, missing)
-                values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                   kind, reason, answer, correctness, depth, clarity, structure,
+                   missing, topic)
+                values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     scorecard["session_id"],
@@ -82,6 +86,7 @@ async def save(scorecard: dict[str, Any], user_id: str, question_total: int) -> 
                     _score(turn, "clarity"),
                     _score(turn, "structure"),
                     Json(score.get("missing") or []),
+                    turn.get("topic") or scorecard.get("topic"),
                 ),
             )
 

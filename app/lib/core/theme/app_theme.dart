@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_dimens.dart';
+import 'mettle_colors.dart';
 import 'score_colors.dart';
 
 abstract final class AppTheme {
@@ -70,7 +71,10 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       textTheme: text,
-      extensions: const <ThemeExtension<dynamic>>[ScoreColors.standard()],
+      extensions: const <ThemeExtension<dynamic>>[
+        ScoreColors.standard(),
+        MettleColors.dark(),
+      ],
 
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,

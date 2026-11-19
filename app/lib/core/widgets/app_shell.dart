@@ -7,7 +7,6 @@ import '../constants/app_strings.dart';
 import '../di/injection.dart';
 import '../network/api_client.dart';
 import 'app_sidebar.dart';
-import 'app_top_bar.dart';
 import 'nav_destination.dart';
 import 'window_size.dart';
 
@@ -47,7 +46,6 @@ class AppShell extends StatelessWidget {
     if (!context.isWideWindow) return _CompactShell(shell: this);
 
     final user = sl<AuthRepository>().currentUser;
-    final location = GoRouterState.of(context).matchedLocation;
 
     return Scaffold(
       body: Row(
@@ -63,18 +61,7 @@ class AppShell extends StatelessWidget {
             backendHost: _host(sl<ApiClient>().baseUrl),
           ),
           Expanded(
-            child: Column(
-              children: [
-                // AppTopBar(
-                //   onStartSession: onStartSession,
-                //   onAccountPressed: () =>
-                //       _select(context, navDestinations.length - 1),
-                //   lead: topBarLead ?? TopBarPath(location: location),
-                //   actions: topBarActions,
-                // ),
-                Expanded(child: body),
-              ],
-            ),
+            child: Column(children: [Expanded(child: body)]),
           ),
         ],
       ),

@@ -38,7 +38,7 @@ class SignInView extends StatelessWidget {
         final messenger = ScaffoldMessenger.of(context);
         switch (state.status) {
           case SignInSucceeded():
-            context.go(AppRoutes.home);
+            context.go(AppRoutes.dashboard);
           case SignInFailed(:final message):
             messenger.showSnackBar(SnackBar(content: Text(message)));
             context.read<SignInCubit>().dismissError();

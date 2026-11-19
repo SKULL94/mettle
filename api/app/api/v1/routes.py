@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Response, status
 from sse_starlette.sse import EventSourceResponse
 
-from ...auth.deps import CurrentUser
+from ...auth.deps import CurrentPrincipal, CurrentUser
 from ...config import get_settings
 from ...data.catalog import UnknownTopic, catalog, resolve
 from ...providers.factory import ProviderNotConfigured, get_provider
@@ -19,10 +19,11 @@ from ...schemas.wire import (
     ScorecardResponse,
     SessionStateResponse,
     SkipRequest,
+    SummaryResponse,
     TopicOut,
 )
 from ...session import registry
-from ...store import quota
+from ...store import progress, quota, summary
 
 router = APIRouter()
 
@@ -41,6 +42,14 @@ async def meta() -> MetaResponse:
         version=settings.version,
         model=settings.anthropic_model,
         configured=settings.has_api_key,
+    )
+
+
+@router.get("/me/summary", response_model=SummaryResponse)
+async def me_summary(principal: CurrentPrincipal) -> SummaryResponse:
+    built = await summary.build(principal.id)
+    return SummaryResponse.model_validate(
+        {**built, "first_name": principal.first_name}
     )
 
 
@@ -86,7 +95,7 @@ async def create_session(
         ) from None
 
     try:
-        await quota.claim(user_id, body.question_count)
+        await quota.reserve(user_id, body.question_count)
     except quota.QuotaExceeded as exc:
         raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, str(exc)) from None
     except quota.SpendCapReached as exc:
@@ -137,6 +146,8 @@ async def submit_answer(
     session_id: str, body: AnswerRequest, user_id: CurrentUser
 ) -> Response:
     handle = await _handle(session_id, user_id)
+    await _count_submission(handle, user_id)
+
     try:
         await handle.submit(body.turn_id, body.answer)
     except registry.SessionConflict as exc:
@@ -144,11 +155,32 @@ async def submit_answer(
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
+async def _count_submission(
+    handle: registry.SessionHandle, user_id: str
+) -> None:
+    first = await progress.record_answer(
+        session_id=handle.session_id,
+        user_id=user_id,
+        topic=handle.topic,
+        difficulty=handle.difficulty,
+        mode="topic",
+    )
+    if not first:
+        return
+
+    try:
+        await quota.consume(user_id)
+    except quota.QuotaExceeded as exc:
+        raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, str(exc)) from None
+
+
 @router.post("/sessions/{session_id}/skip", status_code=status.HTTP_202_ACCEPTED)
 async def skip_question(
     session_id: str, body: SkipRequest, user_id: CurrentUser
 ) -> Response:
     handle = await _handle(session_id, user_id)
+    await _count_submission(handle, user_id)
+
     try:
         await handle.submit(body.turn_id, "")
     except registry.SessionConflict as exc:
