@@ -37,7 +37,7 @@ class ScorecardDashboard extends StatelessWidget {
           subtitle: AppStrings.scorecardSubtitle,
           actions: [
             OutlinedButton.icon(
-              onPressed: () => context.go(AppRoutes.home),
+              onPressed: () => context.go(AppRoutes.dashboard),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(0, AppDimens.controlHeight),
               ),

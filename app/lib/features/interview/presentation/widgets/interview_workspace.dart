@@ -6,7 +6,6 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/app_shell.dart';
 import '../../../../core/widgets/page_frame.dart';
 import '../../../../core/widgets/status_dot.dart';
 import '../bloc/interview_bloc.dart';
@@ -15,7 +14,6 @@ import '../bloc/interview_state.dart';
 import 'answer_composer.dart';
 import 'previous_answer.dart';
 import 'question_card.dart';
-import 'session_setup_sheet.dart';
 
 class InterviewWorkspace extends StatelessWidget {
   const InterviewWorkspace({required this.state, super.key});
@@ -24,29 +22,49 @@ class InterviewWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppShell(
-      selectedIndex: AppShell.noSelection,
-      sessionActive: true,
-      onStartSession: () => startSessionFlow(context),
-      topBarLead: _SessionStatus(state: state),
-      topBarActions: [
-        OutlinedButton.icon(
-          onPressed: () => context.go(AppRoutes.home),
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size(0, AppDimens.controlHeight),
-          ),
-          icon: const Icon(Icons.call_end_rounded, size: AppDimens.iconMd),
-          label: const Text(AppStrings.endSession),
-        ),
-      ],
-      body: Padding(
-        padding: const EdgeInsets.all(AppDimens.lg),
-        child: Row(
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(flex: 5, child: _QuestionPane(state: state)),
-            const SizedBox(width: AppDimens.paneGap),
-            Expanded(flex: 7, child: _AnswerPane(state: state)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppDimens.lg,
+                AppDimens.lg,
+                AppDimens.lg,
+                0,
+              ),
+              child: Row(
+                children: [
+                  Expanded(child: _SessionStatus(state: state)),
+                  const SizedBox(width: AppDimens.md),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go(AppRoutes.dashboard),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, AppDimens.controlHeight),
+                    ),
+                    icon: const Icon(
+                      Icons.call_end_rounded,
+                      size: AppDimens.iconMd,
+                    ),
+                    label: const Text(AppStrings.endSession),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimens.lg),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(flex: 5, child: _QuestionPane(state: state)),
+                    const SizedBox(width: AppDimens.paneGap),
+                    Expanded(flex: 7, child: _AnswerPane(state: state)),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

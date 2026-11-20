@@ -10,10 +10,9 @@ import '../../../../core/theme/mettle_colors.dart';
 import '../../../../core/theme/size_class.dart';
 import '../../../../core/theme/mettle_text.dart';
 import '../../../../core/widgets/mettle/buttons.dart';
-import '../../../../core/widgets/shell/account_row.dart';
 import '../../../../core/widgets/shell/app_scaffold.dart';
+import '../../../../core/widgets/shell/shell_host.dart';
 import '../../../../core/widgets/shell/shell_destination.dart';
-import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../domain/entities/user_summary.dart';
 import '../cubit/dashboard_cubit.dart';
 import '../cubit/dashboard_state.dart';
@@ -82,8 +81,6 @@ class _Loaded extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = sl<AuthRepository>().currentUser;
-
     return BlocBuilder<InterviewSetupCubit, InterviewSetup>(
       builder: (context, setup) {
         final canContinue = setup.canContinue && !summary.isExhausted;
@@ -96,15 +93,9 @@ class _Loaded extends StatelessWidget {
 
         return AppScaffold(
           tab: ShellTab.dashboard,
-          state: ShellState(
-            name: _displayName(user?.displayName, summary.firstName),
-            email: user?.email ?? AppStrings.signedOut,
-            freeRemaining: summary.freeRemaining,
-            freeTotal: summary.freeTotal,
-            completedInterviews: summary.completedInterviews,
-          ),
+          state: shellStateFor(summary),
           onSelect: (destination) => context.go(destination.path),
-          onAccount: (action) => _onAccount(context, action),
+          onAccount: (action) => onAccountAction(context, action),
           bottomBar: context.sizeClass.hasStickyCta && !summary.isExhausted
               ? StickyCtaBar(
                   summaryLine: followRecommendation
@@ -180,20 +171,6 @@ void _toBrief(BuildContext context, InterviewSetup setup) {
       },
     ).toString(),
   );
-}
-
-Future<void> _onAccount(BuildContext context, AccountAction action) async {
-  if (action != AccountAction.signOut) return;
-
-  final router = GoRouter.of(context);
-  await sl<AuthRepository>().signOut();
-  router.go(AppRoutes.signIn);
-}
-
-String _displayName(String? fromAuth, String fromSummary) {
-  if (fromAuth != null && fromAuth.isNotEmpty) return fromAuth;
-  if (fromSummary.isNotEmpty) return fromSummary;
-  return AppStrings.accountFallback;
 }
 
 class _Busy extends StatelessWidget {

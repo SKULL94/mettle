@@ -38,24 +38,17 @@ class ProgressView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isWide = context.isWideWindow;
 
-    return Scaffold(
-      appBar: isWide
-          ? null
-          : AppBar(title: const Text(AppStrings.progressTitle)),
-      body: SafeArea(
-        child: BlocBuilder<ProgressCubit, ProgressState>(
-          builder: (context, state) => switch (state) {
-            ProgressLoading() => const _ProgressSkeleton(),
-            ProgressEmpty() => const _ProgressEmpty(),
-            ProgressLoaded(:final overview) when isWide => ProgressDashboard(
-              overview: overview,
-            ),
-            ProgressLoaded(:final overview) => _ProgressBody(
-              overview: overview,
-            ),
-            ProgressError(:final message) => _ProgressError(message: message),
-          },
-        ),
+    return SafeArea(
+      child: BlocBuilder<ProgressCubit, ProgressState>(
+        builder: (context, state) => switch (state) {
+          ProgressLoading() => const _ProgressSkeleton(),
+          ProgressEmpty() => const _ProgressEmpty(),
+          ProgressLoaded(:final overview) when isWide => ProgressDashboard(
+            overview: overview,
+          ),
+          ProgressLoaded(:final overview) => _ProgressBody(overview: overview),
+          ProgressError(:final message) => _ProgressError(message: message),
+        },
       ),
     );
   }

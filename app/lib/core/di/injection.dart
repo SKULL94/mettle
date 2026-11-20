@@ -11,11 +11,6 @@ import '../../features/dashboard/data/repositories/dashboard_repository_impl.dar
 import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
 import '../../features/dashboard/domain/usecases/get_summary.dart';
 import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
-import '../../features/home/data/repositories/home_repository_impl.dart';
-import '../../features/home/domain/repositories/home_repository.dart';
-import '../../features/home/domain/usecases/get_home_overview.dart';
-import '../../features/home/domain/usecases/watch_sessions.dart' as home;
-import '../../features/home/presentation/bloc/home_bloc.dart';
 import '../../features/interview/data/datasources/interview_http_data_source.dart';
 import '../../features/interview/data/datasources/interview_remote_data_source.dart';
 import '../../features/interview/data/repositories/interview_repository_impl.dart';
@@ -76,7 +71,6 @@ Future<void> configureDependencies() async {
     () => DashboardRepositoryImpl(sl()),
   );
 
-  sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl(sl()));
   sl.registerLazySingleton<ProgressRepository>(
     () => ProgressRepositoryImpl(sl()),
   );
@@ -88,8 +82,6 @@ Future<void> configureDependencies() async {
   );
 
   sl.registerLazySingleton(() => GetSummary(sl()));
-  sl.registerLazySingleton(() => GetHomeOverview(sl()));
-  sl.registerLazySingleton(() => home.WatchSessions(sl()));
   sl.registerLazySingleton(() => GetProgressOverview(sl()));
   sl.registerLazySingleton(() => progress.WatchSessions(sl()));
   sl.registerLazySingleton(() => StartSession(sl()));
@@ -102,7 +94,6 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton(() => ClearSessions(sl()));
 
   sl.registerFactory(() => DashboardCubit(sl()));
-  sl.registerFactory(() => HomeBloc(sl(), sl()));
   sl.registerLazySingleton(() => SettingsCubit(sl(), sl(), sl()));
 
   await _forgetUnrememberedSession();

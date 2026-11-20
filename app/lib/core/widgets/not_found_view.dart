@@ -31,7 +31,7 @@ class NotFoundView extends StatelessWidget {
               ),
               const SizedBox(height: AppDimens.lg),
               FilledButton(
-                onPressed: () => context.go(AppRoutes.home),
+                onPressed: () => context.go(AppRoutes.dashboard),
                 child: const Text(AppStrings.navHome),
               ),
             ],

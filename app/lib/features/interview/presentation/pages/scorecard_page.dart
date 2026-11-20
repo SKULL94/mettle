@@ -6,7 +6,6 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/widgets/app_shell.dart';
 import '../../../../core/widgets/skeleton_box.dart';
 import '../../../../core/widgets/window_size.dart';
 import '../../domain/entities/interview_topic.dart';
@@ -55,11 +54,7 @@ class ScorecardView extends StatelessWidget {
         final body = _WideBody(state: state);
         if (embedded) return body;
 
-        return AppShell(
-          selectedIndex: AppShell.noSelection,
-          onStartSession: () => startSessionFlow(context),
-          body: body,
-        );
+        return Scaffold(body: body);
       },
     );
   }
@@ -96,7 +91,7 @@ class _CompactScorecard extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           tooltip: AppStrings.navHome,
-          onPressed: () => context.go(AppRoutes.home),
+          onPressed: () => context.go(AppRoutes.dashboard),
         ),
       ),
       body: SafeArea(
@@ -335,7 +330,7 @@ class _ScorecardError extends StatelessWidget {
             ),
             const SizedBox(height: AppDimens.sm),
             TextButton(
-              onPressed: () => context.go(AppRoutes.home),
+              onPressed: () => context.go(AppRoutes.dashboard),
               child: const Text(AppStrings.navHome),
             ),
           ],

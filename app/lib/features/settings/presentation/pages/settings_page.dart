@@ -29,9 +29,7 @@ class SettingsView extends StatelessWidget {
     final isWide = context.isWideWindow;
 
     return Scaffold(
-      appBar: isWide
-          ? null
-          : AppBar(title: const Text(AppStrings.settingsTitle)),
+      appBar: AppBar(title: const Text(AppStrings.settingsTitle)),
       body: SafeArea(
         child: isWide ? const SettingsDashboard() : const _SettingsList(),
       ),

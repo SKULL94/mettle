@@ -5,9 +5,6 @@ abstract final class AppRoutes {
   static const signIn = '/sign-in';
   static const signInName = 'signIn';
 
-  static const home = '/';
-  static const homeName = 'home';
-
   static const dashboard = '/dashboard';
   static const dashboardName = 'dashboard';
 
@@ -26,9 +23,6 @@ abstract final class AppRoutes {
 
   static const settings = '/settings';
   static const settingsName = 'settings';
-
-  static const latestScorecard = '/scorecard';
-  static const latestScorecardName = 'latestScorecard';
 
   static const session = '/session/:id';
   static const sessionName = 'session';

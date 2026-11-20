@@ -340,6 +340,38 @@ abstract final class AppStrings {
   static const metaSeparator = ' · ';
   static const today = 'Today';
   static const yesterday = 'Yesterday';
+  static const historyTitle = 'Interview history';
+  static const historySubtitle =
+      'Every interview you have finished, newest first.';
+  static const historyThisMonth = 'This month';
+  static const historyCompleted = 'Completed';
+  static const historyAverage = 'Average score';
+  static const historyBest = 'Best score';
+  static const historyAnswered = 'Questions answered';
+  static const historyEmptyTitle = 'No interviews yet';
+  static const historyEmptyBody =
+      'Finish your first interview and it will show up here with its '
+      'scorecard.';
+  static const historyEmptyCta = 'Start an interview';
+  static const historyFailedTitle = 'History could not load';
+
+  static String historyCount(int count) => sessionCount(count);
+
+  static const months = <String>[
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
   static const monthsShort = <String>[
     'Jan',
     'Feb',
