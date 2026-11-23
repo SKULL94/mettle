@@ -6,6 +6,8 @@ import '../../../features/auth/domain/repositories/auth_repository.dart';
 import '../../../features/dashboard/domain/entities/user_summary.dart';
 import '../../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
 import '../../../features/dashboard/presentation/cubit/dashboard_state.dart';
+import '../../../features/pro/presentation/pages/pro_page.dart';
+import '../../../features/progress/presentation/cubit/progress_cubit.dart';
 import '../../constants/app_strings.dart';
 import '../../di/injection.dart';
 import '../../router/app_routes.dart';
@@ -21,8 +23,8 @@ class ShellHost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<DashboardCubit>()..load(),
+    return BlocProvider.value(
+      value: sl<DashboardCubit>()..load(),
       child: _Host(tab: tab, child: child),
     );
   }
@@ -48,6 +50,8 @@ class _Host extends StatelessWidget {
           state: shellStateFor(summary),
           onSelect: (destination) => context.go(destination.path),
           onAccount: (action) => onAccountAction(context, action),
+          onSeePlans: () => openPro(context),
+          onUpgrade: () => openPro(context),
           body: child,
         );
       },
@@ -76,11 +80,14 @@ Future<void> onAccountAction(BuildContext context, AccountAction action) async {
   final router = GoRouter.of(context);
 
   switch (action) {
-    case AccountAction.profile:
-    case AccountAction.billing:
+    case AccountAction.settings:
       await router.pushNamed<void>(AppRoutes.settingsName);
+    case AccountAction.billing:
+      await router.pushNamed<void>(AppRoutes.proName);
     case AccountAction.signOut:
       await sl<AuthRepository>().signOut();
+      sl<DashboardCubit>().reset();
+      sl<ProgressCubit>().reset();
       router.go(AppRoutes.signIn);
   }
 }

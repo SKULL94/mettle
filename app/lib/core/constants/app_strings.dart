@@ -97,6 +97,16 @@ abstract final class AppStrings {
   static const limitMostImproved = 'Most improved';
   static const limitPractiseNext = 'Practise next';
   static const limitSeeProgress = 'See full progress';
+  static const proComingOverline = 'PRO';
+  static const proComingTitle = 'Pro is coming soon';
+  static const proComingBody =
+      'Mettle is free while it is being built. Pro is not on sale yet, so '
+      'there is nothing to buy and nothing to cancel.';
+  static const proComingWhat = 'What Pro will include';
+  static const proComingFreeTitle = 'Your free interviews keep working';
+  static const proComingFreeBody =
+      'Scorecards, progress and history stay free to view, always.';
+  static const proComingBack = 'Back to dashboard';
   static const proTitle = 'Keep practising with Pro';
   static const proPerMonth = ' / month';
   static const proPerk1 = 'Unlimited interviews on every topic';
@@ -108,7 +118,6 @@ abstract final class AppStrings {
   static const lockedTitle = 'New interviews need Pro';
   static const lockedBody =
       'Your scorecards and progress stay free to view, always.';
-  static const lockedPreview = 'New interview';
 
   static String limitHeadline(String name, int total) => name.isEmpty
       ? "Nice work. You've used all $total free interviews."
@@ -258,6 +267,7 @@ abstract final class AppStrings {
   static const shellProgressLocked =
       'Progress unlocks after your first interview.';
   static const shellAccountMenu = 'Account menu';
+  static const shellSettings = 'Settings';
   static const shellProfile = 'Profile';
   static const shellPlanBilling = 'Plan and billing';
   static const shellSignOut = 'Sign out';
@@ -348,6 +358,7 @@ abstract final class AppStrings {
   static const historyAverage = 'Average score';
   static const historyBest = 'Best score';
   static const historyAnswered = 'Questions answered';
+  static const historySkipped = 'Questions skipped';
   static const historyEmptyTitle = 'No interviews yet';
   static const historyEmptyBody =
       'Finish your first interview and it will show up here with its '
@@ -480,6 +491,11 @@ abstract final class AppStrings {
   static const expandAll = 'Expand all';
   static const evaluatorNoteBalanced =
       'Your four dimensions came out even — no single weak spot to target yet.';
+  static const evaluatorNoteUnscored =
+      'Nothing was scored here — every question was skipped.';
+  static const evaluatorNoteFloor =
+      'Every dimension bottomed out. Start with correctness: get the '
+      'framework behaviour right, then build depth on top.';
 
   static String questionAudit(int count) => 'Question audit ($count)';
 

@@ -21,6 +21,9 @@ abstract final class AppRoutes {
   static const progress = '/progress';
   static const progressName = 'progress';
 
+  static const pro = '/pro';
+  static const proName = 'pro';
+
   static const settings = '/settings';
   static const settingsName = 'settings';
 

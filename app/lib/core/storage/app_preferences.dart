@@ -15,6 +15,7 @@ final class AppPreferences {
   static const _kApiBaseUrl = 'api_base_url';
   static const _kRememberDevice = 'remember_device';
   static const _kHowItWorks = 'how_it_works_dismissed';
+  static const _kLevel = 'interview_level';
 
   Future<String> deviceId() async {
     final existing = _prefs.getString(_kDeviceId);
@@ -28,6 +29,10 @@ final class AppPreferences {
   String? themeMode() => _prefs.getString(_kThemeMode);
 
   Future<void> setThemeMode(String name) => _prefs.setString(_kThemeMode, name);
+
+  String? level() => _prefs.getString(_kLevel);
+
+  Future<void> setLevel(String id) => _prefs.setString(_kLevel, id);
 
   bool howItWorksDismissed() => _prefs.getBool(_kHowItWorks) ?? false;
 

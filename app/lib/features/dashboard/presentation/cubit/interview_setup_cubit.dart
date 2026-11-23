@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/storage/app_preferences.dart';
 import '../../domain/entities/user_summary.dart';
 
 const questionCounts = <int>[3, 5, 10];
@@ -49,13 +53,20 @@ final class InterviewSetup {
 }
 
 final class InterviewSetupCubit extends Cubit<InterviewSetup> {
-  InterviewSetupCubit() : super(const InterviewSetup());
+  InterviewSetupCubit() : super(InterviewSetup(level: _storedLevel()));
+
+  static Level _storedLevel() =>
+      Level.fromId(sl<AppPreferences>().level() ?? Level.fallback.id);
 
   void setMode(InterviewMode mode) => emit(state.copyWith(mode: mode));
 
-  void setLevel(Level level) => emit(state.copyWith(level: level));
+  void setLevel(Level level) {
+    emit(state.copyWith(level: level));
+    unawaited(sl<AppPreferences>().setLevel(level.id));
+  }
 
-  void setTopic(String topicId) => emit(state.copyWith(topicId: topicId));
+  void setTopic(String topicId) =>
+      emit(state.copyWith(mode: InterviewMode.topic, topicId: topicId));
 
   void setQuestionCount(int count) =>
       emit(state.copyWith(questionCount: count));

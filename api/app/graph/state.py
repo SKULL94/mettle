@@ -18,6 +18,7 @@ class PendingQuestion(TypedDict):
     total: int
     kind: str
     reason: str | None
+    must_cover: list[str]
 
 
 class InterviewState(TypedDict, total=False):

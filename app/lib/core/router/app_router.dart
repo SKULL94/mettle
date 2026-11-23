@@ -8,6 +8,7 @@ import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/history/presentation/pages/history_page.dart';
 import '../../features/interview/presentation/pages/interview_page.dart';
 import '../../features/interview/presentation/pages/scorecard_page.dart';
+import '../../features/pro/presentation/pages/pro_page.dart';
 import '../../features/progress/presentation/pages/progress_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
@@ -67,6 +68,11 @@ GoRouter createRouter() {
         name: AppRoutes.briefName,
         builder: (context, state) =>
             BriefPage(setup: _setupFrom(state.uri.queryParameters)),
+      ),
+      GoRoute(
+        path: AppRoutes.pro,
+        name: AppRoutes.proName,
+        builder: (context, state) => const ProPage(),
       ),
       GoRoute(
         path: AppRoutes.settings,

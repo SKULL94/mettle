@@ -65,6 +65,20 @@ async def _stream_generated(session_id: str, request: QuestionRequest) -> str:
     return "".join(pieces)
 
 
+SKIPPED_NOTE = "Skipped, so this question was not scored."
+
+
+def skipped_score(pending: PendingQuestion) -> TurnScore:
+    return TurnScore(
+        correctness=0,
+        depth=0,
+        clarity=0,
+        structure=0,
+        missing=list(pending.get("must_cover", [])),
+        notes=SKIPPED_NOTE,
+    )
+
+
 def should_probe(score: TurnScore, answer: str, follow_up_depth: int) -> bool:
     if follow_up_depth >= MAX_FOLLOW_UP_DEPTH:
         return False
@@ -145,6 +159,7 @@ async def ask_question(state: InterviewState) -> dict[str, Any]:
         total=total,
         kind=kind,
         reason=reason,
+        must_cover=seed.must_cover if seed else [],
     )
 
     await _emit(
@@ -177,16 +192,19 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
 
     await _emit(session_id, "grade.started", {})
 
-    level, topic = resolve(state["topic"])
-    score = await get_provider().grade(
-        GradeRequest(
-            topic_label=topic.label,
-            difficulty=level.id,
-            seniority=level.seniority,
-            question=pending["text"],
-            answer=state["last_answer"],
+    if not state["last_answer"].strip():
+        score = skipped_score(pending)
+    else:
+        level, topic = resolve(state["topic"])
+        score = await get_provider().grade(
+            GradeRequest(
+                topic_label=topic.label,
+                difficulty=level.id,
+                seniority=level.seniority,
+                question=pending["text"],
+                answer=state["last_answer"],
+            )
         )
-    )
 
     await _emit(
         session_id,

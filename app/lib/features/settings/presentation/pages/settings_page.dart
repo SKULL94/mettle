@@ -50,8 +50,6 @@ class _SettingsList extends StatelessWidget {
         AppDimens.xl,
       ),
       children: const [
-        AppearanceSection(),
-        SizedBox(height: AppDimens.xl),
         DataSection(),
         SizedBox(height: AppDimens.xl),
         AboutSection(),

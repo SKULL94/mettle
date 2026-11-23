@@ -11,6 +11,7 @@ import '../../features/dashboard/data/repositories/dashboard_repository_impl.dar
 import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
 import '../../features/dashboard/domain/usecases/get_summary.dart';
 import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
+import '../../features/progress/presentation/cubit/progress_cubit.dart';
 import '../../features/interview/data/datasources/interview_http_data_source.dart';
 import '../../features/interview/data/datasources/interview_remote_data_source.dart';
 import '../../features/interview/data/repositories/interview_repository_impl.dart';
@@ -93,7 +94,8 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton(() => SetThemeMode(sl()));
   sl.registerLazySingleton(() => ClearSessions(sl()));
 
-  sl.registerFactory(() => DashboardCubit(sl()));
+  sl.registerLazySingleton(() => DashboardCubit(sl()));
+  sl.registerLazySingleton(() => ProgressCubit(sl(), sl()));
   sl.registerLazySingleton(() => SettingsCubit(sl(), sl(), sl()));
 
   await _forgetUnrememberedSession();

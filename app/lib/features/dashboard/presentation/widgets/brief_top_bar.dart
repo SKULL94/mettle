@@ -38,8 +38,8 @@ class BriefTopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          MettleBrand(compact: compact),
-          const Spacer(),
+          Expanded(child: MettleBrand(compact: compact)),
+          const SizedBox(width: MettleSpace.s3),
           if (compact)
             IconButton(
               onPressed: onBack,
@@ -79,6 +79,7 @@ class _BackButtonState extends State<_BackButton> {
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: widget.onTap,
           child: Container(
             constraints: const BoxConstraints(

@@ -24,8 +24,8 @@ class ProgressPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ProgressCubit(sl(), sl())..load(),
+    return BlocProvider.value(
+      value: sl<ProgressCubit>()..load(),
       child: const ProgressView(),
     );
   }
@@ -62,7 +62,7 @@ class _ProgressBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () => context.read<ProgressCubit>().load(),
+      onRefresh: () => context.read<ProgressCubit>().refresh(),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
           AppDimens.md,

@@ -12,6 +12,7 @@ import '../../../../core/theme/mettle_text.dart';
 import '../../../../core/widgets/mettle/buttons.dart';
 import '../../../../core/widgets/shell/app_scaffold.dart';
 import '../../../../core/widgets/shell/shell_host.dart';
+import '../../../pro/presentation/pages/pro_page.dart';
 import '../../../../core/widgets/shell/shell_destination.dart';
 import '../../domain/entities/user_summary.dart';
 import '../cubit/dashboard_cubit.dart';
@@ -29,7 +30,7 @@ class DashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => sl<DashboardCubit>()..load()),
+        BlocProvider.value(value: sl<DashboardCubit>()..load()),
         BlocProvider(create: (_) => InterviewSetupCubit()),
       ],
       child: const DashboardView(),
@@ -96,6 +97,8 @@ class _Loaded extends StatelessWidget {
           state: shellStateFor(summary),
           onSelect: (destination) => context.go(destination.path),
           onAccount: (action) => onAccountAction(context, action),
+          onSeePlans: () => openPro(context),
+          onUpgrade: () => openPro(context),
           bottomBar: context.sizeClass.hasStickyCta && !summary.isExhausted
               ? StickyCtaBar(
                   summaryLine: followRecommendation
@@ -137,8 +140,8 @@ class _Loaded extends StatelessWidget {
                     pathParameters: {AppRoutes.idParam: item.sessionId},
                   ),
                   onViewAll: () => context.go(AppRoutes.history),
-                  onUpgrade: () {},
-                  onInvite: () {},
+                  onUpgrade: () => openPro(context),
+                  onInvite: () => openPro(context),
                   onSeeProgress: () => context.go(AppRoutes.progress),
                 ),
         );

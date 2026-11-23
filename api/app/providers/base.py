@@ -35,10 +35,10 @@ class GradeRequest(BaseModel):
 
 
 class TurnScore(BaseModel):
-    correctness: int = Field(ge=1, le=5)
-    depth: int = Field(ge=1, le=5)
-    clarity: int = Field(ge=1, le=5)
-    structure: int = Field(ge=1, le=5)
+    correctness: int = Field(ge=0, le=5)
+    depth: int = Field(ge=0, le=5)
+    clarity: int = Field(ge=0, le=5)
+    structure: int = Field(ge=0, le=5)
     missing: list[str] = Field(default_factory=list)
     notes: str = ""
 
@@ -62,7 +62,7 @@ class TurnScore(BaseModel):
 
     @property
     def is_non_answer(self) -> bool:
-        return all(getattr(self, name) == 1 for name in DIMENSIONS)
+        return all(getattr(self, name) <= 1 for name in DIMENSIONS)
 
 
 class LLMProvider(Protocol):

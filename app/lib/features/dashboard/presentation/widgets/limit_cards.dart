@@ -324,120 +324,41 @@ class LockedSetupCard extends StatelessWidget {
     final colors = context.colors;
     final styles = context.text;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(MettleSpace.rLg),
-      child: SurfaceCard(
-        padding: EdgeInsets.all(context.cardPadding),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: minHeight),
-          child: Stack(
-            children: [
-              const ExcludeSemantics(
-                child: IgnorePointer(
-                  child: Opacity(opacity: 0.28, child: _Preview()),
+    return SurfaceCard(
+      padding: EdgeInsets.all(context.cardPadding),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: minHeight),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: MettleSpace.s6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.lock_outline_rounded,
+                  size: 28,
+                  color: colors.accentText,
                 ),
-              ),
-              Positioned.fill(
-                child: ColoredBox(
-                  color: colors.surfaceCard.withValues(alpha: 0.55),
-                  child: Padding(
-                    padding: const EdgeInsets.all(MettleSpace.s6),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.lock_outline_rounded,
-                          size: 24,
-                          color: colors.accentText,
-                        ),
-                        const SizedBox(height: MettleSpace.s2),
-                        Text(
-                          AppStrings.lockedTitle,
-                          textAlign: TextAlign.center,
-                          style: styles.cardTitle,
-                        ),
-                        const SizedBox(height: MettleSpace.s2),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: bodyMaxWidth,
-                          ),
-                          child: Text(
-                            AppStrings.lockedBody,
-                            textAlign: TextAlign.center,
-                            style: styles.bodyMedium,
-                          ),
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: MettleSpace.s4),
+                Text(
+                  AppStrings.lockedTitle,
+                  textAlign: TextAlign.center,
+                  style: styles.cardTitle,
+                ),
+                const SizedBox(height: MettleSpace.s2),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: bodyMaxWidth),
+                  child: Text(
+                    AppStrings.lockedBody,
+                    textAlign: TextAlign.center,
+                    style: styles.bodyMedium,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Preview extends StatelessWidget {
-  const _Preview();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(AppStrings.lockedPreview, style: context.text.cardTitle),
-        const SizedBox(height: MettleSpace.s3),
-        const _GhostRow(count: 3, height: 52, selectedIndex: 1),
-        const SizedBox(height: MettleSpace.s3),
-        const _GhostRow(count: 4, height: 44),
-        const SizedBox(height: MettleSpace.s3),
-        const _GhostRow(count: 1, height: 48),
-      ],
-    );
-  }
-}
-
-class _GhostRow extends StatelessWidget {
-  const _GhostRow({
-    required this.count,
-    required this.height,
-    this.selectedIndex,
-  });
-
-  final int count;
-  final double height;
-  final int? selectedIndex;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Row(
-      children: [
-        for (var index = 0; index < count; index++) ...[
-          if (index > 0) const SizedBox(width: MettleSpace.s3),
-          Expanded(
-            child: Container(
-              height: height,
-              decoration: BoxDecoration(
-                color: index == selectedIndex
-                    ? colors.accentTint12
-                    : colors.surfaceRaised,
-                borderRadius: BorderRadius.circular(MettleSpace.rMd),
-                border: Border.all(
-                  color: index == selectedIndex
-                      ? colors.accent
-                      : colors.borderDefault,
-                  width: MettleSpace.border,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ],
     );
   }
 }

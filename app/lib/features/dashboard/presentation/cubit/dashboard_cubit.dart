@@ -25,6 +25,8 @@ final class DashboardCubit extends Cubit<DashboardState> {
     });
   }
 
+  void reset() => emit(const DashboardLoading());
+
   void dismissWarning() {
     final current = state;
     if (current is DashboardLoaded) emit(current.withWarning(null));

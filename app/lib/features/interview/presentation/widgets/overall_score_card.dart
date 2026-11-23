@@ -44,8 +44,12 @@ class OverallScoreCard extends StatelessWidget {
 
     final strongest = ranked.first;
     final weakest = ranked.last;
+
+    if (strongest.value == 0) return AppStrings.evaluatorNoteUnscored;
     if (strongest.value == weakest.value) {
-      return AppStrings.evaluatorNoteBalanced;
+      return strongest.value <= 1
+          ? AppStrings.evaluatorNoteFloor
+          : AppStrings.evaluatorNoteBalanced;
     }
 
     return AppStrings.evaluatorNote(

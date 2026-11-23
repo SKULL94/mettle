@@ -21,7 +21,7 @@ class ProgressDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageFrame(
-      onRefresh: () => context.read<ProgressCubit>().load(),
+      onRefresh: () => context.read<ProgressCubit>().refresh(),
       children: [
         PageHeader(
           eyebrow: AppStrings.navAnalytics,
@@ -29,7 +29,7 @@ class ProgressDashboard extends StatelessWidget {
           subtitle: AppStrings.progressSubtitle,
           actions: [
             OutlinedButton.icon(
-              onPressed: () => context.read<ProgressCubit>().load(),
+              onPressed: () => context.read<ProgressCubit>().refresh(),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(0, AppDimens.controlHeight),
               ),

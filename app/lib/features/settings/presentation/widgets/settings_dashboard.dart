@@ -17,7 +17,6 @@ typedef SettingsPane = ({String title, Widget Function(Key key) build});
 
 class _SettingsDashboardState extends State<SettingsDashboard> {
   static final _panes = <SettingsPane>[
-    (title: AppStrings.appearance, build: (key) => AppearanceSection(key: key)),
     (title: AppStrings.data, build: (key) => DataSection(key: key)),
     (title: AppStrings.about, build: (key) => AboutSection(key: key)),
   ];

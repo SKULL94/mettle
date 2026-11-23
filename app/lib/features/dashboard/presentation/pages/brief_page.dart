@@ -30,8 +30,8 @@ class BriefPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<DashboardCubit>()..load(),
+    return BlocProvider.value(
+      value: sl<DashboardCubit>()..load(),
       child: BriefView(setup: setup),
     );
   }

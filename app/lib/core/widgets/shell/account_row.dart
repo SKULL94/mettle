@@ -5,7 +5,7 @@ import '../../theme/mettle_colors.dart';
 import '../../theme/mettle_space.dart';
 import '../../theme/mettle_text.dart';
 
-enum AccountAction { profile, billing, signOut }
+enum AccountAction { settings, billing, signOut }
 
 class AccountRow extends StatelessWidget {
   const AccountRow({
@@ -115,7 +115,7 @@ class AccountMenuButton extends StatelessWidget {
         ),
       ),
       itemBuilder: (context) => [
-        _item(context, AccountAction.profile, AppStrings.shellProfile),
+        _item(context, AccountAction.settings, AppStrings.shellSettings),
         _item(context, AccountAction.billing, AppStrings.shellPlanBilling),
         _item(context, AccountAction.signOut, AppStrings.shellSignOut),
       ],

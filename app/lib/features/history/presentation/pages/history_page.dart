@@ -24,8 +24,8 @@ class HistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ProgressCubit(sl(), sl())..load(),
+    return BlocProvider.value(
+      value: sl<ProgressCubit>()..load(),
       child: const HistoryView(),
     );
   }
@@ -114,16 +114,22 @@ class _Stats extends StatelessWidget {
         .reduce((a, b) => a > b ? a : b);
     final total = sessions.fold(0, (sum, s) => sum + s.overallScore);
     final average = (total / sessions.length).round();
-    final questions = sessions.fold(0, (sum, s) => sum + s.questionCount);
+    final answered = sessions.fold(0, (sum, s) => sum + s.answeredCount);
+    final skipped = sessions.fold(0, (sum, s) => sum + s.skippedCount);
 
     final tiles = <({String label, String value})>[
       (label: AppStrings.historyCompleted, value: '${sessions.length}'),
       (label: AppStrings.historyAverage, value: '$average'),
       (label: AppStrings.historyBest, value: '$best'),
-      (label: AppStrings.historyAnswered, value: '$questions'),
+      (label: AppStrings.historyAnswered, value: '$answered'),
+      (label: AppStrings.historySkipped, value: '$skipped'),
     ];
 
-    final columns = context.sizeClass.isCompact ? 2 : 4;
+    final columns = switch (context.sizeClass) {
+      SizeClass.compact => 2,
+      SizeClass.medium => 3,
+      SizeClass.expanded => 5,
+    };
 
     return SurfaceCard(
       child: Column(

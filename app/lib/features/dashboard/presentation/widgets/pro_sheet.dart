@@ -5,6 +5,7 @@ import '../../../../core/theme/mettle_colors.dart';
 import '../../../../core/theme/mettle_space.dart';
 import '../../../../core/theme/mettle_text.dart';
 import '../../../../core/widgets/mettle/buttons.dart';
+import '../../../pro/presentation/pages/pro_page.dart';
 
 Future<void> showProSheet(BuildContext context) {
   final colors = context.colors;
@@ -32,7 +33,10 @@ Future<void> showProSheet(BuildContext context) {
             PrimaryButton(
               label: AppStrings.proSheetSeePlans,
               fullWidth: true,
-              onPressed: () => Navigator.of(sheetContext).pop(),
+              onPressed: () {
+                Navigator.of(sheetContext).pop();
+                openPro(context);
+              },
             ),
             const SizedBox(height: MettleSpace.s3),
             SecondaryButton(
