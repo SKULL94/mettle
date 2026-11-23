@@ -99,8 +99,8 @@ POST   /v1/sessions/{id}/answer          submit answer → 202
 POST   /v1/sessions/{id}/skip            skip current question → 202
 GET    /v1/sessions/{id}/scorecard       final scorecard
 GET    /v1/topics                        the difficulty-tiered topic catalogue
-GET    /v1/meta                          {version, model, demo_mode, configured}
-GET    /healthz                          liveness + provider + checkpointer
+GET    /v1/meta                          {version, model, configured}
+GET    /healthz                          liveness + model + checkpointer + configured
 ```
 
 ### Why answer-submit and streaming are separate calls
@@ -112,6 +112,15 @@ client on Flutter web. Two cheap round-trips beat a platform-specific transport 
 
 `POST /answer` takes a client-generated `turn_id` and is **idempotent** — a mobile retry after a
 dropped connection can't double-submit an answer.
+
+### Authentication (M2)
+
+M1 has **none** — `X-Device-Id` is accepted and, today, not even checked, so any caller holding a
+`session_id` can read or mutate that session. M2 closes this: a Supabase-issued JWT on
+`Authorization: Bearer`, verified locally against cached JWKS, with `sub` becoming the owner of
+every session and the prefix of every `thread_id`. Google and email sign-in produce identical
+tokens — the backend cannot distinguish them and must not try. Full design in
+[`auth-plan.md`](./auth-plan.md).
 
 ### SSE event protocol (versioned — the Flutter app depends on this)
 
@@ -313,8 +322,8 @@ configured — which is also what makes the badges meaningful rather than decora
 ## 10. Ops
 
 - Multi-stage `Dockerfile` on `uv`; `docker compose up` brings up api + Postgres with seeded data
-- `/healthz` liveness, `/v1/meta` exposing version + model + `demo_mode` so the app can show a
-  `DEMO MODE` chip truthfully
+- `/healthz` liveness, `/v1/meta` exposing version + model + `configured`, so a missing key is
+  visible without starting a session
 - CORS restricted to the GitHub Pages origin; HTTPS both ends
 - Structured JSON logs with a per-session correlation id; log the provider's `request_id` on failures
 - Deploy to Fly.io free tier; GitHub Actions runs lint + types + tests, then builds the image

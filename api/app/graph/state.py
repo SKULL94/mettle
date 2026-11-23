@@ -18,10 +18,12 @@ class PendingQuestion(TypedDict):
     total: int
     kind: str
     reason: str | None
+    must_cover: list[str]
 
 
 class InterviewState(TypedDict, total=False):
     session_id: str
+    user_id: str
     topic: str
     difficulty: str
     question_total: int
@@ -38,12 +40,14 @@ class InterviewState(TypedDict, total=False):
 
 def initial_state(
     session_id: str,
+    user_id: str,
     topic: str,
     difficulty: str,
     question_total: int,
 ) -> InterviewState:
     return InterviewState(
         session_id=session_id,
+        user_id=user_id,
         topic=topic,
         difficulty=difficulty,
         question_total=question_total,

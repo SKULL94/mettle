@@ -4,6 +4,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 DIMENSIONS = ("correctness", "depth", "clarity", "structure")
+SUBSTANTIVE_DIMENSIONS = ("correctness", "depth")
 
 
 class QuestionRequest(BaseModel):
@@ -20,6 +21,9 @@ class QuestionRequest(BaseModel):
     previous_question: str | None = None
     previous_answer: str | None = None
     asked: list[str] = Field(default_factory=list)
+    seed_scenario: str | None = None
+    seed_probes: str | None = None
+    seed_must_cover: list[str] = Field(default_factory=list)
 
 
 class GradeRequest(BaseModel):
@@ -31,10 +35,10 @@ class GradeRequest(BaseModel):
 
 
 class TurnScore(BaseModel):
-    correctness: int = Field(ge=1, le=5)
-    depth: int = Field(ge=1, le=5)
-    clarity: int = Field(ge=1, le=5)
-    structure: int = Field(ge=1, le=5)
+    correctness: int = Field(ge=0, le=5)
+    depth: int = Field(ge=0, le=5)
+    clarity: int = Field(ge=0, le=5)
+    structure: int = Field(ge=0, le=5)
     missing: list[str] = Field(default_factory=list)
     notes: str = ""
 
@@ -46,6 +50,19 @@ class TurnScore(BaseModel):
     def weakest_dimension(self) -> str:
         lowest = self.weakest
         return next(name for name in DIMENSIONS if getattr(self, name) == lowest)
+
+    @property
+    def weakest_substantive(self) -> int:
+        return min(getattr(self, name) for name in SUBSTANTIVE_DIMENSIONS)
+
+    @property
+    def weakest_substantive_dimension(self) -> str:
+        lowest = self.weakest_substantive
+        return next(name for name in SUBSTANTIVE_DIMENSIONS if getattr(self, name) == lowest)
+
+    @property
+    def is_non_answer(self) -> bool:
+        return all(getattr(self, name) <= 1 for name in DIMENSIONS)
 
 
 class LLMProvider(Protocol):

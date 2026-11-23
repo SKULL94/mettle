@@ -27,3 +27,15 @@ final class NotFoundFailure extends Failure {
 final class UnknownFailure extends Failure {
   const UnknownFailure([super.message = AppStrings.unknownError]);
 }
+
+final class AuthFailure extends Failure {
+  const AuthFailure([super.message = AppStrings.authFailed]);
+}
+
+final class AuthCancelledFailure extends Failure {
+  const AuthCancelledFailure([super.message = AppStrings.authCancelled]);
+}
+
+final class AuthRedirectingFailure extends Failure {
+  const AuthRedirectingFailure([super.message = AppStrings.authRedirecting]);
+}

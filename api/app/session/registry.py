@@ -23,6 +23,10 @@ _graph: Any = None
 _handles: dict[str, "SessionHandle"] = {}
 
 
+def thread_id(user_id: str, session_id: str) -> str:
+    return f"{user_id}:{session_id}"
+
+
 def set_graph(graph: Any) -> None:
     global _graph
     _graph = graph
@@ -40,7 +44,7 @@ class SessionHandle:
     topic: str
     difficulty: str
     question_total: int
-    device_id: str
+    user_id: str
     emitter: SessionEmitter
     started: bool = False
     finished: bool = False
@@ -51,7 +55,7 @@ class SessionHandle:
 
     @property
     def config(self) -> dict[str, Any]:
-        return {"configurable": {"thread_id": self.session_id}}
+        return {"configurable": {"thread_id": thread_id(self.user_id, self.session_id)}}
 
     async def snapshot(self) -> dict[str, Any]:
         state = await graph().aget_state(self.config)
@@ -65,6 +69,7 @@ class SessionHandle:
                 await self.inbox.put(
                     initial_state(
                         session_id=self.session_id,
+                        user_id=self.user_id,
                         topic=self.topic,
                         difficulty=self.difficulty,
                         question_total=self.question_total,
@@ -151,7 +156,7 @@ async def create(
     topic: str,
     difficulty: str,
     question_count: int,
-    device_id: str,
+    user_id: str,
 ) -> SessionHandle:
     session_id = f"sesn_{uuid.uuid4().hex[:16]}"
     handle = SessionHandle(
@@ -159,19 +164,23 @@ async def create(
         topic=topic,
         difficulty=difficulty,
         question_total=question_count,
-        device_id=device_id,
+        user_id=user_id,
         emitter=bus.register(session_id),
     )
     _handles[session_id] = handle
     return handle
 
 
-async def get(session_id: str) -> SessionHandle:
+async def get(session_id: str, user_id: str) -> SessionHandle:
     handle = _handles.get(session_id)
     if handle is not None:
+        if handle.user_id != user_id:
+            raise UnknownSession(session_id)
         return handle
 
-    state = await graph().aget_state({"configurable": {"thread_id": session_id}})
+    state = await graph().aget_state(
+        {"configurable": {"thread_id": thread_id(user_id, session_id)}}
+    )
     values = dict(state.values or {})
     if not values.get("topic"):
         raise UnknownSession(session_id)
@@ -182,7 +191,7 @@ async def get(session_id: str) -> SessionHandle:
         topic=str(values["topic"]),
         difficulty=str(values.get("difficulty") or "medium"),
         question_total=int(values.get("question_total") or 0),
-        device_id="",
+        user_id=user_id,
         emitter=bus.register(session_id),
         started=True,
         finished=values.get("scorecard") is not None,

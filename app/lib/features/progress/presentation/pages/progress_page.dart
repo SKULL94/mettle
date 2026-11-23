@@ -6,12 +6,16 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/page_frame.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/window_size.dart';
 import '../../../interview/presentation/widgets/session_setup_sheet.dart';
 import '../../../sessions/presentation/widgets/session_list.dart';
 import '../../domain/entities/progress_overview.dart';
 import '../cubit/progress_cubit.dart';
 import '../cubit/progress_state.dart';
+import '../widgets/progress_dashboard.dart';
 import '../widgets/topic_mastery_list.dart';
 import '../widgets/trend_card.dart';
 
@@ -20,8 +24,8 @@ class ProgressPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ProgressCubit(sl(), sl())..load(),
+    return BlocProvider.value(
+      value: sl<ProgressCubit>()..load(),
       child: const ProgressView(),
     );
   }
@@ -32,19 +36,19 @@ class ProgressView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.progressTitle)),
-      body: SafeArea(
-        child: BlocBuilder<ProgressCubit, ProgressState>(
-          builder: (context, state) => switch (state) {
-            ProgressLoading() => const _ProgressSkeleton(),
-            ProgressEmpty() => const _ProgressEmpty(),
-            ProgressLoaded(:final overview) => _ProgressBody(
-              overview: overview,
-            ),
-            ProgressError(:final message) => _ProgressError(message: message),
-          },
-        ),
+    final isWide = context.isWideWindow;
+
+    return SafeArea(
+      child: BlocBuilder<ProgressCubit, ProgressState>(
+        builder: (context, state) => switch (state) {
+          ProgressLoading() => const _ProgressSkeleton(),
+          ProgressEmpty() => const _ProgressEmpty(),
+          ProgressLoaded(:final overview) when isWide => ProgressDashboard(
+            overview: overview,
+          ),
+          ProgressLoaded(:final overview) => _ProgressBody(overview: overview),
+          ProgressError(:final message) => _ProgressError(message: message),
+        },
       ),
     );
   }
@@ -58,7 +62,7 @@ class _ProgressBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () => context.read<ProgressCubit>().load(),
+      onRefresh: () => context.read<ProgressCubit>().refresh(),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
           AppDimens.md,
@@ -111,33 +115,32 @@ class _ProgressEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final empty = EmptyState(
+      icon: Icons.trending_up_rounded,
+      title: AppStrings.progressEmptyTitle,
+      message: AppStrings.progressEmptyBody,
+      actionLabel: AppStrings.startSession,
+      onAction: () => _startSession(context),
+    );
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimens.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.progressEmptyTitle,
-              style: theme.textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimens.sm),
-            Text(
-              AppStrings.progressEmptyBody,
-              style: theme.textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimens.lg),
-            FilledButton(
-              onPressed: () => _startSession(context),
-              child: const Text(AppStrings.startSession),
-            ),
-          ],
+    if (!context.isWideWindow) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimens.lg),
+          child: empty,
         ),
-      ),
+      );
+    }
+
+    return PageFrame(
+      children: [
+        const PageHeader(
+          eyebrow: AppStrings.navAnalytics,
+          title: AppStrings.progressTitle,
+          subtitle: AppStrings.progressSubtitle,
+        ),
+        empty,
+      ],
     );
   }
 }

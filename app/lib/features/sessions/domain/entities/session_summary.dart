@@ -5,6 +5,7 @@ class SessionSummary {
     required this.overallScore,
     required this.completedAt,
     required this.questionCount,
+    this.skippedCount = 0,
   });
 
   final String id;
@@ -13,4 +14,7 @@ class SessionSummary {
   final int overallScore;
   final DateTime completedAt;
   final int questionCount;
+  final int skippedCount;
+
+  int get answeredCount => questionCount - skippedCount;
 }

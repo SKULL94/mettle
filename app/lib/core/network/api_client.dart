@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/api_constants.dart';
 import '../constants/app_strings.dart';
+import '../constants/supabase_constants.dart';
 import '../error/exceptions.dart';
 import '../storage/app_preferences.dart';
 
@@ -27,7 +29,15 @@ final class ApiClient {
   Future<Map<String, String>> headers({bool json = false}) async => {
     if (json) 'Content-Type': 'application/json',
     ApiConstants.deviceIdHeader: await _prefs.deviceId(),
+    ...?_authorization(),
   };
+
+  Map<String, String>? _authorization() {
+    if (!SupabaseConstants.isConfigured) return null;
+
+    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    return token == null ? null : {'Authorization': 'Bearer $token'};
+  }
 
   Future<Map<String, dynamic>> getJson(String path) async {
     final response = await _send(
@@ -61,9 +71,7 @@ final class ApiClient {
     _guard(response);
   }
 
-  Future<http.Response> _send(
-    Future<http.Response> Function() request,
-  ) async {
+  Future<http.Response> _send(Future<http.Response> Function() request) async {
     try {
       return await request().timeout(ApiConstants.connectTimeout);
     } on TimeoutException {

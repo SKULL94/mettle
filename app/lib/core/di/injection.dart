@@ -1,11 +1,17 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../features/home/data/repositories/home_repository_impl.dart';
-import '../../features/home/domain/repositories/home_repository.dart';
-import '../../features/home/domain/usecases/get_home_overview.dart';
-import '../../features/home/domain/usecases/watch_sessions.dart' as home;
-import '../../features/home/presentation/bloc/home_bloc.dart';
+import '../../features/auth/data/datasources/auth_remote_data_source.dart';
+import '../../features/auth/data/datasources/supabase_auth_data_source.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/dashboard/data/datasources/dashboard_remote_data_source.dart';
+import '../../features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
+import '../../features/dashboard/domain/usecases/get_summary.dart';
+import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
+import '../../features/progress/presentation/cubit/progress_cubit.dart';
 import '../../features/interview/data/datasources/interview_http_data_source.dart';
 import '../../features/interview/data/datasources/interview_remote_data_source.dart';
 import '../../features/interview/data/repositories/interview_repository_impl.dart';
@@ -21,12 +27,14 @@ import '../../features/progress/domain/usecases/get_progress_overview.dart';
 import '../../features/progress/domain/usecases/watch_sessions.dart'
     as progress;
 import '../../features/sessions/data/datasources/session_local_data_source.dart';
+import '../../features/sessions/data/datasources/supabase_session_data_source.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/clear_sessions.dart';
 import '../../features/settings/domain/usecases/get_theme_mode.dart';
 import '../../features/settings/domain/usecases/set_theme_mode.dart';
 import '../../features/settings/presentation/cubit/settings_cubit.dart';
+import '../constants/supabase_constants.dart';
 import '../network/api_client.dart';
 import '../storage/app_preferences.dart';
 
@@ -35,20 +43,35 @@ final sl = GetIt.instance;
 Future<void> configureDependencies() async {
   if (sl.isRegistered<SharedPreferences>()) return;
 
+  await _initSupabase();
+
   sl.registerSingleton<SharedPreferences>(
     await SharedPreferences.getInstance(),
   );
   sl.registerLazySingleton<AppPreferences>(() => AppPreferences(sl()));
 
+  sl.registerLazySingleton<AuthRemoteDataSource>(SupabaseAuthDataSource.new);
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(sl(), sl()),
+  );
+
   sl.registerLazySingleton<SessionLocalDataSource>(
-    () => SessionLocalDataSourceStored(sl()),
+    () => SupabaseConstants.isConfigured
+        ? SupabaseSessionDataSource(Supabase.instance.client)
+        : SessionLocalDataSourceStored(sl()),
   );
   sl.registerLazySingleton<ApiClient>(() => ApiClient(sl()));
   sl.registerLazySingleton<InterviewRemoteDataSource>(
     () => InterviewHttpDataSource(sl()),
   );
 
-  sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl(sl()));
+  sl.registerLazySingleton<DashboardRemoteDataSource>(
+    () => DashboardHttpDataSource(sl()),
+  );
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(sl()),
+  );
+
   sl.registerLazySingleton<ProgressRepository>(
     () => ProgressRepositoryImpl(sl()),
   );
@@ -59,8 +82,7 @@ Future<void> configureDependencies() async {
     () => SettingsRepositoryImpl(sl(), sl()),
   );
 
-  sl.registerLazySingleton(() => GetHomeOverview(sl()));
-  sl.registerLazySingleton(() => home.WatchSessions(sl()));
+  sl.registerLazySingleton(() => GetSummary(sl()));
   sl.registerLazySingleton(() => GetProgressOverview(sl()));
   sl.registerLazySingleton(() => progress.WatchSessions(sl()));
   sl.registerLazySingleton(() => StartSession(sl()));
@@ -72,8 +94,31 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton(() => SetThemeMode(sl()));
   sl.registerLazySingleton(() => ClearSessions(sl()));
 
-  sl.registerFactory(() => HomeBloc(sl(), sl()));
+  sl.registerLazySingleton(() => DashboardCubit(sl()));
+  sl.registerLazySingleton(() => ProgressCubit(sl(), sl()));
   sl.registerLazySingleton(() => SettingsCubit(sl(), sl(), sl()));
+
+  await _forgetUnrememberedSession();
+}
+
+var _supabaseReady = false;
+
+Future<void> _initSupabase() async {
+  if (!SupabaseConstants.isConfigured || _supabaseReady) return;
+
+  await Supabase.initialize(
+    url: SupabaseConstants.url,
+    publishableKey: SupabaseConstants.publishableKey,
+  );
+  _supabaseReady = true;
+}
+
+Future<void> _forgetUnrememberedSession() async {
+  if (!SupabaseConstants.isConfigured) return;
+  if (sl<AppPreferences>().rememberDevice()) return;
+  if (Supabase.instance.client.auth.currentSession == null) return;
+
+  await sl<AuthRepository>().signOut();
 }
 
 Future<void> resetDependencies() => sl.reset();

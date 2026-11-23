@@ -24,8 +24,15 @@ final class ProgressCubit extends Cubit<ProgressState> {
     return super.close();
   }
 
-  Future<void> load() async {
+  void reset() => emit(const ProgressLoading());
+
+  Future<void> refresh() async {
     emit(const ProgressLoading());
+    await load();
+  }
+
+  Future<void> load() async {
+    if (state is! ProgressLoaded) emit(const ProgressLoading());
 
     final result = await _getOverview(const NoParams());
     if (isClosed) return;

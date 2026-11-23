@@ -73,6 +73,11 @@ medium:
     - id: intermediate-dart
       label: Intermediate Dart
       covers: Mixins, extension methods, and the mounted check.
+    - id: misc
+      label: Misc Scenarios
+      covers: >-
+        Mixed scenario questions from real interviews - the cost of setState,
+        wiring one class into another, and the app lifecycle.
 
 hard:
   label: Hard

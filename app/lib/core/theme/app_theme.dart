@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_dimens.dart';
+import 'mettle_colors.dart';
 import 'score_colors.dart';
 
 abstract final class AppTheme {
+  static const sans = 'Inter';
+  static const mono = 'JetBrains Mono';
+
   static ThemeData dark() => _build(
     brightness: Brightness.dark,
     scheme:
@@ -63,10 +67,14 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      fontFamily: AppTheme.sans,
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       textTheme: text,
-      extensions: const <ThemeExtension<dynamic>>[ScoreColors.standard()],
+      extensions: const <ThemeExtension<dynamic>>[
+        ScoreColors.standard(),
+        MettleColors.dark(),
+      ],
 
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
@@ -285,7 +293,7 @@ abstract final class AppTheme {
   static TextStyle code(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return TextStyle(
-      fontFamily: 'JetBrains Mono',
+      fontFamily: AppTheme.mono,
       fontFamilyFallback: const <String>[
         'Consolas',
         'Menlo',

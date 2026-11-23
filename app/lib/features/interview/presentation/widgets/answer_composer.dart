@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -9,6 +10,7 @@ class AnswerComposer extends StatefulWidget {
     required this.isSubmitting,
     required this.onSubmit,
     required this.onSkip,
+    this.expand = false,
     super.key,
   });
 
@@ -16,10 +18,26 @@ class AnswerComposer extends StatefulWidget {
   final bool isSubmitting;
   final ValueChanged<String> onSubmit;
   final VoidCallback onSkip;
+  final bool expand;
 
   @override
   State<AnswerComposer> createState() => _AnswerComposerState();
 }
+
+const _block = DoNothingAndStopPropagationTextIntent();
+
+const _blocked = <ShortcutActivator, Intent>{
+  SingleActivator(LogicalKeyboardKey.keyC, control: true): _block,
+  SingleActivator(LogicalKeyboardKey.keyC, meta: true): _block,
+  SingleActivator(LogicalKeyboardKey.keyX, control: true): _block,
+  SingleActivator(LogicalKeyboardKey.keyX, meta: true): _block,
+  SingleActivator(LogicalKeyboardKey.keyV, control: true): _block,
+  SingleActivator(LogicalKeyboardKey.keyV, meta: true): _block,
+  SingleActivator(LogicalKeyboardKey.keyA, control: true): _block,
+  SingleActivator(LogicalKeyboardKey.keyA, meta: true): _block,
+  SingleActivator(LogicalKeyboardKey.insert, shift: true): _block,
+  SingleActivator(LogicalKeyboardKey.insert, control: true): _block,
+};
 
 class _AnswerComposerState extends State<AnswerComposer> {
   final _controller = TextEditingController();
@@ -49,18 +67,26 @@ class _AnswerComposerState extends State<AnswerComposer> {
 
   @override
   Widget build(BuildContext context) {
+    final field = Shortcuts(
+      shortcuts: _blocked,
+      child: TextField(
+        controller: _controller,
+        focusNode: _focus,
+        enabled: widget.enabled,
+        minLines: widget.expand ? null : 3,
+        maxLines: widget.expand ? null : 6,
+        expands: widget.expand,
+        textAlignVertical: TextAlignVertical.top,
+        textInputAction: TextInputAction.newline,
+        keyboardType: TextInputType.multiline,
+        contextMenuBuilder: (context, state) => const SizedBox.shrink(),
+        decoration: const InputDecoration(hintText: AppStrings.answerHint),
+      ),
+    );
+
     return Column(
       children: [
-        TextField(
-          controller: _controller,
-          focusNode: _focus,
-          enabled: widget.enabled,
-          minLines: 3,
-          maxLines: 6,
-          textInputAction: TextInputAction.newline,
-          keyboardType: TextInputType.multiline,
-          decoration: const InputDecoration(hintText: AppStrings.answerHint),
-        ),
+        if (widget.expand) Expanded(child: field) else field,
         const SizedBox(height: AppDimens.sm),
         Row(
           children: [

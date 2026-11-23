@@ -11,6 +11,8 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+question_bank.yaml
+question_seeds.yaml
 
 # IntelliJ related
 *.iml

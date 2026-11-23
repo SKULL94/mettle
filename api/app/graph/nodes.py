@@ -1,13 +1,21 @@
+import asyncio
+import logging
+import random
 from typing import Any
 
 from langgraph.types import interrupt
 
-from ..data.catalog import resolve
-from ..providers.base import DIMENSIONS, GradeRequest, QuestionRequest
+from ..data.catalog import Seed, Topic, resolve
+from ..providers.base import DIMENSIONS, GradeRequest, QuestionRequest, TurnScore
 from ..providers.factory import get_provider
 from ..session import bus
+from ..store import results
 from .rubric import MAX_FOLLOW_UP_DEPTH, WEAK_DIMENSION_THRESHOLD
 from .state import InterviewState, PendingQuestion, Turn
+
+log = logging.getLogger("mettle.graph")
+
+SCRIPTED_WORD_DELAY = 0.02
 
 
 async def _emit(session_id: str, event: str, data: dict[str, Any]) -> None:
@@ -16,8 +24,69 @@ async def _emit(session_id: str, event: str, data: dict[str, Any]) -> None:
         await emitter.emit(event, data)
 
 
-def should_probe(weakest: int, follow_up_depth: int) -> bool:
-    return weakest <= WEAK_DIMENSION_THRESHOLD and follow_up_depth < MAX_FOLLOW_UP_DEPTH
+def _shuffled(count: int, session_id: str, salt: str) -> list[int]:
+    order = list(range(count))
+    random.Random(f"{session_id}:{salt}").shuffle(order)
+    return order
+
+
+def scripted_question(topic: Topic, session_id: str, asked_count: int) -> str | None:
+    if asked_count >= len(topic.questions):
+        return None
+
+    order = _shuffled(len(topic.questions), session_id, "bank")
+    return topic.questions[order[asked_count]]
+
+
+def seed_for(topic: Topic, session_id: str, asked_count: int) -> Seed | None:
+    if not topic.seeds:
+        return None
+
+    order = _shuffled(len(topic.seeds), session_id, "seeds")
+    return topic.seeds[order[asked_count % len(order)]]
+
+
+async def _stream_scripted(session_id: str, text: str) -> str:
+    for position, word in enumerate(text.split()):
+        await _emit(
+            session_id,
+            "question.delta",
+            {"text": word if position == 0 else f" {word}"},
+        )
+        await asyncio.sleep(SCRIPTED_WORD_DELAY)
+    return text
+
+
+async def _stream_generated(session_id: str, request: QuestionRequest) -> str:
+    pieces: list[str] = []
+    async for piece in get_provider().stream_question(request):
+        pieces.append(piece)
+        await _emit(session_id, "question.delta", {"text": piece})
+    return "".join(pieces)
+
+
+SKIPPED_NOTE = "Skipped, so this question was not scored."
+
+
+def skipped_score(pending: PendingQuestion) -> TurnScore:
+    return TurnScore(
+        correctness=0,
+        depth=0,
+        clarity=0,
+        structure=0,
+        missing=list(pending.get("must_cover", [])),
+        notes=SKIPPED_NOTE,
+    )
+
+
+def should_probe(score: TurnScore, answer: str, follow_up_depth: int) -> bool:
+    if follow_up_depth >= MAX_FOLLOW_UP_DEPTH:
+        return False
+    if not answer.strip():
+        return False
+    if score.is_non_answer:
+        return False
+    return score.weakest_substantive <= WEAK_DIMENSION_THRESHOLD
 
 
 async def plan_interview(state: InterviewState) -> dict[str, Any]:
@@ -46,6 +115,11 @@ async def ask_question(state: InterviewState) -> dict[str, Any]:
 
     level, topic = resolve(state["topic"])
     previous = state["history"][-1] if state["history"] else None
+    seed = (
+        None
+        if is_follow_up
+        else seed_for(topic, session_id, state["asked_count"])
+    )
     request = QuestionRequest(
         topic=topic.id,
         topic_label=topic.label,
@@ -60,14 +134,22 @@ async def ask_question(state: InterviewState) -> dict[str, Any]:
         previous_question=previous["question"] if previous else None,
         previous_answer=previous["answer"] if previous else None,
         asked=[turn["question"] for turn in state["history"]],
+        seed_scenario=seed.scenario if seed else None,
+        seed_probes=seed.probes if seed else None,
+        seed_must_cover=seed.must_cover if seed else [],
     )
 
-    pieces: list[str] = []
-    async for piece in get_provider().stream_question(request):
-        pieces.append(piece)
-        await _emit(session_id, "question.delta", {"text": piece})
+    scripted = (
+        None
+        if is_follow_up
+        else scripted_question(topic, session_id, state["asked_count"])
+    )
+    text = (
+        await _stream_scripted(session_id, scripted)
+        if scripted is not None
+        else await _stream_generated(session_id, request)
+    )
 
-    text = "".join(pieces)
     question_id = f"q-{state['asked_count']}-{state['follow_up_depth']}"
 
     pending = PendingQuestion(
@@ -77,6 +159,7 @@ async def ask_question(state: InterviewState) -> dict[str, Any]:
         total=total,
         kind=kind,
         reason=reason,
+        must_cover=seed.must_cover if seed else [],
     )
 
     await _emit(
@@ -109,16 +192,19 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
 
     await _emit(session_id, "grade.started", {})
 
-    level, topic = resolve(state["topic"])
-    score = await get_provider().grade(
-        GradeRequest(
-            topic_label=topic.label,
-            difficulty=level.id,
-            seniority=level.seniority,
-            question=pending["text"],
-            answer=state["last_answer"],
+    if not state["last_answer"].strip():
+        score = skipped_score(pending)
+    else:
+        level, topic = resolve(state["topic"])
+        score = await get_provider().grade(
+            GradeRequest(
+                topic_label=topic.label,
+                difficulty=level.id,
+                seniority=level.seniority,
+                question=pending["text"],
+                answer=state["last_answer"],
+            )
         )
-    )
 
     await _emit(
         session_id,
@@ -143,7 +229,7 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
         score=score.model_dump(),
     )
 
-    probe = should_probe(score.weakest, state["follow_up_depth"])
+    probe = should_probe(score, state["last_answer"], state["follow_up_depth"])
     history = [*state["history"], turn]
 
     if probe:
@@ -152,7 +238,7 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
             "pending": None,
             "probe": True,
             "follow_up_depth": state["follow_up_depth"] + 1,
-            "follow_up_reason": score.weakest_dimension,
+            "follow_up_reason": score.weakest_substantive_dimension,
         }
 
     asked_count = state["asked_count"] + 1
@@ -165,6 +251,17 @@ async def grade_answer(state: InterviewState) -> dict[str, Any]:
         "asked_count": asked_count,
         "questions_remaining": max(state["question_total"] - asked_count, 0),
     }
+
+
+async def _persist(scorecard: dict[str, Any], state: InterviewState) -> None:
+    try:
+        await results.save(
+            scorecard,
+            user_id=state.get("user_id") or "",
+            question_total=state["question_total"],
+        )
+    except Exception:
+        log.exception("could not persist session=%s", state["session_id"])
 
 
 async def summarize(state: InterviewState) -> dict[str, Any]:
@@ -195,6 +292,8 @@ async def summarize(state: InterviewState) -> dict[str, Any]:
         "missing": missing,
         "turns": history,
     }
+
+    await _persist(scorecard, state)
 
     await _emit(
         state["session_id"],

@@ -31,6 +31,13 @@ class SessionRecordModel {
   int get questionCount =>
       turns.where((turn) => !turn.question.isFollowUp).length;
 
+  int get skippedCount => turns
+      .where(
+        (turn) =>
+            !turn.question.isFollowUp && (turn.answer ?? '').trim().isEmpty,
+      )
+      .length;
+
   TurnScore get dimensions {
     final scores = turns.map((turn) => turn.score).whereType<TurnScore>();
 
@@ -53,6 +60,7 @@ class SessionRecordModel {
     id: id,
     topic: topic,
     overallScore: dimensions.overall,
+    skippedCount: skippedCount,
     completedAt: completedAt,
     questionCount: questionCount,
   );

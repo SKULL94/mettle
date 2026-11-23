@@ -177,8 +177,8 @@ able to make out loud in an interview.
 The app's `initialLocation`. It does real bootstrap work, then replaces itself with Home.
 
 - Wordmark + accent glyph, centered on `bg`, no spinner
-- Runs in parallel: `configureDependencies()`, open the Drift database, read theme preference, read
-  API base URL, generate-or-load the anonymous device id
+- Runs in parallel: `configureDependencies()`, read theme preference, generate-or-load the anonymous
+  device id
 - On completion: `context.go(AppRoutes.home)` — `go`, not `push`, so splash leaves the stack and
   back-from-Home exits the app
 
@@ -189,8 +189,39 @@ The app's `initialLocation`. It does real bootstrap work, then replaces itself w
 | Done | Replaces itself with `/` |
 
 **No artificial delay.** A timed splash that waits to look impressive is a tell — real work or
-nothing. Pair it with `flutter_native_splash` using the same `#0E0E11` ground so Android cold start
-goes native-splash → Flutter-splash → Home with no white flash between.
+nothing.
+
+**`main()` owns nothing but `runApp`.** `SplashCubit` is created in `MettleApp` and provided above
+`MaterialApp.router`, so the bootstrap it kicks off is the *only* place DI is built. Awaiting
+`configureDependencies()` in `main()` instead would leave the splash with nothing to do — it would
+emit `SplashReady` a microtask after its first build and vanish inside one frame, which is exactly
+what it did until this was moved.
+
+The cost is that the first frame has no `SettingsCubit` to read a theme from. `MettleApp` renders in
+`AppThemeMode.defaultMode` (dark) until bootstrap completes and only then subscribes to
+`SettingsCubit` — correct for free, because dark *is* the default, so a stored `light` preference
+resolves on the same frame the splash hands over rather than flashing.
+
+`SplashPage` reads the provided cubit rather than creating its own, and re-checks the current state
+in `initState`: `BlocListener` only fires on *transitions*, so a route that mounts after bootstrap
+already finished would otherwise sit on the wordmark forever.
+
+**The native window carries no artwork — branding is the Flutter splash's job.** The launch window
+is a flat `#0E0E11` fill, so cold start is dark ground → wordmark + tagline → Home, with no flash
+and nothing to drift out of sync with the Flutter mark.
+
+Android 12 replaced the launch window with a platform splash API that positions a single icon for
+you, so native artwork would have rendered differently above and below API 31 — two code paths and
+two asset pipelines for something the Flutter splash shows a beat later anyway.
+
+- **API ≤ 30** — `drawable/launch_background.xml` is the splash colour alone.
+- **API 31+** — `values-v31/styles.xml` sets only `windowSplashScreenBackground`; the platform draws
+  the launcher icon on that ground, which cannot be opted out of.
+
+`LaunchTheme` *and* `NormalTheme` are both dark. `NormalTheme` is the window behind Flutter once the
+engine starts, so a light colour there shows through during the handover even when the launch
+drawable is correct. `values-night/` is identical to `values/` on purpose — the app is dark by
+default whatever the system setting is, so following the system would reintroduce the flash.
 
 *Proves:* correct async bootstrap ordering, DI composition root, and that you know `go` from `push`.
 
@@ -282,10 +313,14 @@ anonymous practice tool and starts being *your* practice tool.
 
 #### Auth
 
+Full design in [`auth-plan.md`](./auth-plan.md).
+
 - **`Splash`** — gains a real decision instead of always landing on Home: restore a session, or route
   to sign-in. The async bootstrap already exists; this adds one branch.
-- **`SignIn` `/sign-in`** — email plus at least one provider. No password-reset screens hand-rolled;
-  lean on the provider.
+- **`SignIn` `/sign-in`** — **built**. A Sign in / Sign up segmented pair, *Continue with Google*, an
+  email and password form with inline validation, show/hide password, *Forgot password?*, and a
+  remember-this-device checkbox. Supabase owns hashing, reset tokens and rate limiting; the app owns
+  the screens. Full design in [`auth-plan.md`](./auth-plan.md).
 - The backend's `X-Device-Id` becomes a fallback rather than the whole identity story. A real user id
   means scores follow the person across devices — the thing device-local storage cannot do.
 
@@ -399,7 +434,7 @@ from one small helper. Disproportionate visual coverage for an afternoon.
 | | Scope | Proves |
 |---|---|---|
 | **M1** · wk 1 | Splash · Home · setup sheet · Interview · Scorecard. Text only, no auth, difficulty-tiered topics. End-to-end on a real device. | It's real and it runs |
-| **M2** · wk 2–3 | Auth + onboarding (stack · experience · focus), personalised Home, Progress charts, History, voice + waveform | Product thinking, not just screens |
+| **M2** · wk 2–3 | Auth (Google + email) + onboarding (stack · experience · focus), personalised Home, Progress charts, History, voice + waveform | Product thinking, not just screens |
 | **M3** · wk 4 | Multi-stack catalogues, JD-targeted questions, checkpointer resume, human-in-the-loop, deployed web build | Agent depth + a live link |
 
 Each milestone ships as a tagged release with a changelog entry. `v0.1.0 → v0.3.0` reads as

@@ -6,10 +6,12 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/widgets/window_size.dart';
 import '../bloc/interview_bloc.dart';
 import '../bloc/interview_event.dart';
 import '../bloc/interview_state.dart';
 import '../widgets/answer_composer.dart';
+import '../widgets/interview_workspace.dart';
 import '../widgets/previous_answer.dart';
 import '../widgets/question_card.dart';
 
@@ -45,13 +47,15 @@ class InterviewView extends StatelessWidget {
         AppRoutes.scorecardName,
         pathParameters: {AppRoutes.idParam: state.sessionId},
       ),
-      child: Scaffold(
-        appBar: const _InterviewAppBar(),
-        body: SafeArea(
-          child: BlocBuilder<InterviewBloc, InterviewState>(
-            builder: (context, state) => _InterviewBody(state: state),
-          ),
-        ),
+      child: BlocBuilder<InterviewBloc, InterviewState>(
+        builder: (context, state) {
+          if (context.isWideWindow) return InterviewWorkspace(state: state);
+
+          return Scaffold(
+            appBar: const _InterviewAppBar(),
+            body: SafeArea(child: _InterviewBody(state: state)),
+          );
+        },
       ),
     );
   }
@@ -121,7 +125,7 @@ class _InterviewBody extends StatelessWidget {
               if (state.status == InterviewStatus.connecting &&
                   !state.showsTranscript) ...[
                 const SizedBox(height: AppDimens.md),
-                const _StatusLine(label: AppStrings.preparingInterview),
+                const StatusLine(label: AppStrings.preparingInterview),
               ],
               if (previous != null) ...[
                 const SizedBox(height: AppDimens.xl),
@@ -130,7 +134,16 @@ class _InterviewBody extends StatelessWidget {
             ],
           ),
         ),
-        if (state.error != null) _InlineError(message: state.error!),
+        if (state.error != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimens.md,
+              0,
+              AppDimens.md,
+              AppDimens.md,
+            ),
+            child: InlineError(message: state.error!),
+          ),
         if (state.status == InterviewStatus.submitting)
           const Padding(
             padding: EdgeInsets.fromLTRB(
@@ -139,7 +152,7 @@ class _InterviewBody extends StatelessWidget {
               AppDimens.md,
               AppDimens.sm,
             ),
-            child: _StatusLine(label: AppStrings.grading),
+            child: StatusLine(label: AppStrings.grading),
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -158,74 +171,6 @@ class _InterviewBody extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _StatusLine extends StatelessWidget {
-  const _StatusLine({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Row(
-      children: [
-        SizedBox(
-          width: AppDimens.iconSm,
-          height: AppDimens.iconSm,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        const SizedBox(width: AppDimens.sm),
-        Flexible(child: Text(label, style: theme.textTheme.labelSmall)),
-      ],
-    );
-  }
-}
-
-class _InlineError extends StatelessWidget {
-  const _InlineError({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppDimens.md,
-        0,
-        AppDimens.md,
-        AppDimens.md,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimens.md,
-        vertical: AppDimens.sm,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(AppDimens.radius),
-        border: Border.all(
-          color: theme.colorScheme.error,
-          width: AppDimens.hairline,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: Text(message, style: theme.textTheme.bodySmall)),
-          TextButton(
-            onPressed: () =>
-                context.read<InterviewBloc>().add(const InterviewRetried()),
-            child: const Text(AppStrings.dismiss),
-          ),
-        ],
-      ),
     );
   }
 }

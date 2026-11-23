@@ -1,5 +1,9 @@
 # Mettle
 
+> **Active branch: `phase-1/web-dashboard`** — the dashboard redesign and the new app shell. Branch
+> off this, not `main`; it is ahead of `main` by the whole redesign. The branch before it was
+> `phase-1/web-app` (web layouts, scorecard tab, Google sign-in on web).
+
 **AI mock interviews for mobile/Flutter engineers.** Pick a topic, get interviewed by an agent that
 probes deeper when an answer is thin, and get a rubric-scored breakdown with your progress tracked
 over time.
@@ -9,24 +13,34 @@ Flutter app (Android · Web) + FastAPI/LangGraph backend in one repo.
 > The differentiator is **measurement, not chat**. Anything can ask questions. This scores answers
 > against a fixed rubric and shows the trend across sessions.
 
-<!-- Demo GIF goes here once M1 ships — top of the README, before anything else. -->
+<!-- Demo GIF goes here — M1 is complete, so this is the next thing to add. Record on a real phone:
+     pick topic → question streams in → answer → follow-up fires → scorecard. -->
 
 ---
 
 ## 🚧 Status
 
-**In active development — M1 in progress.** This README documents the architecture as designed and
-agreed; the sections below mark what is implemented versus planned so nothing here overstates what
-you'll find if you clone it.
+**In active development — M1 complete, M2 started.** This README documents the architecture as
+designed and agreed; the sections below mark what is implemented versus planned so nothing here
+overstates what you'll find if you clone it.
 
 | Milestone | Scope | Status |
 |---|---|---|
-| **M1** | Splash · Home · Interview · Scorecard · Progress (basic) · Settings (basic). Text only, no auth, difficulty-tiered topics, end to end | 🚧 In progress |
-| **M2** | Auth · onboarding (stack · experience · focus) · personalised Home · voice answers + waveform · progress filters | ⬜ Planned |
+| **M1** | Splash · Home · Interview · Scorecard · Progress (basic) · Settings (basic). Text only, difficulty-tiered topics, end to end | ✅ Complete |
+| **M2** | **Auth (Google + email) ✅** · Supabase-backed session history ✅ · **Supabase Postgres store ✅** · **redesigned dashboard + web shell ✅** · **verbatim question bank ✅** · onboarding (stack · experience · focus) · voice answers + waveform · progress filters · Pro plan | 🚧 In progress |
 | **M3** | Multi-stack catalogues · JD-targeted questions · checkpointer resume · human-in-the-loop · deployed web build | ⬜ Planned |
 
+Auth landed ahead of schedule, so it is marked against M2 but is already in the app. Postgres also
+arrived early: sessions, turns and quota now live in **Supabase Postgres** (session pooler, IPv4)
+rather than SQLite, and the schema is applied on startup. **The backend is still not deployed** —
+running an interview needs the API on your own machine.
+
+The old `Home` feature and its `AppShell`/`AppSidebar` chrome were **deleted** on this branch; the
+dashboard replaced them, and `/` now redirects to `/dashboard`.
+
 Design docs are checked in and current: [product & UI plan](docs/product-plan.md) ·
-[backend architecture](docs/backend-plan.md) · [Flutter conventions](CONVENTIONS.md).
+[backend architecture](docs/backend-plan.md) · [auth & data plan](docs/auth-plan.md) ·
+[Flutter conventions](CONVENTIONS.md).
 
 ---
 
@@ -52,8 +66,14 @@ or doesn't. Split across two repos, every contract tweak becomes a coordinated t
 window where `main` is broken on one side. This matters much less by M3 — it matters a lot today.
 
 **Explicitly out of scope for Phase 1:** voice input · question coverage · progress filters and date
-ranges · a configurable API URL · accounts · notifications · role/JD onboarding · auth · Postgres ·
-iOS device testing · running without an API key.
+ranges · a configurable API URL · notifications · role/JD onboarding · iOS device testing · running
+without an API key.
+
+Postgres was on this list and also came in early — the session store moved to Supabase Postgres so
+that mobile and web read the same data for one account.
+
+Accounts were on this list and came in early — see [Why login came
+second](#why-login-came-second).
 
 Progress and Settings **are** in Phase 1, in their basic form — the list above is what gets cut from
 them, not the screens themselves. Both are cheap on top of what already exists: Progress reads the
@@ -68,7 +88,7 @@ Naming that list is what keeps Phase 1 finishable. Ships as tag **`v0.1.0`** wit
 
 | Target | Status | Notes |
 |---|---|---|
-| **Android** | ✅ Primary, developed and tested | Main development target |
+| **Android** | ✅ Primary, developed and run on device | Main development target |
 | **Web** | ✅ Primary | Built with `--wasm`; the public demo surface |
 | **iOS** | ⚠️ **Compile-verified in CI only — not device-tested** | See below |
 | Desktop | ❌ Not a target | Cost without payoff for this product |
@@ -87,27 +107,32 @@ than shipping a mic button that silently fails.
 
 ---
 
-## Why there's no login screen *yet*
+## Why login came second
 
-**There is no authentication in M1** — no signup, no password reset, no OAuth. Splash goes straight
-to Home on every launch. **M2 adds sign-in and onboarding**; this section is why it ships second
-rather than first, and the ordering is deliberate:
+**Sign-in now exists** — Supabase-backed, with Google and email/password, password reset, and a
+remember-this-device toggle. Splash checks for an existing session and routes to Sign-in or Home.
+When Supabase credentials are supplied, session history persists to Supabase instead of device
+storage; without them the app falls back to local storage and the auth calls report themselves as
+unconfigured.
 
-- **Identity is device-local.** Sessions and scores live in a local database on the device. There's
-  no account to create and nothing lost by not having one.
-- **The API needs no user table, no JWT, no refresh-token flow, no session middleware.** It accepts
-  an anonymous device id whose only job is scoping a LangGraph checkpoint thread. That's the entire
+It shipped *after* the interview loop rather than before it, and that ordering was deliberate:
+
+- **Identity started device-local.** Sessions and scores lived in a local database first, so there
+  was always something working to attach an account to.
+- **The API still needs no user table, no JWT, no session middleware.** It accepts an anonymous
+  device id whose only job is scoping a LangGraph checkpoint thread. That's the entire backend
   identity story — it partitions data, it doesn't authenticate anyone, and the code says so.
-- **Zero friction to try it.** Open the web demo and you're interviewing in seconds. An auth wall in
-  front of a demo app loses most of its visitors.
 - **It's where the interesting work isn't.** CRUD-plus-login is the most commonly built portfolio
-  project there is. Skipping it spent that time on the streaming UI, the agent graph, and the scoring
-  rubric instead.
+  project there is. Deferring it spent that time on the streaming UI, the agent graph, and the
+  scoring rubric instead.
+- **Local-first made the account a sync mechanism, not a prerequisite.** The storage layer behind
+  Home, Progress and Settings is one interface with two implementations, so adding accounts swapped
+  a data source rather than rewriting the features above it.
 
-**M2 adds accounts, a first-run flow, and a Home personalised to your stack and experience level** —
-layered on top of working local storage rather than placed as a gate in front of it. The sequencing is
-the point: local storage already works, so an account becomes a sync mechanism rather than a
-prerequisite, and the onboarding flow stays skippable with defaults that work.
+**Known gaps, being honest about them:** there is no guest path — the sign-in screen is currently a
+gate, so the app needs Supabase credentials configured to get past it (see [Quick
+start](#quick-start)). Sign-out now has a control, in the account menu at the foot of the sidebar.
+The guest path is M2 work alongside onboarding.
 
 ---
 
@@ -115,13 +140,17 @@ prerequisite, and the onboarding flow stays skippable with defaults that work.
 
 | Screen | Purpose |
 |---|---|
-| **Splash** | Real async bootstrap — DI, local DB, prefs, device id — then replaces itself with Home. No artificial delay. |
-| **Home** | Average-score ring, score sparkline, recent sessions, weak-topic chips, start CTA |
+| **Splash** | Real async bootstrap — DI, Supabase, prefs, device id — then routes to Sign-in or Dashboard depending on whether a session already exists. |
+| **Sign-in** | Google and email/password, sign-up, password reset, show/hide password, and a remember-this-device toggle that signs you out on next launch when off |
+| **Dashboard** | Three states driven by `GET /v1/me/summary`: **first visit** (how-it-works + interview setup), **returning** (recommended-next topic, readiness ring, set-up-your-own, recent interviews), and **free limit reached** (first-vs-latest score delta, Pro offer, locked setup) |
+| **Brief** | Pre-interview confirmation — topic, level, question count, duration, and when the free credit is actually spent |
+| **History** | Every finished interview grouped by month, with completed/average/best/questions-answered tiles; any row opens its scorecard |
 | **Interview** | The core loop: streaming questions, `Q 3 of 5` progress, answer input, and a **`↳ FOLLOW-UP`** badge when the agent decides to probe deeper instead of advancing |
 | **Scorecard** | Per-dimension rubric scores (correctness · depth · clarity · structure), overall ring, what was missing, next steps |
-| **Progress** | Score trend across your last 10 sessions, topic mastery rows with average and band, and a session history that opens any past scorecard |
+| **Progress** | Score trend across your last 10 sessions, topic mastery rows with average and band |
 | **Settings** | Appearance (system · light · dark), a read-only demo-mode row, clear stored data behind a confirmation, and app version |
-| History filters · coverage · API endpoint | M2 — the parts of Progress and Settings deliberately cut from Phase 1 |
+| **Settings** | Reached from the account menu rather than a nav tab |
+| History filters · coverage · API endpoint · Pro checkout | Still to come — `onUpgrade`/`onInvite` on the Pro card are deliberate no-ops |
 
 Every screen implements all four states — loading, empty, error, loaded — not just the happy path.
 Skeletons, never centered spinners.
@@ -147,9 +176,9 @@ lib/
 |---|---|
 | State management | `flutter_bloc` — one bloc per feature, sealed states, `Cubit` where there are no meaningful events |
 | Dependency injection | `get_it`, manual registration in one file — explicit and greppable, no codegen |
-| Navigation | `go_router` with `StatefulShellRoute`; navigate by name, pass IDs not objects |
+| Navigation | `go_router`, flat routes; the sidebar/bottom-nav chrome is a widget (`AppScaffold` + `ShellHost`), not a `StatefulShellRoute` |
 | Error handling | A hand-rolled sealed `Result<T>` + Dart 3 pattern matching — no `dartz`, no extra dependency |
-| Theming | Material 3, light + dark from one seed, built before the first screen |
+| Theming | Material 3 light + dark from one seed, plus the Mettle design-token layer (`MettleColors` as a `ThemeExtension`, `MettleText`, `MettleSpace`, `SizeClass`) that the dashboard and shell are built on |
 
 Two conventions worth calling out, both documented in [`CONVENTIONS.md`](CONVENTIONS.md):
 
@@ -157,7 +186,7 @@ Two conventions worth calling out, both documented in [`CONVENTIONS.md`](CONVENT
   small. Dart 3 sealed classes cover it without a build step. This was the single biggest lever on
   keeping the codebase pleasant to work in.
 - **`Page` / `View` split** — `*Page` is the route boundary that reads DI and provides the bloc;
-  `*View` is pure UI with no dependencies, which is what makes it widget-testable. `sl<T>()` appears
+  `*View` is pure UI with no dependencies, which keeps DI out of the widget tree. `sl<T>()` appears
   in exactly one place per feature.
 
 ---
@@ -192,12 +221,21 @@ That routing decision travels to the client as a first-class SSE event, which is
 ### HTTP surface
 
 ```
-POST /v1/sessions                     create a session
-GET  /v1/sessions/{id}/turns/stream   SSE — question tokens + grade events
-POST /v1/sessions/{id}/answer         submit an answer (idempotent on turn_id)
-GET  /v1/sessions/{id}/scorecard      final scorecard
-GET  /v1/meta                         version · model · demo_mode
+POST   /v1/sessions                     create a session
+GET    /v1/sessions/{id}                current session state
+GET    /v1/sessions/{id}/turns/stream   SSE — question tokens + grade events
+POST   /v1/sessions/{id}/answer         submit an answer (idempotent on turn_id)
+POST   /v1/sessions/{id}/skip           skip the current question
+GET    /v1/sessions/{id}/scorecard      final scorecard
+DELETE /v1/sessions/{id}                delete a session
+GET    /v1/me/summary                   dashboard payload — plan · free credits · readiness ·
+                                        topic statuses · recent interviews · recommended next
+GET    /v1/topics                       topic catalogue
+GET    /v1/meta                         version · model · configured
 ```
+
+**Free credits are spent on first submission, not on session create** — answering or skipping the
+first question books the credit, so abandoning a brief costs nothing.
 
 Answer submission and streaming are **separate calls** on purpose: a POST returning
 `text/event-stream` is more elegant, but `EventSource` on the web is GET-only, and web is a primary
@@ -264,15 +302,37 @@ ANTHROPIC_API_KEY=sk-ant-...
 ANTHROPIC_MODEL=claude-haiku-4-5    # or claude-sonnet-5 for stronger grading
 ```
 
-Leave `LLM_PROVIDER` commented out — the backend selects the live provider automatically when a key
-is present. `.env` is gitignored; never commit it, and never pass it to `--dart-define-from-file`
-(those values are compiled into the app binary).
+There is one provider and no offline mode, so the key is the only switch — `.env` is gitignored;
+never commit it, and never pass it to `--dart-define-from-file` (those values are compiled into the
+app binary).
 
-### 2. Run the backend
+### 2. Configure sign-in
+
+**The app opens on a sign-in screen and there is no guest path yet**, so Supabase credentials are
+required to reach Home. The shipped `dart_defines/emulator.json` and `dart_defines/device.json`
+carry only `METTLE_BASE_URL` — copy the Supabase and Google client-id keys from
+`dart_defines/local.json.example` into whichever file you run with:
+
+```json
+{
+  "METTLE_BASE_URL": "http://10.0.2.2:8000",
+
+  "SUPABASE_URL": "https://<project-ref>.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_...",
+
+  "GOOGLE_WEB_CLIENT_ID": "<web-client-id>.apps.googleusercontent.com"
+}
+```
+
+Google sign-in additionally needs the OAuth redirect `com.zeeshanhaider.mettle://login-callback`
+registered in the Supabase project. With no Supabase keys supplied the app still builds and runs,
+but the auth calls report themselves as unconfigured and the sign-in screen cannot be passed.
+
+### 3. Run the backend
 
 ```bash
 docker compose up -d          # http://localhost:8000
-curl localhost:8000/v1/meta   # expect "demo_mode":false and your model
+curl localhost:8000/v1/meta   # expect "configured":true and your model
 ```
 
 Without Docker:
@@ -284,7 +344,7 @@ cd api && uv sync && uv run uvicorn app.main:app --port 8000
 Run **one instance with one worker** — session state and the SSE queue live in process memory, so a
 second worker breaks the answer/stream pairing. `docker compose down` stops it.
 
-### 3. Run the app
+### 4. Run the app
 
 **Android emulator** — `10.0.2.2` is the emulator's alias for your host:
 
@@ -324,8 +384,10 @@ at build time, so it must be rebuilt if your router hands out a different IP.
 - `METTLE_BASE_URL` is a **compile-time** constant. Changing it needs a restart, not a hot reload.
 - Plain HTTP to a LAN address only works in **debug** builds. Release builds are HTTPS-only by
   design, so a release APK needs a deployed backend.
-- Interviews need the backend running. Home, Progress, Settings and past scorecards read device-local
-  storage and work with it switched off.
+- Interviews need the backend running. History, Progress, Settings and past scorecards read the
+  session store and work with the backend switched off — from device-local storage when Supabase is
+  unconfigured, from Supabase (so, with network) when it is. **The dashboard is the exception**: it
+  reads `GET /v1/me/summary`, so it needs the API up.
 
 ---
 
@@ -334,8 +396,7 @@ at build time, so it must be rebuilt if your router hands out a different IP.
 ```
 ├── app/              Flutter application          ✅ in place
 │   ├── lib/core/         constants · theme · result · error · router · di · storage · widgets
-│   ├── lib/features/     splash · home · interview · progress · settings
-│   └── test/             mirrors lib/
+│   └── lib/features/     splash · auth · dashboard · history · interview · sessions · progress · settings
 ├── api/              FastAPI + LangGraph service  ✅ in place
 ├── docs/             product plan · backend architecture
 ├── CONVENTIONS.md    Flutter conventions (binding, enforced in review)
@@ -347,29 +408,13 @@ folders are deliberately absent rather than carried along unused.
 
 ---
 
-## Testing & CI
-
-| Layer | Tooling | Asserts |
-|---|---|---|
-| Graph routing | pytest | **A weak answer routes to a follow-up; a strong one advances** — the most important test in the repo |
-| Graph resume | pytest | Interrupt, rebuild from checkpointer, continue with state intact |
-| API routes | `httpx.AsyncClient` | Contract + SSE event names and ordering |
-| Use cases / repositories | `mocktail` | Exception → `Failure` mapping, cache fallback |
-| Blocs | `bloc_test` | Exact emitted state sequence, success and failure paths |
-| Widgets | `flutter_test` | Each sealed state renders correctly |
-| Key screens | golden tests | Light + dark × compact + expanded |
-
-CI makes **no network calls** and needs **no secrets**: `flutter analyze --fatal-infos`,
-`dart format --set-exit-if-changed`, `flutter test`, `ruff`, `mypy --strict`, `pytest`, plus the
-dependency-rule guard and the iOS compile check.
-
----
-
 ## Roadmap
 
-- **M1** — complete text-only loop, difficulty-tiered topics, basic Progress and Settings
-- **M2** — accounts and onboarding (stack · experience · focus), a personalised Home, voice answers
-  with a custom-painted waveform, progress filters
+- **M1** ✅ — complete text-only loop, difficulty-tiered topics, basic Progress and Settings
+- **M2** 🚧 — accounts (Google + email) ✅, Supabase session history ✅, Supabase Postgres store ✅,
+  redesigned dashboard and web shell ✅, verbatim question bank ✅; still to come: a guest path,
+  onboarding (stack · experience · focus), voice answers with a custom-painted waveform, progress
+  filters, and the Pro plan behind the upgrade CTAs
 - **M3** — catalogues for the remaining stacks, job-description targeting, session resume, deployed
   web demo
 - **v2** — cross-device sync on top of M2's accounts, team or cohort features

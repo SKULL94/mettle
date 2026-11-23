@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+
+    <path
+        android:pathData="M107,64 L181,64 A43,43 0 0 1 224,107 L224,181 A43,43 0 0 1 181,224 L107,224 A43,43 0 0 1 64,181 L64,107 A43,43 0 0 1 107,64 Z"
+        android:fillColor="@color/mettle_tile" />
+
+    <path android:pathData="M107,64 L181,64 A43,43 0 0 1 224,107 L224,181 A43,43 0 0 1 181,224 L107,224 A43,43 0 0 1 64,181 L64,107 A43,43 0 0 1 107,64 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="64"
+                android:startY="224"
+                android:endX="224"
+                android:endY="64">
+                <item android:offset="0.0" android:color="@color/mettle_sheen_start" />
+                <item android:offset="0.5" android:color="@color/mettle_sheen_mid" />
+                <item android:offset="1.0" android:color="@color/mettle_sheen_end" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path
+        android:pathData="M124,159 L144,136 L164,159"
+        android:strokeColor="@color/mettle_accent"
+        android:strokeWidth="7.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <path
+        android:pathData="M134,166 L144,154 L154,166"
+        android:strokeColor="@color/mettle_chevron"
+        android:strokeWidth="7.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
