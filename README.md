@@ -1,8 +1,6 @@
 # Mettle
 
-> **Active branch: `phase-1/web-dashboard`** — the dashboard redesign and the new app shell. Branch
-> off this, not `main`; it is ahead of `main` by the whole redesign. The branch before it was
-> `phase-1/web-app` (web layouts, scorecard tab, Google sign-in on web).
+### ▶ [Try it live](https://skull94.github.io/mettle/) · [API health](https://mettle-api-jd5q.onrender.com/healthz)
 
 **AI mock interviews for mobile/Flutter engineers.** Pick a topic, get interviewed by an agent that
 probes deeper when an answer is thin, and get a rubric-scored breakdown with your progress tracked
@@ -28,19 +26,23 @@ overstates what you'll find if you clone it.
 |---|---|---|
 | **M1** | Splash · Home · Interview · Scorecard · Progress (basic) · Settings (basic). Text only, difficulty-tiered topics, end to end | ✅ Complete |
 | **M2** | **Auth (Google + email) ✅** · Supabase-backed session history ✅ · **Supabase Postgres store ✅** · **redesigned dashboard + web shell ✅** · **verbatim question bank ✅** · onboarding (stack · experience · focus) · voice answers + waveform · progress filters · Pro plan | 🚧 In progress |
-| **M3** | Multi-stack catalogues · JD-targeted questions · checkpointer resume · human-in-the-loop · deployed web build | ⬜ Planned |
+| **M3** | Multi-stack catalogues · JD-targeted questions · checkpointer resume · human-in-the-loop · **deployed web build ✅** | 🚧 Started |
 
 Auth landed ahead of schedule, so it is marked against M2 but is already in the app. Postgres also
 arrived early: sessions, turns and quota now live in **Supabase Postgres** (session pooler, IPv4)
-rather than SQLite, and the schema is applied on startup. **The backend is still not deployed** —
-running an interview needs the API on your own machine.
+rather than SQLite, and the schema is applied on startup.
 
-The old `Home` feature and its `AppShell`/`AppSidebar` chrome were **deleted** on this branch; the
-dashboard replaced them, and `/` now redirects to `/dashboard`.
+**The deployment landed early too, so there is a live demo.** The web build is on GitHub Pages, the
+API runs on Render, and both deploy from `main` on push — see
+[Deployment](#deployment). Running locally is still fully supported and is the only way to use your
+own model key.
+
+The old `Home` feature and its `AppShell`/`AppSidebar` chrome were **deleted**; the dashboard
+replaced them, and `/` now redirects to `/dashboard`.
 
 Design docs are checked in and current: [product & UI plan](docs/product-plan.md) ·
 [backend architecture](docs/backend-plan.md) · [auth & data plan](docs/auth-plan.md) ·
-[Flutter conventions](CONVENTIONS.md).
+[deployment runbook](docs/deploy.md) · [Flutter conventions](CONVENTIONS.md).
 
 ---
 
@@ -58,7 +60,7 @@ containerised backend end to end.
 | **`app/`** | Splash → Home → setup sheet → Interview → Scorecard, plus basic Progress and Settings tabs. Text only. Design tokens and both themes before any screen. All four states on every screen. Responsive for phone and web. |
 | **`api/`** | The versioned SSE event protocol, the five-node graph with the conditional follow-up edge, SQLite checkpointer (Postgres-ready), the topic catalogue, and the provider adapter. |
 | **The seam** | The SSE event protocol is the contract, and the Dart `TurnEvent` sealed class is its client-side shape. Both halves are versioned together in one repo, so a change to the protocol is one commit. |
-| **CI** | Two workflows green with no secrets configured, including the dependency-rule guard and the iOS compile check. |
+| **CI/CD** | One workflow: analyze, build the web bundle, publish to GitHub Pages on every push to `main`. The API deploys from the same push via `render.yaml`. The dependency-rule guard and the iOS compile check are still to be added. |
 
 **Why a monorepo matters specifically now:** in Phase 1 the SSE contract changes constantly, and
 every change touches both sides. Here that's one commit and one PR that either passes both workflows
@@ -89,7 +91,7 @@ Naming that list is what keeps Phase 1 finishable. Ships as tag **`v0.1.0`** wit
 | Target | Status | Notes |
 |---|---|---|
 | **Android** | ✅ Primary, developed and run on device | Main development target |
-| **Web** | ✅ Primary | Built with `--wasm`; the public demo surface |
+| **Web** | ✅ Primary — **[live](https://skull94.github.io/mettle/)** | The public demo surface. CI ships the default JS build, not `--wasm` |
 | **iOS** | ⚠️ **Compile-verified in CI only — not device-tested** | See below |
 | Desktop | ❌ Not a target | Cost without payoff for this product |
 
@@ -282,7 +284,40 @@ than dead-ending mid-interview.
 
 ---
 
+## Deployment
+
+Three free services, no card on file anywhere. Full runbook in [`docs/deploy.md`](docs/deploy.md).
+
+| Piece | Host | Why there |
+|---|---|---|
+| Flutter web build | **GitHub Pages** — [skull94.github.io/mettle](https://skull94.github.io/mettle/) | Static files; a CDN, not a server |
+| FastAPI + LangGraph | **Render** free web service | Needs a live process holding SSE connections |
+| Postgres · auth · checkpoints | **Supabase** | Render's free Postgres expires 30 days after creation |
+| Keep-alive ping | **cron-job.org** → `/healthz` every 10 min | Free instances sleep after 15 idle minutes |
+
+`git push` to `main` deploys both halves. `.github/workflows/web.yml` analyzes, builds and publishes
+to Pages; `render.yaml` describes the API as a Docker service with `/healthz` as its health check,
+and Render rebuilds on the same commit.
+
+Two things the deployment forces that are worth knowing before reading the code:
+
+- **One instance, one worker.** The per-session mailbox is process memory, so a second worker would
+  break the answer/stream pairing. Redis pub/sub is the fix when it's needed; the Postgres
+  checkpointer already covers durability, which is the part that matters.
+- **Build-time vs runtime config.** `METTLE_BASE_URL`, `SUPABASE_URL` and `WEB_REDIRECT_URL` are
+  compiled into the web bundle from GitHub repository *variables* — not secrets, because anything in
+  a web bundle is public. The model key and database URL are runtime environment variables on Render
+  and never enter the repo.
+
+A deploy that lands mid-interview leaves an open SSE stream hanging. The session itself resumes from
+the checkpoint, but the client has to reconnect — worth knowing before demoing over a push.
+
+---
+
 ## Quick start
+
+> **Running locally is only needed to use your own model key or to work on the code** — otherwise
+> the [live demo](https://skull94.github.io/mettle/) is the same build.
 
 > **An Anthropic API key is required.** Every question is written and every answer graded by a live
 > model, so there is no offline or canned mode — without a key the backend starts but
@@ -398,7 +433,9 @@ at build time, so it must be rebuilt if your router hands out a different IP.
 │   ├── lib/core/         constants · theme · result · error · router · di · storage · widgets
 │   └── lib/features/     splash · auth · dashboard · history · interview · sessions · progress · settings
 ├── api/              FastAPI + LangGraph service  ✅ in place
-├── docs/             product plan · backend architecture
+├── docs/             product plan · backend architecture · auth plan · deployment runbook
+├── .github/workflows/  web build + GitHub Pages deploy
+├── render.yaml       Render blueprint for the API   ✅ deployed
 ├── CONVENTIONS.md    Flutter conventions (binding, enforced in review)
 └── docker-compose.yml                             ✅ in place
 ```
@@ -415,8 +452,8 @@ folders are deliberately absent rather than carried along unused.
   redesigned dashboard and web shell ✅, verbatim question bank ✅; still to come: a guest path,
   onboarding (stack · experience · focus), voice answers with a custom-painted waveform, progress
   filters, and the Pro plan behind the upgrade CTAs
-- **M3** — catalogues for the remaining stacks, job-description targeting, session resume, deployed
-  web demo
+- **M3** 🚧 — deployed web demo ✅ (Pages + Render + Supabase); still to come: catalogues for the
+  remaining stacks, job-description targeting, session resume
 - **v2** — cross-device sync on top of M2's accounts, team or cohort features
 
 ---

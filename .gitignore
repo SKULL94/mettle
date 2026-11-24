@@ -13,6 +13,7 @@
 migrate_working_dir/
 question_bank.yaml
 question_seeds.yaml
+docs/architecture/
 
 # IntelliJ related
 *.iml
