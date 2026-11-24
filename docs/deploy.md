@@ -88,6 +88,7 @@ variables → Actions → Variables**:
 | Variable | Value |
 |---|---|
 | `METTLE_BASE_URL` | `https://mettle-api.onrender.com` |
+| `WEB_REDIRECT_URL` | `https://skull94.github.io/mettle/` |
 | `SUPABASE_URL` | the Project URL |
 | `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` |
 | `GOOGLE_WEB_CLIENT_ID` | the web OAuth client id |
@@ -103,6 +104,16 @@ Three things the workflow handles that are easy to miss by hand:
   route would 404.
 - `METTLE_BASE_URL` arrives as a dart-define. `ApiConstants.configuredBaseUrl` reads it at compile
   time, so the URL is never hardcoded per environment.
+- `WEB_REDIRECT_URL` exists because `Uri.base.origin` is scheme + host + port with **no path**. On
+  Pages that resolves to `https://skull94.github.io`, so Google sign-in would return the user to the
+  domain root rather than into Mettle, losing the session. Development never sees this, because
+  serving at the origin root makes origin and app URL identical. Unset, the code falls back to
+  `Uri.base.origin`, so local behaviour is unchanged.
+
+`GOOGLE_WEB_CLIENT_ID` is passed but unused by the web build: `signInWithOAuth` hands the whole
+flow to Supabase's server, which holds the client id itself, and `kIsWeb` being a compile-time
+constant means dart2js strips the only code that would have read it. It is kept for parity with the
+Android and iOS builds, which do use it.
 
 Also add these to Supabase under **Authentication → URL Configuration → Redirect URLs**, or Google
 sign-in fails on web only:

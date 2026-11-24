@@ -11,6 +11,8 @@ abstract final class SupabaseConstants {
     'GOOGLE_IOS_CLIENT_ID',
   );
 
+  static const webRedirectUrl = String.fromEnvironment('WEB_REDIRECT_URL');
+
   static const isConfigured = url != '' && publishableKey != '';
 
   static const callbackScheme = 'com.zeeshanhaider.mettle';
