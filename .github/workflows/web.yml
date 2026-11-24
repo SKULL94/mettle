@@ -37,6 +37,11 @@ jobs:
         working-directory: app
         run: flutter analyze
 
+      - name: Configure analytics
+        if: vars.GA_MEASUREMENT_ID != ''
+        working-directory: app
+        run: sed -i "s|__GA_MEASUREMENT_ID__|${{ vars.GA_MEASUREMENT_ID }}|" web/index.html
+
       - name: Build web
         working-directory: app
         run: |

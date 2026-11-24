@@ -38,6 +38,23 @@
   <title>Mettle - AI Mock Interviews for Flutter &amp; Mobile Engineers</title>
   <link rel="manifest" href="manifest.json">
 
+  <script>
+    (function () {
+      var id = '__GA_MEASUREMENT_ID__';
+      if (id.charAt(0) !== 'G') return;
+
+      var tag = document.createElement('script');
+      tag.async = true;
+      tag.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+      document.head.appendChild(tag);
+
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { window.dataLayer.push(arguments); };
+      window.gtag('js', new Date());
+      window.gtag('config', id);
+    })();
+  </script>
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
