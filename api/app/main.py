@@ -37,6 +37,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     if not settings.auth_enforced:
         log.warning("SUPABASE_URL is not set; every request runs as a single local user")
+    elif settings.checkpoint_backend != "postgres":
+        raise RuntimeError(
+            "SUPABASE_URL is set but DATABASE_URL is not postgres: quotas and the spend cap "
+            "would silently not be enforced. Point DATABASE_URL at Supabase."
+        )
 
     async with open_checkpointer(settings) as checkpointer:
         registry.set_graph(build_graph(checkpointer))

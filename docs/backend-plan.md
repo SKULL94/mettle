@@ -326,7 +326,8 @@ configured — which is also what makes the badges meaningful rather than decora
   visible without starting a session
 - CORS restricted to the GitHub Pages origin; HTTPS both ends
 - Structured JSON logs with a per-session correlation id; log the provider's `request_id` on failures
-- Deploy to Fly.io free tier; GitHub Actions runs lint + types + tests, then builds the image
+- Render free web service from `render.yaml`, Supabase Postgres for state, GitHub Pages for the web
+  build — see [deploy.md](deploy.md). One instance, one worker, because the mailbox is process memory
 
 ---
 
