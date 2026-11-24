@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: mettle-api
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: api
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://skull94.github.io
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5
+      - key: GRADE_EFFORT
+        value: high
+      - key: QUESTION_EFFORT
+        value: low
+      - key: ENABLE_FALLBACKS
+        value: "true"
+      - key: FREE_SESSIONS_PER_USER
+        value: "3"
+      - key: MONTHLY_SPEND_CAP_CENTS
+        value: "2000"
+      - key: PG_DISABLE_PREPARED_STATEMENTS
+        value: "true"
+      - key: PG_POOL_MIN
+        value: "1"
+      - key: PG_POOL_MAX
+        value: "5"
+      - key: LOG_LEVEL
+        value: INFO
