@@ -5,7 +5,7 @@ Three free services, no credit card anywhere.
 | Piece | Host | URL |
 |---|---|---|
 | Flutter web build | GitHub Pages | `https://skull94.github.io/mettle/` |
-| FastAPI + LangGraph | Render free web service | `https://mettle-api.onrender.com` |
+| FastAPI + LangGraph | Render free web service | `https://mettle-api-jd5q.onrender.com` |
 | Postgres, auth, checkpoints | Supabase free project | `https://<ref>.supabase.co` |
 
 The LLM calls are the only line item that costs money. `FREE_SESSIONS_PER_USER` and
@@ -56,6 +56,12 @@ Supabase's **secret** key is not on this list. The backend reads Postgres direct
 `region: singapore` is the nearest free region to India — change it in the blueprint before the
 first deploy, because a Render service cannot be moved between regions afterwards.
 
+Render appends a random suffix when a service name is already taken across the platform, which
+`mettle-api` was. The live hostname is `mettle-api-jd5q.onrender.com`; read it off the service page
+rather than assuming it. A request to the un-suffixed name returns Render's own router 404,
+recognisable by the `code` field that FastAPI never sends:
+`{"detail":"Not Found","code":"not_found"}`.
+
 `DATABASE_URL` is the one that must not be forgotten. The Dockerfile defaults it to sqlite on a
 container path, and the free tier has no persistent disk, so that default means a database that
 vanishes on every restart *and* quota enforcement that silently no-ops. The app refuses to boot in
@@ -71,7 +77,7 @@ A free service spins down after 15 minutes idle and takes roughly a minute to wa
 is the first thing a recruiter would see. One service fits inside the 750 instance-hours a month
 (744 hours in the longest month), so running continuously costs nothing.
 
-Point **cron-job.org** or **UptimeRobot** at `https://mettle-api.onrender.com/healthz` every 10
+Point **cron-job.org** or **UptimeRobot** at `https://mettle-api-jd5q.onrender.com/healthz` every 10
 minutes. `/healthz` touches no database and no model, so the ping is free on every axis. Don't use a
 GitHub Actions `schedule` for this — it burns Actions minutes and queues unpredictably under load.
 
@@ -87,7 +93,7 @@ variables → Actions → Variables**:
 
 | Variable | Value |
 |---|---|
-| `METTLE_BASE_URL` | `https://mettle-api.onrender.com` |
+| `METTLE_BASE_URL` | `https://mettle-api-jd5q.onrender.com` |
 | `WEB_REDIRECT_URL` | `https://skull94.github.io/mettle/` |
 | `SUPABASE_URL` | the Project URL |
 | `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` |
