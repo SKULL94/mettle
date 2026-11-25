@@ -5,6 +5,7 @@ import '../../theme/mettle_colors.dart';
 import '../../theme/mettle_space.dart';
 import '../../theme/mettle_text.dart';
 import '../../theme/size_class.dart';
+import '../mettle_snack_bar.dart';
 import 'account_row.dart';
 import 'credit_chip.dart';
 import 'free_plan_card.dart';
@@ -55,11 +56,7 @@ class AppScaffold extends StatelessWidget {
 
   void _select(BuildContext context, ShellDestination destination) {
     if (destination.tab == ShellTab.progress && state.progressLocked) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          const SnackBar(content: Text(AppStrings.shellProgressLocked)),
-        );
+      showMettleSnackBar(context, AppStrings.shellProgressLocked);
       return;
     }
     onSelect(destination);

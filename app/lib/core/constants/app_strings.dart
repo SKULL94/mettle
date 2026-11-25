@@ -569,6 +569,12 @@ abstract final class AppStrings {
   static const authHaveAccount = 'Already have an account?';
   static const authEmailInvalid = 'Enter a valid email address.';
   static const authPasswordTooShort = 'Use at least 8 characters.';
+  static const authPasswordTooLong = 'Use no more than 32 characters.';
+  static const authPasswordNeedsUpper = 'Include an uppercase letter.';
+  static const authPasswordNeedsLower = 'Include a lowercase letter.';
+  static const authPasswordNeedsNumber = 'Include a number.';
+  static const authPasswordNeedsSymbol = 'Include a symbol, such as ! or @.';
+  static const authPasswordRequired = 'Enter your password.';
   static const authResetSent = 'Check your inbox for a reset link.';
   static const authRedirecting = 'Opening Google sign-in…';
   static const authValueProps = <String>[

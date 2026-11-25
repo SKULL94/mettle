@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -69,7 +70,9 @@ class SplashView extends StatelessWidget {
                   ),
                   child: BlocBuilder<SplashCubit, SplashState>(
                     builder: (context, state) => switch (state) {
-                      SplashWarmingUp() || SplashReady() => const _Lockup(),
+                      SplashWarmingUp() || SplashReady() => kIsWeb
+                          ? const SizedBox.shrink()
+                          : const _Lockup(),
                       SplashFailed(:final message) => _BootstrapError(
                         message: message,
                       ),

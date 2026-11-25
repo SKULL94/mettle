@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/constants/app_strings.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/auth_user.dart';
@@ -17,6 +16,8 @@ class SignInCubit extends Cubit<SignInState> {
     emit(
       state.copyWith(
         mode: mode,
+        email: '',
+        password: '',
         showErrors: false,
         status: const SignInEditing(),
       ),
@@ -98,11 +99,7 @@ class SignInCubit extends Cubit<SignInState> {
     }
   }
 
-  String? get emailError => state.showErrors && !state.isEmailValid
-      ? AppStrings.authEmailInvalid
-      : null;
+  String? get emailError => state.showErrors ? state.emailIssue : null;
 
-  String? get passwordError => state.showErrors && !state.isPasswordValid
-      ? AppStrings.authPasswordTooShort
-      : null;
+  String? get passwordError => state.showErrors ? state.passwordIssue : null;
 }

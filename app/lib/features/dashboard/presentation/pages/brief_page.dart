@@ -10,6 +10,7 @@ import '../../../../core/theme/mettle_colors.dart';
 import '../../../../core/theme/mettle_space.dart';
 import '../../../../core/theme/size_class.dart';
 import '../../../../core/widgets/mettle/buttons.dart';
+import '../../../../core/widgets/mettle_snack_bar.dart';
 import '../../../interview/domain/entities/difficulty.dart';
 import '../../../interview/domain/entities/interview_topic.dart';
 import '../../../interview/domain/entities/session_config.dart';
@@ -56,7 +57,6 @@ class _BriefViewState extends State<BriefView> {
     setState(() => _starting = true);
 
     final router = GoRouter.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final topic = _topic();
 
     final result = await sl<StartSession>()(
@@ -73,9 +73,7 @@ class _BriefViewState extends State<BriefView> {
           pathParameters: {AppRoutes.idParam: data},
         );
       case Failed():
-        messenger.showSnackBar(
-          const SnackBar(content: Text(AppStrings.briefFailed)),
-        );
+        showMettleSnackBar(context, AppStrings.briefFailed);
     }
   }
 

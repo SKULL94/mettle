@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
+import '../../../../core/widgets/mettle_snack_bar.dart';
 import '../../../../core/widgets/selectable_tile.dart';
 import '../../domain/entities/app_theme_mode.dart';
 import '../cubit/settings_cubit.dart';
@@ -123,7 +124,6 @@ class DataSection extends StatelessWidget {
 
 Future<void> _confirmClear(BuildContext context) async {
   final cubit = context.read<SettingsCubit>();
-  final messenger = ScaffoldMessenger.of(context);
 
   final confirmed = await showConfirmDialog(
     context,
@@ -136,10 +136,11 @@ Future<void> _confirmClear(BuildContext context) async {
   if (!confirmed) return;
 
   final cleared = await cubit.clearSessions();
-  messenger.showSnackBar(
-    SnackBar(
-      content: Text(cleared ? AppStrings.clearDataDone : AppStrings.cacheError),
-    ),
+  if (!context.mounted) return;
+
+  showMettleSnackBar(
+    context,
+    cleared ? AppStrings.clearDataDone : AppStrings.cacheError,
   );
 }
 

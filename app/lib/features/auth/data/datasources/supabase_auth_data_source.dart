@@ -18,6 +18,13 @@ final class SupabaseAuthDataSource implements AuthRemoteDataSource {
     return sb.Supabase.instance.client;
   }
 
+  static String get _webRedirect => SupabaseConstants.webRedirectUrl.isEmpty
+      ? Uri.base.origin
+      : SupabaseConstants.webRedirectUrl;
+
+  static String get _redirect =>
+      kIsWeb ? _webRedirect : SupabaseConstants.redirectUrl;
+
   @override
   AuthUser? get currentUser {
     if (!SupabaseConstants.isConfigured) return null;
@@ -54,7 +61,7 @@ final class SupabaseAuthDataSource implements AuthRemoteDataSource {
     final response = await _client.auth.signUp(
       email: email,
       password: password,
-      emailRedirectTo: SupabaseConstants.redirectUrl,
+      emailRedirectTo: _redirect,
     );
 
     if (response.session == null) {
@@ -74,9 +81,7 @@ final class SupabaseAuthDataSource implements AuthRemoteDataSource {
     if (kIsWeb) {
       await _client.auth.signInWithOAuth(
         sb.OAuthProvider.google,
-        redirectTo: SupabaseConstants.webRedirectUrl.isEmpty
-            ? Uri.base.origin
-            : SupabaseConstants.webRedirectUrl,
+        redirectTo: _webRedirect,
         queryParams: const {'prompt': 'select_account'},
       );
       throw const AuthRedirectingException(AppStrings.authRedirecting);
@@ -115,7 +120,7 @@ final class SupabaseAuthDataSource implements AuthRemoteDataSource {
 
   @override
   Future<void> sendPasswordReset(String email) => _client.auth
-      .resetPasswordForEmail(email, redirectTo: SupabaseConstants.redirectUrl);
+      .resetPasswordForEmail(email, redirectTo: _redirect);
 
   @override
   Future<void> signOut() async {
