@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/platform/boot_signal.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/mettle_mark.dart';
@@ -47,8 +48,16 @@ class SplashView extends StatelessWidget {
         value: _overlay,
         child: BlocListener<SplashCubit, SplashState>(
           listener: (context, state) {
+            if (state is SplashFailed) {
+              signalBootComplete();
+              return;
+            }
             if (state is! SplashReady) return;
+
             context.go(state.signedIn ? AppRoutes.dashboard : AppRoutes.signIn);
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => signalBootComplete(),
+            );
           },
           child: Scaffold(
             body: SafeArea(
