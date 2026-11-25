@@ -144,9 +144,13 @@
   </div>
 
   <script>
-    window.addEventListener('flutter-first-frame', function () {
+    window.mettleBootComplete = function () {
       var boot = document.getElementById('boot');
       if (boot) boot.remove();
+    };
+
+    window.addEventListener('flutter-first-frame', function () {
+      window.setTimeout(window.mettleBootComplete, 8000);
     });
   </script>
   <script src="flutter_bootstrap.js" async></script>
