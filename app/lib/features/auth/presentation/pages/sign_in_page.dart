@@ -7,6 +7,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/widgets/mettle_snack_bar.dart';
 import '../../../../core/widgets/window_size.dart';
 import '../cubit/sign_in_cubit.dart';
 import '../cubit/sign_in_state.dart';
@@ -35,17 +36,14 @@ class SignInView extends StatelessWidget {
     return BlocListener<SignInCubit, SignInState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
-        final messenger = ScaffoldMessenger.of(context);
         switch (state.status) {
           case SignInSucceeded():
             context.go(AppRoutes.dashboard);
           case SignInFailed(:final message):
-            messenger.showSnackBar(SnackBar(content: Text(message)));
+            showMettleSnackBar(context, message);
             context.read<SignInCubit>().dismissError();
           case SignInResetSent():
-            messenger.showSnackBar(
-              const SnackBar(content: Text(AppStrings.authResetSent)),
-            );
+            showMettleSnackBar(context, AppStrings.authResetSent);
             context.read<SignInCubit>().dismissError();
           case SignInEditing() || SignInBusy():
             break;
@@ -118,6 +116,7 @@ class _Form extends StatelessWidget {
       const SizedBox(height: AppDimens.lg),
 
       AuthField(
+        key: ValueKey('email-${state.mode}'),
         label: AppStrings.authEmailLabel,
         hint: AppStrings.authEmailHint,
         icon: Icons.mail_outline_rounded,
@@ -129,6 +128,7 @@ class _Form extends StatelessWidget {
       const SizedBox(height: AppDimens.md),
 
       AuthField(
+        key: ValueKey('password-${state.mode}'),
         label: AppStrings.authPasswordLabel,
         icon: Icons.lock_outline_rounded,
         obscure: state.obscurePassword,

@@ -1,3 +1,6 @@
+import 'package:form_builder_validators/form_builder_validators.dart';
+
+import '../../../../core/constants/app_strings.dart';
 import '../../domain/entities/auth_user.dart';
 
 enum AuthMode { signIn, signUp }
@@ -53,11 +56,44 @@ class SignInState {
   final bool showErrors;
   final SignInStatus status;
 
-  static final _email = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+  static final _emailCheck = FormBuilderValidators.compose<String>([
+    FormBuilderValidators.required(errorText: AppStrings.authEmailInvalid),
+    FormBuilderValidators.email(errorText: AppStrings.authEmailInvalid),
+  ]);
 
-  bool get isEmailValid => _email.hasMatch(email.trim());
+  static final _passwordCheck = FormBuilderValidators.compose<String>([
+    FormBuilderValidators.required(errorText: AppStrings.authPasswordRequired),
+    FormBuilderValidators.minLength(
+      8,
+      errorText: AppStrings.authPasswordTooShort,
+    ),
+    FormBuilderValidators.maxLength(
+      32,
+      errorText: AppStrings.authPasswordTooLong,
+    ),
+    FormBuilderValidators.hasUppercaseChars(
+      errorText: AppStrings.authPasswordNeedsUpper,
+    ),
+    FormBuilderValidators.hasLowercaseChars(
+      errorText: AppStrings.authPasswordNeedsLower,
+    ),
+    FormBuilderValidators.hasNumericChars(
+      errorText: AppStrings.authPasswordNeedsNumber,
+    ),
+    FormBuilderValidators.hasSpecialChars(
+      errorText: AppStrings.authPasswordNeedsSymbol,
+    ),
+  ]);
 
-  bool get isPasswordValid => password.length >= 8;
+  String? get emailIssue => _emailCheck(email.trim());
+
+  String? get passwordIssue => mode == AuthMode.signUp
+      ? _passwordCheck(password)
+      : (password.isEmpty ? AppStrings.authPasswordRequired : null);
+
+  bool get isEmailValid => emailIssue == null;
+
+  bool get isPasswordValid => passwordIssue == null;
 
   bool get canSubmit => isEmailValid && isPasswordValid;
 

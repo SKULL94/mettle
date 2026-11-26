@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,14 +9,24 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/platform/boot_signal.dart';
+import '../../../../core/platform/launch_link.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/mettle_mark.dart';
+import '../../../../core/widgets/mettle_snack_bar.dart';
 import '../cubit/splash_cubit.dart';
 import '../cubit/splash_state.dart';
 
 const _markSize = 96.0;
 const _taglineMaxWidth = 280.0;
+
+String? _noticeFor(LaunchLink link, bool signedIn) => switch (link) {
+  LaunchLink.none => null,
+  LaunchLink.expired => AppStrings.authLinkExpired,
+  LaunchLink.verified => signedIn
+      ? AppStrings.authVerifiedSignedIn
+      : AppStrings.authVerifiedSignIn,
+};
 
 const _overlay = SystemUiOverlayStyle(
   statusBarColor: Colors.transparent,
@@ -54,10 +65,16 @@ class SplashView extends StatelessWidget {
             }
             if (state is! SplashReady) return;
 
+            final overlay = Overlay.maybeOf(context, rootOverlay: true);
+            final notice = _noticeFor(LaunchLinkReader.take(), state.signedIn);
+
             context.go(state.signedIn ? AppRoutes.dashboard : AppRoutes.signIn);
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) => signalBootComplete(),
-            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              signalBootComplete();
+              if (overlay != null && notice != null) {
+                showMettleSnackBarIn(overlay, notice);
+              }
+            });
           },
           child: Scaffold(
             body: SafeArea(
@@ -69,7 +86,9 @@ class SplashView extends StatelessWidget {
                   ),
                   child: BlocBuilder<SplashCubit, SplashState>(
                     builder: (context, state) => switch (state) {
-                      SplashWarmingUp() || SplashReady() => const _Lockup(),
+                      SplashWarmingUp() || SplashReady() => kIsWeb
+                          ? const SizedBox.shrink()
+                          : const _Lockup(),
                       SplashFailed(:final message) => _BootstrapError(
                         message: message,
                       ),

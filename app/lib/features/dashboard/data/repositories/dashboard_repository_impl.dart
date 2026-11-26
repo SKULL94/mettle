@@ -19,8 +19,8 @@ final class DashboardRepositoryImpl implements DashboardRepository {
       return Failed(
         NetworkFailure(error.detail ?? AppStrings.serverUnreachable),
       );
-    } on ServerException {
-      return const Failed(ServerFailure());
+    } on ServerException catch (error) {
+      return Failed(ServerFailure(error.detail ?? AppStrings.serverError));
     } on Object {
       return const Failed(UnknownFailure());
     }

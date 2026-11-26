@@ -6,6 +6,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/result/result.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/widgets/mettle_snack_bar.dart';
 import '../../../../core/widgets/window_size.dart';
 import '../../domain/entities/interview_topic.dart';
 import '../../domain/entities/session_config.dart';
@@ -51,14 +52,13 @@ Future<String?> startConfiguredSession(
   BuildContext context,
   SessionConfig config,
 ) async {
-  final messenger = ScaffoldMessenger.of(context);
   final result = await sl<StartSession>()(config);
 
   switch (result) {
     case Success(:final data):
       return data;
     case Failed(:final failure):
-      messenger.showSnackBar(SnackBar(content: Text(failure.message)));
+      if (context.mounted) showMettleSnackBar(context, failure.message);
       return null;
   }
 }
