@@ -119,8 +119,8 @@ final class SupabaseAuthDataSource implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> sendPasswordReset(String email) => _client.auth
-      .resetPasswordForEmail(email, redirectTo: _redirect);
+  Future<void> sendPasswordReset(String email) =>
+      _client.auth.resetPasswordForEmail(email, redirectTo: _redirect);
 
   @override
   Future<void> signOut() async {

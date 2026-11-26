@@ -47,8 +47,10 @@ class _Toast extends StatefulWidget {
 }
 
 class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: _fade)..forward();
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: _fade,
+  )..forward();
 
   @override
   void dispose() {
@@ -69,12 +71,13 @@ class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
           child: Padding(
             padding: const EdgeInsets.only(top: AppDimens.lg),
             child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, -0.35),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-              ),
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, -0.35),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+                  ),
               child: FadeTransition(
                 opacity: _controller,
                 child: ConstrainedBox(

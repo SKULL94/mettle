@@ -23,9 +23,8 @@ const _taglineMaxWidth = 280.0;
 String? _noticeFor(LaunchLink link, bool signedIn) => switch (link) {
   LaunchLink.none => null,
   LaunchLink.expired => AppStrings.authLinkExpired,
-  LaunchLink.verified => signedIn
-      ? AppStrings.authVerifiedSignedIn
-      : AppStrings.authVerifiedSignIn,
+  LaunchLink.verified =>
+    signedIn ? AppStrings.authVerifiedSignedIn : AppStrings.authVerifiedSignIn,
 };
 
 const _overlay = SystemUiOverlayStyle(
@@ -86,9 +85,8 @@ class SplashView extends StatelessWidget {
                   ),
                   child: BlocBuilder<SplashCubit, SplashState>(
                     builder: (context, state) => switch (state) {
-                      SplashWarmingUp() || SplashReady() => kIsWeb
-                          ? const SizedBox.shrink()
-                          : const _Lockup(),
+                      SplashWarmingUp() || SplashReady() =>
+                        kIsWeb ? const SizedBox.shrink() : const _Lockup(),
                       SplashFailed(:final message) => _BootstrapError(
                         message: message,
                       ),
