@@ -28,7 +28,7 @@ final class SupabaseAuthDataSource implements AuthRemoteDataSource {
   @override
   AuthUser? get currentUser {
     if (!SupabaseConstants.isConfigured) return null;
-    final user = sb.Supabase.instance.client.auth.currentUser;
+    final user = sb.Supabase.instance.client.auth.currentSession?.user;
     return user == null ? null : _toEntity(user);
   }
 

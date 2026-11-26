@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/constants/app_strings.dart';
 import 'core/di/injection.dart';
+import 'core/platform/launch_link.dart';
 import 'core/platform/url_strategy.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -9,6 +10,7 @@ import 'core/theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   configureUrlStrategy();
+  LaunchLinkReader.capture(Uri.base);
   await configureDependencies();
   runApp(const MettleApp());
 }

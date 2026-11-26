@@ -575,6 +575,10 @@ abstract final class AppStrings {
   static const authPasswordNeedsNumber = 'Include a number.';
   static const authPasswordNeedsSymbol = 'Include a symbol, such as ! or @.';
   static const authPasswordRequired = 'Enter your password.';
+  static const authVerifiedSignedIn = 'Email verified. You are signed in.';
+  static const authVerifiedSignIn = 'Email verified. Sign in to continue.';
+  static const authLinkExpired =
+      'That link has expired. Request a new one to continue.';
   static const authResetSent = 'Check your inbox for a reset link.';
   static const authRedirecting = 'Opening Google sign-in…';
   static const authValueProps = <String>[
