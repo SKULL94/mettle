@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -114,11 +115,11 @@ class DataSection extends StatelessWidget {
               title: AppStrings.privacy,
               body: AppStrings.privacyBody,
               trailing: Icon(
-                Icons.copy_rounded,
+                Icons.open_in_new_rounded,
                 size: AppDimens.iconMd,
                 color: theme.textTheme.labelSmall?.color,
               ),
-              onTap: () => _copyPrivacyUrl(context),
+              onTap: () => _openPrivacyPolicy(context),
             ),
             const Divider(height: AppDimens.hairline),
             SettingsRow(
@@ -151,13 +152,18 @@ class DataSection extends StatelessWidget {
   }
 }
 
-Future<void> _copyPrivacyUrl(BuildContext context) async {
-  final messenger = ScaffoldMessenger.of(context);
+Future<void> _openPrivacyPolicy(BuildContext context) async {
+  final opened = await launchUrl(
+    Uri.parse(AppStrings.privacyUrl),
+    mode: LaunchMode.externalApplication,
+    webOnlyWindowName: '_blank',
+  );
+
+  if (opened || !context.mounted) return;
 
   await Clipboard.setData(const ClipboardData(text: AppStrings.privacyUrl));
-  messenger.showSnackBar(
-    const SnackBar(content: Text(AppStrings.copiedToClipboard)),
-  );
+  if (!context.mounted) return;
+  showMettleSnackBar(context, AppStrings.privacyFallback);
 }
 
 Future<void> _confirmDeleteAccount(BuildContext context) async {
