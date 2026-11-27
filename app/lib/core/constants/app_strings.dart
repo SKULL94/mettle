@@ -541,6 +541,8 @@ abstract final class AppStrings {
   static const privacy = 'Privacy policy';
   static const privacyBody = 'What is stored, and who it is sent to.';
   static const privacyUrl = 'https://skull94.github.io/mettle/privacy.html';
+  static const privacyFallback =
+      'Could not open the browser. The link was copied instead.';
 
   static const about = 'About';
   static const appVersion = '0.1.0';
