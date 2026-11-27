@@ -18,6 +18,8 @@ services:
         sync: false
       - key: SUPABASE_JWT_SECRET
         sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
       - key: CORS_ORIGINS
         value: https://skull94.github.io
       - key: ANTHROPIC_MODEL

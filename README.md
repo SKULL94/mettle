@@ -105,7 +105,7 @@ guard for it is still to be written.
 
 ```
 lib/
-├── core/           constants · theme · error · network · router · di · result · storage · platform · widgets
+├── core/           constants · di · error · network · platform · result · router · storage · theme · usecase · widgets
 └── features/<feature>/
     ├── data/           models · datasources · repositories (impl)
     ├── domain/         entities · repository contracts · use cases
@@ -187,9 +187,9 @@ target. Two cheap round-trips beat a platform-specific transport.
 
 The model sits behind an `LLMProvider` protocol — `stream_question` and `grade` — so the graph never
 imports the SDK and knows nothing about which model answers. Swapping models is one env var, and the
-provider adapts to each model's capabilities: `effort` and adaptive thinking go to models that
-support them, and are dropped for anything in `NO_TUNING_PREFIXES` (Haiku 4.5, Sonnet 4.5), which
-rejects both.
+provider adapts to each model's capabilities: questions stream with thinking off at a low `effort`,
+grading runs adaptive thinking at a high one, and both are dropped for anything in
+`NO_TUNING_PREFIXES` (Haiku 4.5, Sonnet 4.5), which rejects them.
 
 **There is one implementation, and it needs a key.** An earlier design had a second, scripted
 provider reading from a checked-in question bank so the repo would run with no credentials. That was
@@ -286,10 +286,10 @@ Android still runs, though it is on hold: use `dart_defines/emulator.json` (host
 
 ```
 ├── app/              Flutter application          ✅ in place
-│   ├── lib/core/         constants · theme · result · error · router · di · storage · widgets
-│   └── lib/features/     splash · auth · dashboard · history · interview · sessions · progress · settings
+│   ├── lib/core/         constants · di · error · network · platform · result · router · storage · theme · usecase · widgets
+│   └── lib/features/     splash · auth · dashboard · history · interview · sessions · progress · pro · settings
 ├── api/              FastAPI + LangGraph service  ✅ in place
-├── docs/             product plan · backend architecture · auth plan · deployment runbook
+├── docs/             product plan · backend plan · auth plan · deployment runbook · architecture/
 ├── .github/workflows/  web build + GitHub Pages deploy
 ├── render.yaml       Render blueprint for the API   ✅ deployed
 ├── CONVENTIONS.md    Flutter conventions (binding, enforced in review)

@@ -1,16 +1,26 @@
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/result/result.dart';
 import '../../../../core/storage/app_preferences.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../sessions/data/datasources/session_local_data_source.dart';
 import '../../domain/entities/app_theme_mode.dart';
 import '../../domain/repositories/settings_repository.dart';
 
 final class SettingsRepositoryImpl implements SettingsRepository {
-  const SettingsRepositoryImpl(this._prefs, this._sessions);
+  const SettingsRepositoryImpl(
+    this._prefs,
+    this._sessions,
+    this._api,
+    this._auth,
+  );
 
   final AppPreferences _prefs;
   final SessionLocalDataSource _sessions;
+  final ApiClient _api;
+  final AuthRepository _auth;
 
   @override
   Future<AppThemeMode> themeMode() async =>
@@ -36,5 +46,21 @@ final class SettingsRepositoryImpl implements SettingsRepository {
     } on Object {
       return const Failed(UnknownFailure());
     }
+  }
+
+  @override
+  Future<Result<void>> deleteAccount() async {
+    try {
+      await _api.delete(ApiConstants.me);
+    } on NetworkException {
+      return const Failed(NetworkFailure());
+    } on ServerException {
+      return const Failed(ServerFailure());
+    } on Object {
+      return const Failed(UnknownFailure());
+    }
+
+    await _auth.signOut();
+    return const Success(null);
   }
 }

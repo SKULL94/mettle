@@ -32,6 +32,12 @@ class OverallScoreCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
+            const SizedBox(height: AppDimens.md),
+            Text(
+              AppStrings.gradedByAi,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.labelSmall,
+            ),
           ],
         ),
       ),

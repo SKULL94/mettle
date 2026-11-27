@@ -4,16 +4,22 @@ import '../../../../core/result/result.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/app_theme_mode.dart';
 import '../../domain/usecases/clear_sessions.dart';
+import '../../domain/usecases/delete_account.dart';
 import '../../domain/usecases/get_theme_mode.dart';
 import '../../domain/usecases/set_theme_mode.dart';
 
 final class SettingsCubit extends Cubit<AppThemeMode> {
-  SettingsCubit(this._getThemeMode, this._setThemeMode, this._clearSessions)
-    : super(AppThemeMode.system);
+  SettingsCubit(
+    this._getThemeMode,
+    this._setThemeMode,
+    this._clearSessions,
+    this._deleteAccount,
+  ) : super(AppThemeMode.system);
 
   final GetThemeMode _getThemeMode;
   final SetThemeMode _setThemeMode;
   final ClearSessions _clearSessions;
+  final DeleteAccount _deleteAccount;
 
   Future<void> load() async {
     final result = await _getThemeMode(const NoParams());
@@ -33,6 +39,11 @@ final class SettingsCubit extends Cubit<AppThemeMode> {
 
   Future<bool> clearSessions() async {
     final result = await _clearSessions(const NoParams());
+    return result is Success<void>;
+  }
+
+  Future<bool> deleteAccount() async {
+    final result = await _deleteAccount(const NoParams());
     return result is Success<void>;
   }
 }

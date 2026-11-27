@@ -13,9 +13,12 @@ class CreateSessionResponse(BaseModel):
     first_turn_url: str
 
 
+MAX_ANSWER_CHARS = 8000
+
+
 class AnswerRequest(BaseModel):
     turn_id: str
-    answer: str = ""
+    answer: str = Field(default="", max_length=MAX_ANSWER_CHARS)
 
 
 class SkipRequest(BaseModel):

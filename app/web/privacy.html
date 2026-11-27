@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy · Mettle</title>
+<meta name="description" content="How Mettle collects, uses, shares and deletes your personal data.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+  :root {
+    --bg: #FAFAFC;
+    --surface: #FFFFFF;
+    --raised: #F1F1F5;
+    --outline: #DEDEE6;
+    --fg: #16161C;
+    --fg-2: #5B5B6B;
+    --fg-3: #8A8A9A;
+    --accent: #6D5AE0;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0E0E11;
+      --surface: #17171C;
+      --raised: #1F1F26;
+      --outline: #2E2E38;
+      --fg: #EDEDF2;
+      --fg-2: #9A9AA8;
+      --fg-3: #6B6B78;
+      --accent: #9D8DF1;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 0 24px 96px; }
+
+  header {
+    padding: 64px 0 32px;
+    border-bottom: 1px solid var(--outline);
+    margin-bottom: 44px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    margin: 0 0 18px;
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-weight: 620;
+    margin: 0 0 16px;
+  }
+
+  .meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-3);
+    margin: 0;
+  }
+
+  h2 {
+    font-size: 1.22rem;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    margin: 44px 0 12px;
+    padding-top: 20px;
+    border-top: 1px solid var(--outline);
+  }
+
+  h2:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+
+  h3 { font-size: 1rem; font-weight: 600; margin: 26px 0 8px; }
+
+  p { margin: 0 0 16px; }
+  strong { font-weight: 620; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  ul { padding-left: 22px; margin: 0 0 18px; }
+  li { margin-bottom: 9px; color: var(--fg-2); }
+  li strong { color: var(--fg); }
+
+  .lead {
+    font-size: 1.08rem;
+    color: var(--fg-2);
+    border-left: 2px solid var(--accent);
+    padding: 2px 0 2px 20px;
+    margin: 0 0 32px;
+  }
+
+  .scroller {
+    overflow-x: auto;
+    border: 1px solid var(--outline);
+    border-radius: 12px;
+    background: var(--surface);
+    margin: 0 0 22px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 520px; }
+
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    font-weight: 500;
+    padding: 13px 16px;
+    background: var(--raised);
+    border-bottom: 1px solid var(--outline);
+  }
+
+  tbody td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--outline);
+    vertical-align: top;
+    color: var(--fg-2);
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody td:first-child { color: var(--fg); font-weight: 600; white-space: nowrap; }
+
+  .card {
+    border: 1px solid var(--outline);
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin: 0 0 22px;
+  }
+
+  .card p:last-child { margin-bottom: 0; }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--outline);
+    font-size: 14px;
+    color: var(--fg-3);
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--raised);
+    border: 1px solid var(--outline);
+    border-radius: 4px;
+    padding: 0.08em 0.34em;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <p class="eyebrow">Mettle</p>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Last updated 27 November 2026</p>
+  </header>
+
+  <p class="lead">The short version: Mettle stores your email, your interview answers and your
+    scores. Your answers are sent to Anthropic to be graded. Nothing is sold, nothing is used for
+    advertising, and you can delete all of it from Settings at any time.</p>
+
+  <h2>1. Who is responsible for your data</h2>
+  <p>Mettle is an independent project operated by <strong>Md Zeeshan Haider</strong>, who is the
+    data fiduciary for the purposes of India's Digital Personal Data Protection Act, 2023.</p>
+  <div class="card">
+    <p><strong>Contact for privacy questions and grievances</strong><br>
+      Md Zeeshan Haider — Grievance Officer<br>
+      <a href="mailto:mdzeeshanhaider31@gmail.com">mdzeeshanhaider31@gmail.com</a></p>
+    <p>Write to this address for access, correction, erasure, or any complaint about how your data
+      is handled. You will get a response within 30 days.</p>
+  </div>
+
+  <h2>2. What data is collected</h2>
+
+  <h3>Account data</h3>
+  <ul>
+    <li><strong>Email address</strong> — so you have an account and can sign back in.</li>
+    <li><strong>Display name and first name</strong>, if you sign in with Google and Google provides
+      them. Used only to greet you on the dashboard.</li>
+    <li><strong>A password hash</strong>, if you sign up with email and password. The plain password
+      is never seen or stored by Mettle — Supabase handles hashing.</li>
+  </ul>
+
+  <h3>Interview data</h3>
+  <ul>
+    <li><strong>The questions you were asked</strong> and the topic and level you chose.</li>
+    <li><strong>Your answers, as you typed them.</strong></li>
+    <li><strong>Your scores</strong> on each answer and for the session overall, plus the notes the
+      grader produced about what a complete answer would have covered.</li>
+    <li><strong>How many interviews you have used</strong>, to apply the free-usage limit.</li>
+  </ul>
+
+  <h3>Technical data</h3>
+  <ul>
+    <li>Standard server logs from hosting providers — IP address, timestamp, and which page or
+      endpoint was requested. Used to keep the service running and diagnose faults.</li>
+    <li>A theme preference and a sign-in session token stored locally in your browser or on your
+      device. These are not sent anywhere.</li>
+  </ul>
+  <p>Mettle has no advertising, no analytics product, and no third-party tracking cookies.</p>
+
+  <h2>3. Why it is collected</h2>
+  <p>Your data is processed on the basis of your <strong>consent</strong>, which you give by creating
+    an account and starting an interview, and only for these purposes:</p>
+  <ul>
+    <li>Running an interview and generating the next question.</li>
+    <li>Grading your answers and producing your scorecard.</li>
+    <li>Showing your history and your progress over time.</li>
+    <li>Applying the free-usage limit and preventing abuse of the service.</li>
+    <li>Keeping the service secure and working.</li>
+  </ul>
+  <p>Your data is <strong>not</strong> sold, rented, shared with advertisers, or used to build a
+    profile of you for any purpose other than showing you your own progress.</p>
+
+  <h2>4. Your answers are sent to Anthropic for grading</h2>
+  <div class="card">
+    <p>This is the most important thing to understand about how Mettle works. When you submit an
+      answer, <strong>the question and the full text of your answer are sent to Anthropic's Claude
+      API</strong>, which returns the scores and notes you see on your scorecard. The same applies
+      to the previous answer in a session when the interviewer asks a follow-up.</p>
+    <p>Anthropic processes this data as a service provider in order to return a result. Under
+      Anthropic's commercial terms, data submitted through their API is <strong>not used to train
+      their models</strong>. Anthropic may retain it for a limited period for safety and abuse
+      monitoring. Their policy governs that retention and is linked below.</p>
+    <p><strong>Do not type anything into an answer that you would not want processed by a third
+      party.</strong> Answer as you would in a real interview — there is no reason to include
+      personal details, employer-confidential information, or credentials, and you should not.</p>
+  </div>
+
+  <h2>5. Who else processes your data</h2>
+  <p>Mettle is built on third-party infrastructure. Each provider below processes data only to
+    deliver its service, and each is located outside India, so using Mettle involves transferring
+    your data abroad. The DPDP Act permits such transfers except to countries the Government of
+    India restricts.</p>
+
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Provider</th>
+          <th scope="col">What it handles</th>
+          <th scope="col">Where</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Anthropic</td>
+          <td>Generates interview questions; receives your answers and grades them</td>
+          <td>United States</td>
+        </tr>
+        <tr>
+          <td>Supabase</td>
+          <td>Your account and sign-in; the database holding your sessions, answers and scores</td>
+          <td>As configured for the project</td>
+        </tr>
+        <tr>
+          <td>Render</td>
+          <td>Runs the Mettle API; processes answers in transit and writes server logs</td>
+          <td>Singapore</td>
+        </tr>
+        <tr>
+          <td>GitHub Pages</td>
+          <td>Serves the web app itself; standard access logs</td>
+          <td>United States</td>
+        </tr>
+        <tr>
+          <td>Google</td>
+          <td>Only if you choose "Continue with Google" — confirms your identity to Supabase</td>
+          <td>United States</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Links to their policies:
+    <a href="https://www.anthropic.com/legal/privacy" rel="noopener">Anthropic</a> ·
+    <a href="https://supabase.com/privacy" rel="noopener">Supabase</a> ·
+    <a href="https://render.com/privacy" rel="noopener">Render</a> ·
+    <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub</a> ·
+    <a href="https://policies.google.com/privacy" rel="noopener">Google</a>
+  </p>
+
+  <h2>6. How long it is kept</h2>
+  <ul>
+    <li><strong>Account and interview data</strong> — until you delete it. Mettle does not expire or
+      archive your history on its own.</li>
+    <li><strong>Deleting your history</strong> (Settings → Clear history) removes every session,
+      answer and score from the database immediately. This cannot be undone.</li>
+    <li><strong>Deleting your account</strong> (Settings → Delete account) removes your interview
+      data and your account. This cannot be undone.</li>
+    <li><strong>Server logs</strong> are retained by the hosting providers under their own retention
+      schedules, typically for a short period.</li>
+    <li>Data already sent to Anthropic is subject to Anthropic's retention policy and cannot be
+      recalled by Mettle after the fact.</li>
+  </ul>
+
+  <h2>7. Your rights</h2>
+  <p>Under the DPDP Act you have the right to:</p>
+  <ul>
+    <li><strong>Know what is held about you</strong> and who it has been shared with. Your interview
+      data is visible in the app under History and Progress; write to the address above for anything
+      else.</li>
+    <li><strong>Correct or complete</strong> inaccurate data.</li>
+    <li><strong>Erase</strong> your data — available directly in Settings, or by writing to the
+      address above.</li>
+    <li><strong>Withdraw your consent</strong> at any time. Deleting your account withdraws it in
+      full; after that Mettle holds nothing to process.</li>
+    <li><strong>Nominate</strong> another person to exercise your rights in the event of your death
+      or incapacity. Write to the address above to register a nominee.</li>
+    <li><strong>Raise a grievance</strong> with the Grievance Officer named in section 1. If you are
+      not satisfied with the response, you may complain to the Data Protection Board of India.</li>
+  </ul>
+
+  <h2>8. Security</h2>
+  <ul>
+    <li>All traffic between the app, the API and the database uses HTTPS.</li>
+    <li>Passwords are hashed by Supabase. Mettle never receives or stores a plain password.</li>
+    <li>Every API request is authenticated with a signed token verified on the server. Your user
+      identity is read from that verified token, never from anything the app sends.</li>
+    <li>Database row-level security restricts each row to the account that owns it, so one user
+      cannot read another user's interviews.</li>
+  </ul>
+  <p>No service can promise perfect security. If a breach affecting your personal data occurs, you
+    and the Data Protection Board of India will be notified as the DPDP Act requires.</p>
+
+  <h2>9. Children</h2>
+  <p>Mettle is intended for working software developers and is <strong>not for anyone under 18</strong>.
+    Accounts are not knowingly created for children, and no behavioural advertising or tracking is
+    directed at anyone. If you believe a child has created an account, write to the address above
+    and it will be deleted.</p>
+
+  <h2>10. Changes to this policy</h2>
+  <p>If this policy changes in a way that materially affects how your data is handled, the date at
+    the top will be updated and notice will be given in the app before the change takes effect.
+    Continuing to use Mettle after that constitutes consent to the updated policy.</p>
+
+  <footer>
+    <p><a href="./">← Back to Mettle</a></p>
+  </footer>
+
+</div>
+</body>
+</html>

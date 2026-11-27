@@ -15,18 +15,17 @@ Conventions this plan is built on: [`../CONVENTIONS.md`](../CONVENTIONS.md)
 
 | Target | Status | Rationale |
 |---|---|---|
-| **Android** | Primary · fully tested | The artifact that proves mobile Flutter capability |
 | **Web** | Primary · public demo | One-click trial for recruiters; converts far better than a repo link |
-| **iOS** | Compile-verified in CI only | Development machine is Windows — cannot build or test locally |
+| **Android** | On hold | Developed and run on a real device through M2, paused while web is finished |
+| **iOS** | Never device-tested | Development machine is Windows — cannot build or test locally, and no CI job compiles it |
 | Desktop | Not a target | Cost without payoff |
 
-**iOS honesty rule.** CI runs `flutter build ios --no-codesign`. The README says *"builds for iOS in
-CI; not device-tested."* Never claim verified iOS support. The gap is a smaller problem than the
+**iOS honesty rule.** Never claim verified iOS support. The gap is a smaller problem than the
 overclaim.
 
 **Web constraints to design around:**
 
-- Build with `flutter build web --wasm`; keep assets minimal.
+- Build with `flutter build web --release`; keep assets minimal.
 - A real branded loading state in `index.html` so first paint doesn't look broken.
 - FastAPI CORS configured for the Pages origin; HTTPS on both ends.
 - **Voice degrades to text on web.** Deliberate platform degradation — not a broken mic button.
@@ -110,15 +109,20 @@ judgment; animation everywhere reads as a tutorial project.
 
 ## 3. Navigation map
 
-Three tabs in a `StatefulShellRoute.indexedStack`. The interview is pushed **above** the shell —
-no tab bar competing for attention mid-answer.
+Flat routes. The shell chrome is a widget — `AppScaffold` + `ShellHost` — not a
+`StatefulShellRoute`. The interview is pushed **above** the shell, so no tab bar competes for
+attention mid-answer.
 
 ```
-/splash                Splash        initialLocation · bootstraps, then replaces itself
-/                      Home        ┐
-/progress              Progress    ├─ shell · bottom nav (NavigationRail when ≥840dp)
+/splash                Splash        initialLocation · bootstraps, then routes on session
+/sign-in               Sign-in       Google + email/password, outside the shell
+/dashboard             Dashboard   ┐ `/` redirects here
+/history               History     ├─ shell · bottom nav (NavigationRail when ≥840dp)
+/progress              Progress    │
 /settings              Settings    ┘
-/session/:id           Interview   ┐ pushed full-screen, outside shell
+/pro                   Pro           plan page, reached from the account menu
+/interview/brief       Brief       ┐
+/session/:id           Interview   ├─ pushed full-screen, outside shell
 /session/:id/result    Scorecard   ┘
 ```
 
@@ -350,7 +354,7 @@ Home stops being a generic dashboard:
 
 - **`Progress` `/progress`** — score trend, per-topic mastery, question coverage.
 - **`History`** — past sessions list, reusing `Scorecard`. Nearly free.
-- **`Settings`** — theme, **API base URL**, sign-out, clear data.
+- **`Settings`** — theme, sign-out, clear data, app version.
 - **Voice answers** — record + waveform `CustomPainter` + STT on Android; text fallback on web.
 
 #### What this costs — read before starting

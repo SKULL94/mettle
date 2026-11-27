@@ -10,6 +10,7 @@ abstract final class ApiConstants {
   static const sessions = '/$apiVersion/sessions';
   static const meta = '/$apiVersion/meta';
   static const summary = '/$apiVersion/me/summary';
+  static const me = '/$apiVersion/me';
   static const health = '/healthz';
 
   static String session(String id) => '$sessions/$id';
