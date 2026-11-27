@@ -23,7 +23,7 @@ from ...schemas.wire import (
     TopicOut,
 )
 from ...session import registry
-from ...store import progress, quota, summary
+from ...store import account, progress, quota, summary
 
 router = APIRouter()
 
@@ -51,6 +51,18 @@ async def me_summary(principal: CurrentPrincipal) -> SummaryResponse:
     return SummaryResponse.model_validate(
         {**built, "first_name": principal.first_name}
     )
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(user_id: CurrentUser) -> Response:
+    try:
+        await account.delete(user_id)
+    except account.IdentityDeleteFailed:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY,
+            "your interviews were deleted but the account could not be removed",
+        ) from None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/topics", response_model=CatalogResponse)

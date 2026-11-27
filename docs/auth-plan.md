@@ -23,7 +23,7 @@ document is how that becomes an account without throwing the local path away.
 | Database | **Supabase Postgres** | One managed Postgres serving app data *and* the LangGraph checkpointer |
 | API keys | **Publishable + secret**, not the legacy `anon` / `service_role` JWTs | The legacy pair still works but is deprecated end of 2026. Starting a new project on it buys a migration for nothing |
 | Token verification | **Local, via JWKS** | No network hop per request once keys are cached |
-| Anonymous start | **Yes — anonymous sign-in, later linked to a real identity** | Preserves M1's "zero friction to try it" (see §7) |
+| Anonymous start | **Not shipped** — sign-in is required, there is no anonymous mode | Scores and progress are tied to an account, so an interview without one has nothing to attach to. The argument for it is still in §7 if this is revisited |
 
 > **Correction to a common framing:** there is no "demo" versus "authentic" auth method. Every
 > Supabase method — Google, email, phone — issues the same signed JWT with the same claims and the

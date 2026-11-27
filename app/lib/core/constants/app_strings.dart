@@ -526,11 +526,30 @@ abstract final class AppStrings {
       'It cannot be undone.';
   static const clearDataConfirm = 'Delete everything';
   static const clearDataDone = 'Your interview history was deleted.';
+
+  static const deleteAccount = 'Delete account';
+  static const deleteAccountBody =
+      'Removes your account and every interview on it.';
+  static const deleteAccountPrompt =
+      'This permanently deletes your account, every interview and score on it, '
+      'and your sign-in. You will be signed out and cannot recover any of it.';
+  static const deleteAccountConfirm = 'Delete my account';
+  static const deleteAccountDone = 'Your account was deleted.';
+  static const deleteAccountError =
+      'Your account could not be deleted. Please try again.';
+
+  static const privacy = 'Privacy policy';
+  static const privacyBody = 'What is stored, and who it is sent to.';
+  static const privacyUrl = 'https://skull94.github.io/mettle/privacy.html';
+
   static const about = 'About';
   static const appVersion = '0.1.0';
   static const repository = 'Repository';
   static const repositoryUrl = 'https://github.com/SKULL94/mettle';
   static const copiedToClipboard = 'Link copied.';
+
+  static const gradedByAi =
+      'AI-graded. Use this as a practice signal, not a verdict.';
 
   static const retry = 'Retry';
   static const dismiss = 'Dismiss';

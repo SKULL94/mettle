@@ -39,6 +39,7 @@ class Settings(BaseSettings):
 
     supabase_url: str = ""
     supabase_jwt_secret: str = ""
+    supabase_secret_key: str = ""
 
     free_sessions_per_user: int = 3
     monthly_spend_cap_cents: int = 2000
@@ -55,8 +56,16 @@ class Settings(BaseSettings):
         return bool(self.supabase_url.strip())
 
     @property
+    def can_delete_accounts(self) -> bool:
+        return bool(self.supabase_url.strip() and self.supabase_secret_key.strip())
+
+    @property
     def supabase_issuer(self) -> str:
         return f"{self.supabase_url.rstrip('/')}/auth/v1"
+
+    @property
+    def supabase_admin_users_url(self) -> str:
+        return f"{self.supabase_issuer}/admin/users"
 
     @property
     def supabase_jwks_url(self) -> str:

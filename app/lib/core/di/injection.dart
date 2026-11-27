@@ -31,6 +31,7 @@ import '../../features/sessions/data/datasources/supabase_session_data_source.da
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/clear_sessions.dart';
+import '../../features/settings/domain/usecases/delete_account.dart';
 import '../../features/settings/domain/usecases/get_theme_mode.dart';
 import '../../features/settings/domain/usecases/set_theme_mode.dart';
 import '../../features/settings/presentation/cubit/settings_cubit.dart';
@@ -79,7 +80,7 @@ Future<void> configureDependencies() async {
     () => InterviewRepositoryImpl(sl(), sl()),
   );
   sl.registerLazySingleton<SettingsRepository>(
-    () => SettingsRepositoryImpl(sl(), sl()),
+    () => SettingsRepositoryImpl(sl(), sl(), sl(), sl()),
   );
 
   sl.registerLazySingleton(() => GetSummary(sl()));
@@ -93,10 +94,11 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton(() => GetThemeMode(sl()));
   sl.registerLazySingleton(() => SetThemeMode(sl()));
   sl.registerLazySingleton(() => ClearSessions(sl()));
+  sl.registerLazySingleton(() => DeleteAccount(sl()));
 
   sl.registerLazySingleton(() => DashboardCubit(sl()));
   sl.registerLazySingleton(() => ProgressCubit(sl(), sl()));
-  sl.registerLazySingleton(() => SettingsCubit(sl(), sl(), sl()));
+  sl.registerLazySingleton(() => SettingsCubit(sl(), sl(), sl(), sl()));
 
   await _forgetUnrememberedSession();
 }

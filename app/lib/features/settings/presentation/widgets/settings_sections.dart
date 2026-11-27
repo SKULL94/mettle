@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/mettle_snack_bar.dart';
 import '../../../../core/widgets/selectable_tile.dart';
@@ -106,20 +108,81 @@ class DataSection extends StatelessWidget {
       title: AppStrings.data,
       child: Card(
         clipBehavior: Clip.antiAlias,
-        child: SettingsRow(
-          title: AppStrings.clearData,
-          body: AppStrings.clearDataBody,
-          titleColor: theme.colorScheme.error,
-          trailing: Icon(
-            Icons.delete_outline_rounded,
-            size: AppDimens.iconMd,
-            color: theme.colorScheme.error,
-          ),
-          onTap: () => _confirmClear(context),
+        child: Column(
+          children: [
+            SettingsRow(
+              title: AppStrings.privacy,
+              body: AppStrings.privacyBody,
+              trailing: Icon(
+                Icons.copy_rounded,
+                size: AppDimens.iconMd,
+                color: theme.textTheme.labelSmall?.color,
+              ),
+              onTap: () => _copyPrivacyUrl(context),
+            ),
+            const Divider(height: AppDimens.hairline),
+            SettingsRow(
+              title: AppStrings.clearData,
+              body: AppStrings.clearDataBody,
+              titleColor: theme.colorScheme.error,
+              trailing: Icon(
+                Icons.delete_outline_rounded,
+                size: AppDimens.iconMd,
+                color: theme.colorScheme.error,
+              ),
+              onTap: () => _confirmClear(context),
+            ),
+            const Divider(height: AppDimens.hairline),
+            SettingsRow(
+              title: AppStrings.deleteAccount,
+              body: AppStrings.deleteAccountBody,
+              titleColor: theme.colorScheme.error,
+              trailing: Icon(
+                Icons.person_remove_outlined,
+                size: AppDimens.iconMd,
+                color: theme.colorScheme.error,
+              ),
+              onTap: () => _confirmDeleteAccount(context),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+Future<void> _copyPrivacyUrl(BuildContext context) async {
+  final messenger = ScaffoldMessenger.of(context);
+
+  await Clipboard.setData(const ClipboardData(text: AppStrings.privacyUrl));
+  messenger.showSnackBar(
+    const SnackBar(content: Text(AppStrings.copiedToClipboard)),
+  );
+}
+
+Future<void> _confirmDeleteAccount(BuildContext context) async {
+  final cubit = context.read<SettingsCubit>();
+
+  final confirmed = await showConfirmDialog(
+    context,
+    title: AppStrings.deleteAccount,
+    message: AppStrings.deleteAccountPrompt,
+    confirmLabel: AppStrings.deleteAccountConfirm,
+    destructive: true,
+  );
+
+  if (!confirmed) return;
+
+  final deleted = await cubit.deleteAccount();
+  if (!context.mounted) return;
+
+  if (!deleted) {
+    showMettleSnackBar(context, AppStrings.deleteAccountError);
+    return;
+  }
+
+  showMettleSnackBar(context, AppStrings.deleteAccountDone);
+  context.go(AppRoutes.signIn);
 }
 
 Future<void> _confirmClear(BuildContext context) async {

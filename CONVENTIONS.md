@@ -296,12 +296,13 @@ abstract final class AppRoutes {
 ```dart
 // core/router/app_router.dart
 final appRouter = GoRouter(
-  initialLocation: AppRoutes.home,
+  initialLocation: AppRoutes.splash,
+  redirect: _guard,
   routes: [
     GoRoute(
-      path: AppRoutes.home,
-      name: AppRoutes.homeName,
-      builder: (context, state) => const HomePage(),
+      path: AppRoutes.dashboard,
+      name: AppRoutes.dashboardName,
+      builder: (context, state) => const DashboardPage(),
     ),
     GoRoute(
       path: AppRoutes.session,
@@ -319,10 +320,12 @@ final appRouter = GoRouter(
 - Pass **identifiers**, not objects. The destination's bloc fetches what it needs. This keeps deep
   links and browser refresh working for free.
 - `extra` is only for data that cannot be refetched, and never for an entity.
-- Bottom navigation uses `StatefulShellRoute.indexedStack` so each tab keeps its own stack.
-- **This app has no authentication and no gated routes.** `/splash` is the `initialLocation`; it
-  performs async bootstrap then calls `context.go(AppRoutes.home)` — `go`, not `push`, so it leaves
-  the stack. Don't introduce `redirect` guards or auth state without a decision to add accounts.
+- Routes are flat. The sidebar/bottom-nav chrome is a widget — `AppScaffold` + `ShellHost` — not a
+  `StatefulShellRoute`.
+- **Sign-in is required and routes are gated** by the `_guard` redirect on the router. `/splash` is
+  the `initialLocation`; it performs async bootstrap then calls `context.go(...)` — `go`, not
+  `push`, so it leaves the stack — landing on `/sign-in` or `/dashboard` depending on the session.
+  `/` redirects to `/dashboard`.
 
 **Page vs. View.** `*Page` is the route boundary: it reads DI and provides the bloc, nothing else.
 `*View` is pure UI and takes no dependencies — which is what makes it widget-testable.

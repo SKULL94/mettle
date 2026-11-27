@@ -71,6 +71,13 @@ final class ApiClient {
     _guard(response);
   }
 
+  Future<void> delete(String path) async {
+    final response = await _send(
+      () async => _client.delete(uri(path), headers: await headers()),
+    );
+    _guard(response);
+  }
+
   Future<http.Response> _send(Future<http.Response> Function() request) async {
     try {
       return await request().timeout(ApiConstants.connectTimeout);

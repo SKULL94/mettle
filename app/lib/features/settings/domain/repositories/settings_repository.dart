@@ -7,4 +7,6 @@ abstract interface class SettingsRepository {
   Future<Result<void>> setThemeMode(AppThemeMode mode);
 
   Future<Result<void>> clearSessions();
+
+  Future<Result<void>> deleteAccount();
 }
